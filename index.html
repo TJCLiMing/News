@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <base target="_top">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #FF92A9;
+            --secondary: #FFD93D;
+            --accent: #6BCB77;
+            --bg: #F0F7FF;
+            --text: #4D4D4D;
+            --btn-prayer: #F9A825; 
+            --btn-prayer-shadow: #F57F17;
+            --line-green: #06C755;
+        }
+
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background: linear-gradient(135deg, #FFF5F5 0%, #F0F7FF 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin: 30px 0 50px;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            color: var(--text);
+            position: relative;
+            display: inline-block;
+        }
+
+        header h1::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 100%;
+            height: 12px;
+            background: var(--secondary);
+            z-index: -1;
+            opacity: 0.5;
+            border-radius: 10px;
+        }
+
+        /* 區塊標題裝飾 */
+        .section-divider {
+            margin: 60px 0 30px;
+            padding-left: 15px;
+            color: #555;
+            font-size: 1.6rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+        
+        .section-divider::before {
+            content: '';
+            display: inline-block;
+            width: 8px;
+            height: 28px;
+            background: var(--primary);
+            border-radius: 10px;
+            margin-right: 15px;
+        }
+
+        /* 網格系統優化 */
+        .grid {
+            display: grid;
+            /* 改用 1fr 讓電腦版圖片可以自動長大 */
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 30px;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        /* 快捷鍵專用網格：防止疊在一起 */
+        .action-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 25px;
+            width: 100%;
+        }
+
+        /* 卡片基礎設計 */
+        .card {
+            background: white;
+            border-radius: 25px;
+            border: 4px solid #FFF;
+            box-shadow: 8px 8px 0px rgba(0,0,0,0.05);
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            opacity: 0;
+            transform: translateY(25px);
+            transition: all 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+
+        .card.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* 海報與安排表圖片容器 (直式 2:3) */
+        .img-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 2 / 3; 
+            overflow: hidden;
+            background: #fdfdfd;
+        }
+
+        .card img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            transition: transform 0.5s;
+        }
+
+        @media (hover: hover) {
+            .card:hover {
+                transform: rotate(-1deg) scale(1.02);
+                box-shadow: 12px 12px 0px rgba(255, 146, 169, 0.15);
+            }
+        }
+
+        .badge {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: var(--primary);
+            color: white;
+            padding: 8px 18px;
+            border-radius: 15px;
+            font-weight: bold;
+            transform: rotate(-10deg);
+            z-index: 10;
+            box-shadow: 3px 3px 0px rgba(0,0,0,0.1);
+            font-size: 0.9rem;
+        }
+
+        /* 功能快捷鍵卡片 */
+        .work-card {
+            padding: 30px 20px;
+            text-align: center;
+            min-height: 340px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            box-sizing: border-box;
+        }
+
+        .work-card h3 {
+            margin: 5px 0 15px 0;
+            color: #333;
+            font-size: 1.4rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .icon {
+            width: 32px;
+            height: 32px;
+            fill: currentColor;
+            flex-shrink: 0;
+        }
+
+        .desc-text {
+            color: #666;
+            font-size: 1rem;
+            line-height: 1.7;
+            margin-bottom: 20px;
+        }
+
+        .info {
+            padding: 20px;
+            text-align: center;
+            border-top: 2px dashed #eee;
+        }
+
+        .info h3 {
+            margin: 0;
+            color: #444;
+            font-size: 1.25rem;
+        }
+
+        /* 按鈕樣式 */
+        .btn {
+            display: inline-block;
+            background: var(--accent);
+            color: white;
+            padding: 12px 35px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: 0.3s;
+            box-shadow: 0 4px 0px #5ab866;
+            font-size: 1rem;
+        }
+
+        .btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0px #5ab866;
+        }
+
+        .btn-prayer {
+            background: var(--btn-prayer);
+            box-shadow: 0 4px 0px var(--btn-prayer-shadow);
+        }
+        .btn-prayer:active {
+            box-shadow: 0 2px 0px var(--btn-prayer-shadow);
+        }
+
+        /* 好友連結 QRCode 區塊 */
+        .qr-container {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 20px 0 60px;
+        }
+
+        .qr-section {
+            text-align: center;
+            max-width: 280px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: 0.6s ease-out;
+        }
+
+        .qr-card {
+            background: white;
+            border-radius: 35px;
+            padding: 30px;
+            border: 4px solid #FFF;
+            box-shadow: 10px 10px 0px rgba(0,0,0,0.05);
+        }
+
+        .qr-card img {
+            width: 100%;
+            height: auto;
+            border-radius: 20px;
+        }
+
+        .qr-text {
+            margin-top: 18px;
+            color: var(--line-green);
+            font-weight: bold;
+            font-size: 1.2rem;
+            letter-spacing: 1px;
+        }
+
+        #loading {
+            text-align: center;
+            padding: 80px;
+            color: #888;
+            font-size: 1.3rem;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: auto;
+            padding: 50px 20px;
+            color: #aaa;
+            font-size: 0.85rem;
+            border-top: 1px solid rgba(0,0,0,0.05);
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>精彩活動快報</h1>
+        </header>
+
+        <div id="loading">✨ 正在搬運最新資料...</div>
+        <div class="grid" id="posterGrid"></div>
+
+        <div class="section-divider">功能快捷鍵</div>
+        <div class="action-grid" id="actionGrid">
+            
+            <div class="card is-visible work-card" style="background: #f0f7ff; border-color: #d0e7ff;">
+                <div>
+                    <h3>
+                        <svg class="icon" viewBox="0 0 24 24" style="color: #4a90e2;"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
+                        GoogleMeet
+                    </h3>
+                    <div class="desc-text">週二晚間聚會<br>週三查經聚會<br>週五晚間聚會<br>週六安息日聚會</div>
+                </div>
+                <a href="https://meet.google.com/wfw-arii-kxw" target="_blank" class="btn" style="background: #4a90e2; box-shadow: 0 4px 0px #357abd;">加入會議</a>
+            </div>
+
+            <div class="card is-visible work-card" style="background: #fffdf0; border-color: #fff9c4;">
+                <div>
+                    <h3>
+                        <svg class="icon" viewBox="0 0 24 24" style="color: #fbc02d;"><path d="M11 4h2v8h-2zm-4.24 1.76l1.41 1.42A6.978 6.978 0 0 0 5 12c0 3.86 3.14 7 7 7s7-3.14 7-7a6.978 6.978 0 0 0-3.17-5.82l1.41-1.42A8.966 8.966 0 0 1 21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9a8.966 8.966 0 0 1 3.76-7.24z"/></svg>
+                        禱告團契
+                    </h3>
+                    <div class="desc-text">每天晚上 9:30~10:20<br><br><em style="color:#aaa; font-size:0.9rem;">「要常常喜樂，不住的禱告，<br>凡事謝恩。」<br>— 帖撒羅尼迦前書 5:16-18</em></div>
+                </div>
+                <a href="https://meet.google.com/wfw-arii-kxw" target="_blank" class="btn btn-prayer">加入禱告室</a>
+            </div>
+
+            <div class="card is-visible work-card" style="background: #f0fff4; border-color: #d7f5dd;">
+                <div>
+                    <h3>
+                        <svg class="icon" viewBox="0 0 24 24" style="color: #6BCB77;"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg>
+                        黎明寶庫
+                    </h3>
+                    <div class="desc-text">感謝同靈分享照片、聚會資料<br>聚會感動、活動心得<br><br><em style="color:#aaa; font-size:0.9rem;">「你們各人要照所得的恩賜<br>彼此服事。」<br>— 彼得前書 4:10</em></div>
+                </div>
+                <a href="https://tjc-km.github.io/LimingUploader/?openExternalBrowser=1" target="_blank" class="btn">進入</a>
+            </div>
+
+            <div class="card is-visible work-card" style="background: #fff8f0; border-color: #ffe0cc;">
+                <div>
+                    <h3>
+                        <svg class="icon" viewBox="0 0 24 24" style="color: #e67e22;"><path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 16H7v-2h10v2zm0-4H7v-2h10v2zm0-4H7V8h10v2z"/></svg>
+                        文字記錄區
+                    </h3>
+                    <div class="desc-text">歡迎記錄聚會感動、活動心得<br><br><em style="color:#aaa; font-size:0.9rem;">「我要提說耶和華所行的；<br>我要記念你古時的奇事。」<br>— 詩篇 77:11</em></div>
+                </div>
+                <a href="https://docs.google.com/forms/d/e/1FAIpQLSefHtRz-OdeewdtKzQ1_I8UPKAqdrEyTNuC0zo1WTQdwv98fA/viewform?pli=1" target="_blank" class="btn" style="background: #e67e22; box-shadow: 0 4px 0px #ca6f1e;">前往記錄</a>
+            </div>
+
+            <div class="card is-visible work-card" style="background: #fdf2ff; border-color: #f3e5f5;">
+                <div>
+                    <h3>
+                        <svg class="icon" viewBox="0 0 24 24" style="color: #9c27b0;"><path d="M12 3L4 9v12h16V9l-8-6zm-2 16h-2v-2h2v2zm0-4h-2v-2h2v2zm4 4h-2v-2h2v2zm0-4h-2v-2h2v2zm0-4h-2v-2h2v2z"/></svg>
+                        更認識黎明教會
+                    </h3>
+                    <div class="desc-text">歡迎點擊查看教會介紹<br><br><em style="color:#aaa; font-size:0.9rem;">「我曾歡喜，聽見人對我說：<br>我們往耶和華的殿去。」<br>— 詩篇 122:1</em></div>
+                </div>
+                <a href="https://tjclimin20.my.canva.site/singlepageweb?openExternalBrowser=1" target="_blank" class="btn" style="background: #9c27b0; box-shadow: 0 4px 0px #7b1fa2;">查看</a>
+            </div>
+
+        </div>
+
+        <div class="section-divider">月份安排表</div>
+        <div class="grid" id="scheduleGrid"></div>
+
+        <div class="section-divider">好友連結</div>
+        <div class="qr-container">
+            <div class="qr-section" id="qrSection" style="opacity:1; transform:translateY(0);">
+                <div class="qr-card">
+                    <img id="qrImg" src="" alt="Line QRCode" style="min-height:150px; background:#f5f5f5;">
+                    <div class="qr-text">黎明官方帳號</div>
+                </div>
+            </div>
+            <div class="qr-section" id="helperQrSection" style="opacity:0; transform:translateY(20px);">
+                <div class="qr-card">
+                    <img id="helperQrImg" src="" alt="小幫手 QRCode">
+                    <div class="qr-text" style="color: #e67e22;">小幫手</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        🚀 最後部署時間：<span id="update-time">讀取中...</span>
+    </footer>
+
+    <script>
+        // ▼ GAS Web App 部署網址（部署後填入）
+        const API_URL = 'https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec';
+
+        // 1. LINE 強制跳轉
+        (function() {
+            var ua = navigator.userAgent;
+            if (ua.indexOf("Line") > -1 && window.location.href.indexOf('openExternalBrowser=1') === -1) {
+                var url = window.location.href;
+                var sep = url.indexOf('?') > -1 ? '&' : '?';
+                window.location.href = url + sep + 'openExternalBrowser=1';
+            }
+        })();
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) entry.target.classList.add('is-visible');
+            });
+        }, { threshold: 0.1 });
+
+        // 2. 從後端獲取資料
+        fetch(API_URL + '?mode=api')
+            .then(r => r.json())
+            .then(function(data) {
+                if (data.status === "error") {
+                    document.getElementById('loading').innerHTML = "❌ 發生錯誤：" + data.message;
+                    return;
+                }
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('update-time').innerText = data.updateTime;
+
+                renderSection('posterGrid', data.posters, true);
+                renderSection('scheduleGrid', data.schedules, false);
+
+                if (data.qrCodeId) {
+                    const qrImg = document.getElementById('qrImg');
+                    qrImg.src = 'https://drive.google.com/thumbnail?sz=w1000&id=' + data.qrCodeId;
+                    setTimeout(() => document.getElementById('qrSection').style.opacity = '1', 100);
+                }
+                if (data.helperQrCodeId) {
+                    const helperQrImg = document.getElementById('helperQrImg');
+                    helperQrImg.src = 'https://drive.google.com/thumbnail?sz=w1000&id=' + data.helperQrCodeId;
+                    setTimeout(() => {
+                        const sec = document.getElementById('helperQrSection');
+                        sec.style.opacity = '1';
+                        sec.style.transform = 'translateY(0)';
+                    }, 200);
+                }
+            })
+            .catch(function(err) {
+                document.getElementById('loading').innerHTML = "❌ 無法連線：" + err.message;
+            });
+
+        function renderSection(containerId, items, isPoster) {
+            const grid = document.getElementById(containerId);
+            if (!items || items.length === 0) {
+                grid.innerHTML = "<p style='color:#999; grid-column:1/-1; text-align:center;'>目前暫無相關資料</p>";
+                return;
+            }
+
+            const now = new Date();
+
+            items.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = 'card';
+                div.style.transitionDelay = (index * 0.1) + 's';
+
+                let badgeHtml = '';
+                if (isPoster) {
+                    const fileDate = new Date(item.name.substring(0, 10));
+                    const diffDays = (fileDate - now) / 86400000;
+                    if (diffDays >= 0 && diffDays <= 10) badgeHtml = '<div class="badge">最新</div>';
+                }
+
+                const imgUrl = 'https://drive.google.com/thumbnail?sz=w1000&id=' + item.id;
+                const rawImgUrl = 'https://drive.google.com/uc?export=view&id=' + item.id;
+                const cleanTitle = item.name.replace(/^\d{4}-?\d{2}-?\d{2}/, '').replace(/^[ _]+/, '').split('.')[0];
+
+                div.innerHTML = `
+                    ${badgeHtml}
+                    <div class="img-container">
+                        <a href="${rawImgUrl}" target="_blank">
+                            <img src="${imgUrl}" alt="圖片" loading="lazy">
+                        </a>
+                    </div>
+                    <div class="info">
+                        <h3>${cleanTitle || '未命名項目'}</h3>
+                        ${isPoster ? `<small style="color:#bbb">📅 ${item.name.substring(0, 10)}</small>` : ''}
+                    </div>
+                `;
+                grid.appendChild(div);
+                observer.observe(div);
+            });
+        }
+    </script>
+</body>
+</html>
