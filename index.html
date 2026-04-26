@@ -401,37 +401,53 @@
             });
         }, { threshold: 0.1 });
 
-        // 2. 從後端獲取資料
+        // 2. 渲染資料（先快取、再即時更新）
+        function applyData(data, fromCache) {
+            if (data.status === "error") {
+                if (!fromCache) document.getElementById('loading').innerHTML = "❌ 發生錯誤：" + data.message;
+                return;
+            }
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('update-time').innerText = data.updateTime + (fromCache ? '（快取）' : '');
+
+            document.getElementById('posterGrid').innerHTML = '';
+            document.getElementById('scheduleGrid').innerHTML = '';
+            renderSection('posterGrid', data.posters, true);
+            renderSection('scheduleGrid', data.schedules, false);
+
+            if (data.qrCodeId) {
+                const qrImg = document.getElementById('qrImg');
+                qrImg.src = 'https://drive.google.com/thumbnail?sz=w1000&id=' + data.qrCodeId;
+                setTimeout(() => document.getElementById('qrSection').style.opacity = '1', 100);
+            }
+            if (data.helperQrCodeId) {
+                const helperQrImg = document.getElementById('helperQrImg');
+                helperQrImg.src = 'https://drive.google.com/thumbnail?sz=w1000&id=' + data.helperQrCodeId;
+                setTimeout(() => {
+                    const sec = document.getElementById('helperQrSection');
+                    sec.style.opacity = '1';
+                    sec.style.transform = 'translateY(0)';
+                }, 200);
+            }
+        }
+
+        // 有快取先顯示，同時背景抓新資料
+        const CACHE_KEY = 'dashboardCache';
+        try {
+            const cached = localStorage.getItem(CACHE_KEY);
+            if (cached) applyData(JSON.parse(cached), true);
+        } catch(e) {}
+
         fetch(API_URL + '?mode=api')
             .then(r => r.json())
             .then(function(data) {
-                if (data.status === "error") {
-                    document.getElementById('loading').innerHTML = "❌ 發生錯誤：" + data.message;
-                    return;
-                }
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('update-time').innerText = data.updateTime;
-
-                renderSection('posterGrid', data.posters, true);
-                renderSection('scheduleGrid', data.schedules, false);
-
-                if (data.qrCodeId) {
-                    const qrImg = document.getElementById('qrImg');
-                    qrImg.src = 'https://drive.google.com/thumbnail?sz=w1000&id=' + data.qrCodeId;
-                    setTimeout(() => document.getElementById('qrSection').style.opacity = '1', 100);
-                }
-                if (data.helperQrCodeId) {
-                    const helperQrImg = document.getElementById('helperQrImg');
-                    helperQrImg.src = 'https://drive.google.com/thumbnail?sz=w1000&id=' + data.helperQrCodeId;
-                    setTimeout(() => {
-                        const sec = document.getElementById('helperQrSection');
-                        sec.style.opacity = '1';
-                        sec.style.transform = 'translateY(0)';
-                    }, 200);
-                }
+                try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch(e) {}
+                applyData(data, false);
             })
             .catch(function(err) {
-                document.getElementById('loading').innerHTML = "❌ 無法連線：" + err.message;
+                if (!localStorage.getItem(CACHE_KEY)) {
+                    document.getElementById('loading').innerHTML = "❌ 無法連線：" + err.message;
+                }
             });
 
         function renderSection(containerId, items, isPoster) {
