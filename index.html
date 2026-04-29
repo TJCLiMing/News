@@ -433,6 +433,12 @@
                     sec.style.transform = 'translateY(0)';
                 }, 200);
             }
+            // 每次渲染完都檢查是否要捲動到 #schedule
+            if (window.location.hash === '#schedule') {
+                setTimeout(() => {
+                    document.getElementById('schedule').scrollIntoView({ behavior: 'smooth' });
+                }, 100);
+            }
         }
 
         // 有快取先顯示，同時背景抓新資料
@@ -447,12 +453,6 @@
             .then(function(data) {
                 try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch(e) {}
                 applyData(data, false);
-                // 資料載入完成後，若網址有 #schedule 則捲動過去
-                if (window.location.hash === '#schedule') {
-                    setTimeout(() => {
-                        document.getElementById('schedule').scrollIntoView({ behavior: 'smooth' });
-                    }, 100);
-                }
             })
             .catch(function(err) {
                 if (!localStorage.getItem(CACHE_KEY)) {
