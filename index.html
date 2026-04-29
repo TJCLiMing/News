@@ -361,7 +361,7 @@
 
         </div>
 
-        <div class="section-divider">月份安排表</div>
+        <div class="section-divider" id="schedule">月份安排表</div>
         <div class="grid" id="scheduleGrid"></div>
 
         <div class="section-divider">好友連結</div>
@@ -447,6 +447,12 @@
             .then(function(data) {
                 try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch(e) {}
                 applyData(data, false);
+                // 資料載入完成後，若網址有 #schedule 則捲動過去
+                if (window.location.hash === '#schedule') {
+                    setTimeout(() => {
+                        document.getElementById('schedule').scrollIntoView({ behavior: 'smooth' });
+                    }, 100);
+                }
             })
             .catch(function(err) {
                 if (!localStorage.getItem(CACHE_KEY)) {
