@@ -366,18 +366,18 @@
 
         <div class="section-divider">好友連結</div>
         <div class="qr-container">
-            <div class="qr-section" id="qrSection" style="opacity:1; transform:translateY(0);">
+            <div class="qr-section" style="opacity:1; transform:translateY(0);">
                 <a href="https://lin.ee/RInugzP" target="_blank" style="text-decoration:none;">
                     <div class="qr-card">
-                        <img id="qrImg" src="" alt="Line QRCode" style="min-height:150px; background:#f5f5f5;">
+                        <img src="官方LineQR.png" alt="Line QRCode">
                         <div class="qr-text">黎明官方帳號</div>
                     </div>
                 </a>
             </div>
-            <div class="qr-section" id="helperQrSection" style="opacity:0; transform:translateY(20px);">
+            <div class="qr-section" style="opacity:1; transform:translateY(0);">
                 <a href="https://lin.ee/x37YBt8" target="_blank" style="text-decoration:none;">
                     <div class="qr-card">
-                        <img id="helperQrImg" src="" alt="小幫手 QRCode">
+                        <img src="小幫手QRCode.png" alt="小幫手 QRCode">
                         <div class="qr-text" style="color: #e67e22;">小幫手</div>
                     </div>
                 </a>
@@ -423,20 +423,6 @@
             renderSection('posterGrid', data.posters, true);
             renderSection('scheduleGrid', data.schedules, false);
 
-            if (data.qrCodeId) {
-                const qrImg = document.getElementById('qrImg');
-                qrImg.src = 'https://drive.google.com/thumbnail?sz=w1000&id=' + data.qrCodeId;
-                setTimeout(() => document.getElementById('qrSection').style.opacity = '1', 100);
-            }
-            if (data.helperQrCodeId) {
-                const helperQrImg = document.getElementById('helperQrImg');
-                helperQrImg.src = 'https://drive.google.com/thumbnail?sz=w1000&id=' + data.helperQrCodeId;
-                setTimeout(() => {
-                    const sec = document.getElementById('helperQrSection');
-                    sec.style.opacity = '1';
-                    sec.style.transform = 'translateY(0)';
-                }, 200);
-            }
             // 每次渲染完都檢查是否要捲動到 #schedule
             if (window.location.hash === '#schedule') {
                 setTimeout(() => {
