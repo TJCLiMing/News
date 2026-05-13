@@ -4,7 +4,17 @@
  */
 function doGet(e) {
   if (e && e.parameter && e.parameter.mode === 'api') {
+    const props = PropertiesService.getScriptProperties();
+    const cached = props.getProperty('CACHED_DATA');
+    if (cached) {
+      Logger.log('[快取] 命中，直接回傳快取資料');
+      return ContentService
+        .createTextOutput(cached)
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+    Logger.log('[快取] 未命中，重新查詢 Drive');
     const data = getDashboardData();
+    props.setProperty('CACHED_DATA', JSON.stringify(data));
     return ContentService
       .createTextOutput(JSON.stringify(data))
       .setMimeType(ContentService.MimeType.JSON);
@@ -60,8 +70,13 @@ function getDashboardData() {
   }
 }
 
-// 每 5 分鐘被觸發一次，讓 GAS 保持熱機狀態，避免冷啟動延遲
-function keepWarm() {}
+// 每 5 分鐘預先抓資料並存進快取，讓使用者來時可以瞬間回傳
+function keepWarm() {
+  const data = getDashboardData();
+  PropertiesService.getScriptProperties()
+    .setProperty('CACHED_DATA', JSON.stringify(data));
+  Logger.log('[keepWarm] 快取已更新');
+}
 
 // 執行一次即可安裝定時觸發器
 function installKeepWarmTrigger() {
