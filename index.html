@@ -429,10 +429,15 @@
             }
         }
 
+        console.time('[效能] GAS API 總回應時間');
         fetch(API_URL + '?mode=api')
-            .then(r => r.json())
-            .then(applyData)
+            .then(r => { console.timeLog('[效能] GAS API 總回應時間', '收到 response'); return r.json(); })
+            .then(function(data) {
+                console.timeEnd('[效能] GAS API 總回應時間');
+                applyData(data);
+            })
             .catch(function(err) {
+                console.timeEnd('[效能] GAS API 總回應時間');
                 document.getElementById('loading').innerHTML = "❌ 無法連線：" + err.message;
             });
 
@@ -460,6 +465,7 @@
                 const imgUrl = 'https://drive.google.com/thumbnail?sz=w1000&id=' + item.id;
                 const rawImgUrl = 'https://drive.google.com/uc?export=view&id=' + item.id;
                 const cleanTitle = item.name.replace(/^\d{4}-?\d{2}-?\d{2}/, '').replace(/^[ _]+/, '').split('.')[0];
+                const labelKey = `[效能] 圖片載入: ${item.name}`;
 
                 div.innerHTML = `
                     ${badgeHtml}
@@ -473,6 +479,11 @@
                         ${isPoster ? `<small style="color:#bbb">📅 ${item.name.substring(0, 10)}</small>` : ''}
                     </div>
                 `;
+                const imgEl = div.querySelector('img');
+                console.time(labelKey);
+                imgEl.addEventListener('load', () => console.timeEnd(labelKey));
+                imgEl.addEventListener('error', () => console.timeEnd(labelKey + ' ❌ 失敗'));
+
                 grid.appendChild(div);
                 observer.observe(div);
             });

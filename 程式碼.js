@@ -21,13 +21,13 @@ function doGet(e) {
  */
 function getDashboardData() {
   try {
+    const t0 = Date.now();
     const props = PropertiesService.getScriptProperties();
-    // 優先從屬性讀取，若無則使用預設值（請務必確認這兩個 ID 是否正確）
     const posterFolderId = props.getProperty('POSTER_FOLDER_ID') || '1kkkt_UT-ZYT36ti_nlXnChKjKVm6Hu00';
     const scheduleFolderId = props.getProperty('SCHEDULE_FOLDER_ID');
     const qrCodeId = props.getProperty('QRCODE_FILE_ID');
     const helperQrCodeId = props.getProperty('HELPER_QRCODE_FILE_ID');
-    
+
     if (!posterFolderId) throw new Error("尚未設定海報資料夾 ID");
 
     const now = new Date();
@@ -35,12 +35,23 @@ function getDashboardData() {
 
     const formatMonth = (d) => `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
     const targetMonths = [formatMonth(now), formatMonth(nextMonth)];
-    
+
+    const t1 = Date.now();
+    const posters = fetchFiles(posterFolderId, 'poster');
+    const t2 = Date.now();
+    const schedules = fetchFiles(scheduleFolderId, 'schedule', targetMonths);
+    const t3 = Date.now();
+
+    Logger.log(`[效能] 讀取屬性: ${t1 - t0}ms`);
+    Logger.log(`[效能] 抓海報: ${t2 - t1}ms（${posters.length} 筆）`);
+    Logger.log(`[效能] 抓安排表: ${t3 - t2}ms（${schedules.length} 筆）`);
+    Logger.log(`[效能] 總計: ${t3 - t0}ms`);
+
     return {
-      posters: fetchFiles(posterFolderId, 'poster'),
-      schedules: fetchFiles(scheduleFolderId, 'schedule', targetMonths),
-      qrCodeId: qrCodeId,
-      helperQrCodeId: helperQrCodeId,
+      posters,
+      schedules,
+      qrCodeId,
+      helperQrCodeId,
       updateTime: props.getProperty('DEPLOY_TIME') || Utilities.formatDate(new Date(), "GMT+8", "yyyy-MM-dd HH:mm:ss"),
       status: "success"
     };
