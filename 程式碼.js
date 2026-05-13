@@ -31,10 +31,10 @@ function getDashboardData() {
     if (!posterFolderId) throw new Error("尚未設定海報資料夾 ID");
 
     const now = new Date();
-    const next15Days = new Date(now.getTime() + 15 * 24 * 60 * 60 * 1000);
-    
+    const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+
     const formatMonth = (d) => `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
-    const targetMonths = [...new Set([formatMonth(now), formatMonth(next15Days)])];
+    const targetMonths = [formatMonth(now), formatMonth(nextMonth)];
     
     return {
       posters: fetchFiles(posterFolderId, 'poster'),
