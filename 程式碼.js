@@ -100,7 +100,7 @@ function fetchFiles(folderId, type, targetMonths = []) {
   const files = folder.getFiles();
   const nowTime = new Date().setHours(0,0,0,0);
   const limitTime = new Date();
-  limitTime.setMonth(limitTime.getMonth() + 1);
+  limitTime.setMonth(limitTime.getMonth() + 3);
   
   let results = [];
   while (files.hasNext()) {
