@@ -33,11 +33,11 @@
         header {
             background: white;
             border-bottom: 2px solid #ffe0e8;
-            padding: 0 20px;
+            padding: 0 16px;
             height: var(--header-h);
             display: flex;
             align-items: center;
-            gap: 14px;
+            gap: 10px;
             flex-shrink: 0;
             box-shadow: 0 2px 10px rgba(255,146,169,0.12);
             z-index: 100;
@@ -51,6 +51,7 @@
             padding: 6px;
             color: var(--primary);
             border-radius: 8px;
+            flex-shrink: 0;
             transition: background 0.2s;
         }
         .hamburger:hover { background: #ffe8ee; }
@@ -59,13 +60,33 @@
             font-size: 1.25rem;
             color: var(--text);
             font-weight: 700;
+            white-space: nowrap;
         }
 
+        .header-updated {
+            font-size: 0.78rem;
+            color: #ccc;
+            white-space: nowrap;
+        }
+
+        .header-spacer { flex: 1; }
+
+        .header-admin {
+            background: none;
+            border: none;
+            color: #ccc;
+            font-size: 0.82rem;
+            cursor: pointer;
+            white-space: nowrap;
+            padding: 4px 8px;
+        }
+        .header-admin:hover { color: var(--primary); }
+
         .back-link {
-            margin-left: auto;
             color: #bbb;
             text-decoration: none;
             font-size: 0.88rem;
+            white-space: nowrap;
             transition: color 0.2s;
         }
         .back-link:hover { color: var(--primary); }
@@ -357,6 +378,8 @@
         /* ── RWD ── */
         @media (max-width: 768px) {
             .hamburger { display: flex; }
+            .header-updated { display: none; }
+            .header-admin { display: none; }
 
             .sidebar {
                 position: fixed;
@@ -388,9 +411,10 @@
             </svg>
         </button>
         <h1>🌸 黎明相簿</h1>
-        <span id="updatedAt" style="margin-left:10px; font-size:0.78rem; color:#ccc;"></span>
-        <button onclick="adminUpdate()" style="margin-left:auto; background:none; border:none; color:#ccc; font-size:0.82rem; cursor:pointer;">⚙ 管理員更新</button>
-        <a href="index.html" class="back-link" style="margin-left:12px;">← 活動快報</a>
+        <span id="updatedAt" class="header-updated"></span>
+        <div class="header-spacer"></div>
+        <button onclick="adminUpdate()" class="header-admin">⚙ 管理員更新</button>
+        <a href="index.html" class="back-link">← 活動快報</a>
     </header>
 
     <div class="overlay" id="overlay"></div>
