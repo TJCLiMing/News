@@ -855,7 +855,7 @@
             btn.textContent = '送出中…';
 
             try {
-                const url = `${GAS_URL}?mode=addComment&folderId=${encodeURIComponent(currentFolderId)}&name=${encodeURIComponent(name)}&text=${encodeURIComponent(text)}`;
+                const url = `${GAS_URL}?mode=addComment&folderId=${encodeURIComponent(currentFolderId)}&folderName=${encodeURIComponent(currentFolderName)}&name=${encodeURIComponent(name)}&text=${encodeURIComponent(text)}`;
                 const res  = await fetch(url);
                 const data = await res.json();
                 if (data.status === 'success') {

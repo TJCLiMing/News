@@ -22,15 +22,16 @@ function doGet(e) {
   }
 
   if (e && e.parameter && e.parameter.mode === 'addComment') {
-    const folderId = e.parameter.folderId || '';
-    const name     = e.parameter.name    || '';
-    const text     = e.parameter.text    || '';
+    const folderId   = e.parameter.folderId   || '';
+    const folderName = e.parameter.folderName || '';
+    const name       = e.parameter.name       || '';
+    const text       = e.parameter.text       || '';
     if (!text) {
       return ContentService
         .createTextOutput(JSON.stringify({ status: 'error', message: '內容不得為空' }))
         .setMimeType(ContentService.MimeType.JSON);
     }
-    const result = addComment(folderId, name, text);
+    const result = addComment(folderId, folderName, name, text);
     return ContentService
       .createTextOutput(JSON.stringify(result))
       .setMimeType(ContentService.MimeType.JSON);
@@ -202,7 +203,7 @@ function getComments(folderId) {
 /**
  * 新增一則心得留言
  */
-function addComment(folderId, name, text) {
+function addComment(folderId, folderName, name, text) {
   try {
     const props   = PropertiesService.getScriptProperties();
     const sheetId = props.getProperty('FEEDBACK_SHEET_ID');
@@ -210,13 +211,13 @@ function addComment(folderId, name, text) {
 
     const sheet = SpreadsheetApp.openById(sheetId).getSheets()[0];
     sheet.appendRow([
-      new Date(),       // A 時間戳記
-      '活動相簿心得',    // B 類別
-      '',               // C 日期
-      name || '匿名',   // D 姓名
-      text,             // E 內容
-      '',               // F 有檔案也可以傳
-      folderId          // G 相簿ID
+      new Date(),              // A 時間戳記
+      folderName || '活動相簿', // B 類別（相簿名稱）
+      '',                      // C 日期
+      name || '匿名',           // D 姓名
+      text,                    // E 內容
+      '',                      // F 有檔案也可以傳
+      folderId                 // G 相簿ID
     ]);
 
     // 清除該資料夾快取，讓下次讀取重新撈最新資料
