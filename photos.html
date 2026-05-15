@@ -395,7 +395,7 @@
         // ── 初始化資料夾清單 ──
         async function initFolders() {
             const folders = await driveList(
-                `'${ROOT_ID}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`
+                `'${ROOT_ID}' in parents and trashed=false`
             );
             const list = document.getElementById('folderList');
             if (!folders.length) {
