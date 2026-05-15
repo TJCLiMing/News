@@ -382,7 +382,10 @@
             let all = [], token = '';
             do {
                 const url = `${BASE_URL}?q=${encodeURIComponent(q)}&orderBy=name+desc&fields=nextPageToken,files(id,name,mimeType)&pageSize=200${token ? '&pageToken=' + token : ''}&key=${API_KEY}${extra}`;
-                const data = await fetch(url).then(r => r.json());
+                const res  = await fetch(url);
+                const data = await res.json();
+                console.log('[Drive API]', q, '→', data);
+                if (data.error) console.error('[Drive API 錯誤]', data.error);
                 all = all.concat(data.files || []);
                 token = data.nextPageToken || '';
             } while (token);
