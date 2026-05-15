@@ -121,6 +121,19 @@ function installKeepWarmTrigger() {
   Logger.log('keepWarm 觸發器已安裝');
 }
 
+// 執行這個函數來觸發授權（只需跑一次）
+function authorizeAll() {
+  const props = PropertiesService.getScriptProperties();
+  const sheetId = props.getProperty('FEEDBACK_SHEET_ID');
+  if (sheetId) {
+    const sheet = SpreadsheetApp.openById(sheetId);
+    Logger.log('授權成功，Sheet 名稱：' + sheet.getName());
+  } else {
+    Logger.log('FEEDBACK_SHEET_ID 尚未設定');
+  }
+  DriveApp.getRootFolder(); // 同時確保 Drive 權限
+}
+
 function setDeployTime() {
   const props = PropertiesService.getScriptProperties();
   const t = Utilities.formatDate(new Date(), "GMT+8", "yyyy-MM-dd HH:mm");
