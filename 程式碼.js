@@ -1,8 +1,16 @@
 /**
  * 網頁進入點
- * ?mode=api → 回傳 JSON（供 GitHub Pages 跨域呼叫）
+ * ?mode=api    → 活動快報 JSON
+ * ?mode=photos → 相簿完整結構 JSON（供 GitHub Actions 產生靜態 JSON 用）
  */
 function doGet(e) {
+  if (e && e.parameter && e.parameter.mode === 'photos') {
+    const data = getPhotosData();
+    return ContentService
+      .createTextOutput(JSON.stringify(data))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
   if (e && e.parameter && e.parameter.mode === 'api') {
     const props = PropertiesService.getScriptProperties();
     const cached = props.getProperty('CACHED_DATA');
@@ -123,4 +131,41 @@ function fetchFiles(folderId, type, targetMonths = []) {
     }
   }
   return type === 'poster' ? results.sort((a, b) => a.date - b.date) : results.sort((a, b) => a.name.localeCompare(b.name));
+}
+
+/**
+ * 相簿完整結構（資料夾 + 檔案），供 GitHub Actions 產生靜態 JSON
+ */
+function getPhotosData() {
+  try {
+    const props = PropertiesService.getScriptProperties();
+    const rootId = props.getProperty('PHOTO_FOLDER_ID') || '12xTW7EdkKu4mPQead-0C7NTJT54gzZD3';
+    const root = DriveApp.getFolderById(rootId);
+
+    const folders = [];
+    const folderIter = root.getFolders();
+    while (folderIter.hasNext()) {
+      const folder = folderIter.next();
+      const files = [];
+      const fileIter = folder.getFiles();
+      while (fileIter.hasNext()) {
+        const file = fileIter.next();
+        const mime = file.getMimeType();
+        if (mime.startsWith('image/') || mime.startsWith('video/')) {
+          files.push({ id: file.getId(), name: file.getName(), mimeType: mime });
+        }
+      }
+      files.sort((a, b) => b.name.localeCompare(a.name));
+      folders.push({ id: folder.getId(), name: folder.getName(), files });
+    }
+    folders.sort((a, b) => b.name.localeCompare(a.name));
+
+    return {
+      folders,
+      updatedAt: Utilities.formatDate(new Date(), 'GMT+8', 'yyyy-MM-dd HH:mm'),
+      status: 'success'
+    };
+  } catch (e) {
+    return { status: 'error', message: e.toString() };
+  }
 }

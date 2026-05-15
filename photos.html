@@ -317,7 +317,14 @@
             </svg>
         </button>
         <h1>🌸 黎明相簿</h1>
-        <a href="index.html" class="back-link">← 回到活動快報</a>
+        <span id="updatedAt" style="margin-left:10px; font-size:0.78rem; color:#ccc;"></span>
+        <a href="https://github.com/TJCLiMing/News/actions/workflows/update-photos.yml"
+           target="_blank"
+           title="手動更新相簿資料"
+           style="margin-left:auto; background:#f0f7ff; border:1.5px solid #d0e7ff; color:#4a90e2; padding:6px 14px; border-radius:20px; font-size:0.82rem; text-decoration:none; white-space:nowrap;">
+           🔄 重新整理
+        </a>
+        <a href="index.html" class="back-link" style="margin-left:12px;">← 活動快報</a>
     </header>
 
     <div class="overlay" id="overlay"></div>
@@ -358,10 +365,6 @@
             }
         })();
 
-        const API_KEY   = 'AIzaSyCSDEHp-beHyJ21gepZ4hONAoS3MFXZ4so';
-        const ROOT_ID   = '12xTW7EdkKu4mPQead-0C7NTJT54gzZD3';
-        const BASE_URL  = 'https://www.googleapis.com/drive/v3/files';
-
         // ── Hamburger ──
         const hamburger = document.getElementById('hamburger');
         const sidebar   = document.getElementById('sidebar');
@@ -377,79 +380,70 @@
             overlay.classList.remove('on');
         }
 
-        // ── Drive API helpers ──
-        async function driveList(q, extra = '') {
-            let all = [], token = '';
-            do {
-                const url = `${BASE_URL}?q=${encodeURIComponent(q)}&orderBy=name+desc&fields=nextPageToken,files(id,name,mimeType)&pageSize=200${token ? '&pageToken=' + token : ''}&key=${API_KEY}${extra}`;
-                const res  = await fetch(url);
-                const data = await res.json();
-                console.log('[Drive API]', q, '→', data);
-                if (data.error) console.error('[Drive API 錯誤]', data.error);
-                all = all.concat(data.files || []);
-                token = data.nextPageToken || '';
-            } while (token);
-            return all;
-        }
+        // ── 讀取靜態 JSON ──
+        let allFolders = [];
 
-        // ── 初始化資料夾清單 ──
-        async function initFolders() {
-            const folders = await driveList(
-                `'${ROOT_ID}' in parents and trashed=false`
-            );
+        async function init() {
             const list = document.getElementById('folderList');
-            if (!folders.length) {
-                list.innerHTML = '<div style="padding:16px; color:#ccc; font-size:0.9rem;">沒有資料夾</div>';
-                return;
-            }
-            list.innerHTML = folders.map(f =>
-                `<div class="folder-item" data-id="${f.id}" data-name="${escHtml(f.name)}">
-                    <span>📁</span><span>${escHtml(f.name)}</span>
-                </div>`
-            ).join('');
+            try {
+                const data = await fetch('photos-data.json?t=' + Date.now()).then(r => r.json());
 
-            list.querySelectorAll('.folder-item').forEach(item => {
-                item.addEventListener('click', () => {
-                    list.querySelectorAll('.folder-item').forEach(i => i.classList.remove('active'));
-                    item.classList.add('active');
-                    loadFolder(item.dataset.id, item.dataset.name);
-                    closeSidebar();
+                if (data.status === 'error') {
+                    list.innerHTML = `<div style="padding:16px; color:#f66; font-size:0.85rem;">❌ ${data.message}</div>`;
+                    return;
+                }
+
+                allFolders = data.folders || [];
+                document.getElementById('updatedAt').textContent = data.updatedAt ? `更新：${data.updatedAt}` : '';
+
+                if (!allFolders.length) {
+                    list.innerHTML = '<div style="padding:16px; color:#ccc; font-size:0.9rem;">沒有相簿資料</div>';
+                    return;
+                }
+
+                list.innerHTML = allFolders.map((f, i) =>
+                    `<div class="folder-item" data-idx="${i}">
+                        <span>📁</span><span>${escHtml(f.name)}</span>
+                    </div>`
+                ).join('');
+
+                list.querySelectorAll('.folder-item').forEach(item => {
+                    item.addEventListener('click', () => {
+                        list.querySelectorAll('.folder-item').forEach(i => i.classList.remove('active'));
+                        item.classList.add('active');
+                        renderFolder(parseInt(item.dataset.idx));
+                        closeSidebar();
+                    });
                 });
-            });
+
+            } catch (e) {
+                list.innerHTML = '<div style="padding:16px; color:#f66; font-size:0.85rem;">❌ 資料尚未產生，請按「🔄 重新整理」</div>';
+            }
         }
 
-        // ── 載入資料夾內容 ──
-        async function loadFolder(folderId, folderName) {
+        // ── 渲染資料夾內容（直接從 JSON，不需要 API）──
+        function renderFolder(idx) {
+            const folder   = allFolders[idx];
             const grid     = document.getElementById('photoGrid');
             const hintMsg  = document.getElementById('hintMsg');
             const emptyMsg = document.getElementById('emptyMsg');
             const header   = document.getElementById('contentHeader');
 
             grid.innerHTML = '';
-            hintMsg.textContent = '⏳ 載入中...';
-            hintMsg.style.display = 'block';
-            emptyMsg.style.display = 'none';
-            header.style.display = 'none';
-
-            const files = await driveList(
-                `'${folderId}' in parents and trashed=false`
-            );
-            const media = files.filter(f =>
-                f.mimeType.startsWith('image/') || f.mimeType.startsWith('video/')
-            );
-
             hintMsg.style.display = 'none';
+            emptyMsg.style.display = 'none';
 
-            if (!media.length) {
+            if (!folder.files || !folder.files.length) {
                 emptyMsg.style.display = 'block';
+                header.style.display = 'none';
                 return;
             }
 
-            document.getElementById('folderTitle').textContent = folderName;
-            document.getElementById('fileCount').textContent   = `共 ${media.length} 個檔案`;
+            document.getElementById('folderTitle').textContent = folder.name;
+            document.getElementById('fileCount').textContent   = `共 ${folder.files.length} 個檔案`;
             header.style.display = 'block';
 
-            media.forEach((file, index) => {
+            folder.files.forEach((file, index) => {
                 const el = document.createElement('div');
                 if (file.mimeType.startsWith('video/')) {
                     el.className = 'video-item';
@@ -462,7 +456,7 @@
                     el.className = 'photo-item';
                     el.innerHTML = `<img src="https://drive.google.com/thumbnail?sz=w400&id=${file.id}" alt="${escHtml(file.name)}" loading="lazy">`;
                 }
-                el.addEventListener('click', () => openLightbox(media, index));
+                el.addEventListener('click', () => openLightbox(folder.files, index));
                 grid.appendChild(el);
             });
         }
@@ -497,8 +491,8 @@
         }
 
         document.getElementById('lbClose').addEventListener('click', closeLightbox);
-        document.getElementById('lbPrev').addEventListener('click', () => { lbIdx = (lbIdx - 1 + lbItems.length) % lbItems.length; renderLb(); });
-        document.getElementById('lbNext').addEventListener('click', () => { lbIdx = (lbIdx + 1) % lbItems.length; renderLb(); });
+        document.getElementById('lbPrev').addEventListener('click',  () => { lbIdx = (lbIdx - 1 + lbItems.length) % lbItems.length; renderLb(); });
+        document.getElementById('lbNext').addEventListener('click',  () => { lbIdx = (lbIdx + 1) % lbItems.length; renderLb(); });
         document.getElementById('lightbox').addEventListener('click', e => { if (e.target === e.currentTarget) closeLightbox(); });
         document.addEventListener('keydown', e => {
             if (!document.getElementById('lightbox').classList.contains('on')) return;
@@ -511,7 +505,7 @@
             return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
         }
 
-        initFolders();
+        init();
     </script>
 </body>
 </html>

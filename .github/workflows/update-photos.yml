@@ -1,0 +1,30 @@
+name: 更新相簿資料
+
+on:
+  schedule:
+    - cron: '0 16 * * *'   # 每天台灣時間凌晨 00:00（UTC 16:00）
+  workflow_dispatch:         # 手動觸發按鈕
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: 從 GAS 取得相簿資料
+        run: |
+          curl -L \
+            "https://script.google.com/macros/s/AKfycbzWzh7mEl9wt7ehw7SWLQpwpJlbRB6AoDhSiFSex7YC2sp92ceICPct4AO64LiyN8lbPg/exec?mode=photos" \
+            -o photos-data.json
+          echo "取得完成，檔案大小："
+          wc -c photos-data.json
+
+      - name: Commit & Push
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add photos-data.json
+          git diff --staged --quiet && echo "資料無變動，略過 commit" || \
+          git commit -m "chore: update photos-data.json [skip ci]"
+          git push
