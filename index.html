@@ -359,6 +359,20 @@
                 <a href="https://tjclimin20.my.canva.site/singlepageweb?openExternalBrowser=1" target="_blank" class="btn" style="background: #9c27b0; box-shadow: 0 4px 0px #7b1fa2;">查看</a>
             </div>
 
+            <div class="card is-visible work-card" style="background: #fff0f4; border-color: #ffc8d8;">
+                <div>
+                    <h3>
+                        <svg class="icon" viewBox="0 0 24 24" style="color: #e91e8c;"><path d="M20 5h-3.17L15 3H9L7.17 5H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm-8 13c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+                        活動照片
+                    </h3>
+                    <div class="desc-text">瀏覽歷次活動的精彩照片與影片<br><em style="color:#bbb; font-size:0.82rem;">每天晚上自動同步</em><br><br><em style="color:#aaa; font-size:0.9rem;">「這是耶和華所定的日子，<br>我們在其中要高興歡喜。」<br>— 詩篇 118:24</em></div>
+                </div>
+                <div style="display:flex; flex-direction:column; align-items:center; gap:10px; width:100%;">
+                    <a href="photos.html" target="_blank" class="btn" style="background: #e91e8c; box-shadow: 0 4px 0px #c2185b; width:100%; text-align:center;">查看相簿</a>
+                    <button onclick="adminUpdate()" style="background:none; border:none; color:#ccc; font-size:0.78rem; cursor:pointer; text-decoration:underline;">管理員更新</button>
+                </div>
+            </div>
+
         </div>
 
         <div class="section-divider" id="schedule">月份安排表</div>
@@ -487,6 +501,16 @@
                 grid.appendChild(div);
                 observer.observe(div);
             });
+        }
+        // ── 管理員更新（密碼保護）──
+        function adminUpdate() {
+            const pw = prompt('請輸入管理員密碼：');
+            if (pw === null) return; // 取消
+            if (pw === '52399254') {
+                window.open('https://github.com/TJCLiMing/News/actions/workflows/update-photos.yml', '_blank');
+            } else {
+                alert('密碼錯誤');
+            }
         }
     </script>
 </body>
