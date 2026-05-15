@@ -1,13 +1,38 @@
 /**
  * 網頁進入點
- * ?mode=api    → 活動快報 JSON
- * ?mode=photos → 相簿完整結構 JSON（供 GitHub Actions 產生靜態 JSON 用）
+ * ?mode=api          → 活動快報 JSON
+ * ?mode=photos       → 相簿完整結構 JSON（供 GitHub Actions 產生靜態 JSON 用）
+ * ?mode=getComments&folderId=xxx → 取得指定相簿心得
+ * ?mode=addComment&folderId=xxx&name=xxx&text=xxx → 新增心得
  */
 function doGet(e) {
   if (e && e.parameter && e.parameter.mode === 'photos') {
     const data = getPhotosData();
     return ContentService
       .createTextOutput(JSON.stringify(data))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  if (e && e.parameter && e.parameter.mode === 'getComments') {
+    const folderId = e.parameter.folderId || '';
+    const comments = getComments(folderId);
+    return ContentService
+      .createTextOutput(JSON.stringify({ status: 'success', comments }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  if (e && e.parameter && e.parameter.mode === 'addComment') {
+    const folderId = e.parameter.folderId || '';
+    const name     = e.parameter.name    || '';
+    const text     = e.parameter.text    || '';
+    if (!text) {
+      return ContentService
+        .createTextOutput(JSON.stringify({ status: 'error', message: '內容不得為空' }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+    const result = addComment(folderId, name, text);
+    return ContentService
+      .createTextOutput(JSON.stringify(result))
       .setMimeType(ContentService.MimeType.JSON);
   }
 
@@ -131,6 +156,77 @@ function fetchFiles(folderId, type, targetMonths = []) {
     }
   }
   return type === 'poster' ? results.sort((a, b) => a.date - b.date) : results.sort((a, b) => a.name.localeCompare(b.name));
+}
+
+/**
+ * 取得指定相簿的心得留言（有快取）
+ */
+function getComments(folderId) {
+  try {
+    const props = PropertiesService.getScriptProperties();
+    const cacheKey = 'COMMENTS_' + folderId;
+    const cached = props.getProperty(cacheKey);
+    if (cached) {
+      Logger.log('[getComments] 快取命中 folderId=' + folderId);
+      return JSON.parse(cached);
+    }
+
+    const sheetId = props.getProperty('FEEDBACK_SHEET_ID');
+    if (!sheetId) return [];
+
+    const sheet = SpreadsheetApp.openById(sheetId).getSheets()[0];
+    const data  = sheet.getDataRange().getValues();
+    const comments = [];
+
+    for (let i = 1; i < data.length; i++) {
+      const row = data[i];
+      if (String(row[6]) === String(folderId) && row[4]) {
+        comments.push({
+          name: row[3] || '匿名',
+          date: Utilities.formatDate(new Date(row[0]), 'GMT+8', 'yyyy-MM-dd HH:mm'),
+          text: String(row[4])
+        });
+      }
+    }
+    comments.reverse(); // 最新在最上面
+
+    props.setProperty(cacheKey, JSON.stringify(comments));
+    Logger.log('[getComments] 查詢完成，共 ' + comments.length + ' 則');
+    return comments;
+  } catch(e) {
+    Logger.log('[getComments] 錯誤：' + e);
+    return [];
+  }
+}
+
+/**
+ * 新增一則心得留言
+ */
+function addComment(folderId, name, text) {
+  try {
+    const props   = PropertiesService.getScriptProperties();
+    const sheetId = props.getProperty('FEEDBACK_SHEET_ID');
+    if (!sheetId) throw new Error('未設定 FEEDBACK_SHEET_ID');
+
+    const sheet = SpreadsheetApp.openById(sheetId).getSheets()[0];
+    sheet.appendRow([
+      new Date(),       // A 時間戳記
+      '活動相簿心得',    // B 類別
+      '',               // C 日期
+      name || '匿名',   // D 姓名
+      text,             // E 內容
+      '',               // F 有檔案也可以傳
+      folderId          // G 相簿ID
+    ]);
+
+    // 清除該資料夾快取，讓下次讀取重新撈最新資料
+    props.deleteProperty('COMMENTS_' + folderId);
+    Logger.log('[addComment] 成功 folderId=' + folderId);
+    return { status: 'success' };
+  } catch(e) {
+    Logger.log('[addComment] 錯誤：' + e);
+    return { status: 'error', message: e.toString() };
+  }
 }
 
 /**

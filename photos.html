@@ -694,7 +694,8 @@
             document.querySelectorAll('.folder-item').forEach(i => i.classList.remove('active'));
             const item = document.querySelector(`.folder-item[data-idx="${idx}"]`);
             if (item) item.classList.add('active');
-            history.replaceState(null, '', '#' + encodeURIComponent(allFolders[idx].id));
+            currentFolderId = allFolders[idx].id;
+            history.replaceState(null, '', '#' + encodeURIComponent(currentFolderId));
             renderFolder(idx);
         }
 
@@ -804,20 +805,14 @@
             return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
         }
 
-        // ── 心得面板（模擬） ──
+        // ── 心得面板 ──
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbzWzh7mEl9wt7ehw7SWLQpwpJlbRB6AoDhSiFSex7YC2sp92ceICPct4AO64LiyN8lbPg/exec';
         let currentFolderName = '';
-
-        // 模擬資料（之後換成 GAS API）
-        const MOCK_COMMENTS = [
-            { name: '大衛', date: '2026-05-15 20:32', text: '這次活動真的很感動，謝謝弟兄姊妹的分享！' },
-            { name: '以斯帖', date: '2026-05-15 21:10', text: '照片拍得很好，每一張都充滿了愛❤️\n下次還要一起參加！' },
-            { name: '匿名', date: '2026-05-16 08:45', text: '感謝主，有這樣的團契真是祝福。' },
-        ];
+        let currentFolderId   = '';
 
         function openComments() {
-            const panel = document.getElementById('commentPanel');
             document.getElementById('cpFolderName').textContent = currentFolderName;
-            panel.classList.add('on');
+            document.getElementById('commentPanel').classList.add('on');
             loadComments();
         }
 
@@ -825,17 +820,18 @@
             document.getElementById('commentPanel').classList.remove('on');
         }
 
-        function loadComments() {
+        async function loadComments() {
             const list = document.getElementById('cpList');
             list.innerHTML = '<div class="cp-loading">載入中…</div>';
-
-            // 模擬 1 秒網路延遲
-            setTimeout(() => {
-                if (!MOCK_COMMENTS.length) {
-                    list.innerHTML = '<div class="cp-empty">還沒有心得，成為第一個留言的人吧！</div>';
+            try {
+                const res  = await fetch(`${GAS_URL}?mode=getComments&folderId=${encodeURIComponent(currentFolderId)}`);
+                const data = await res.json();
+                const comments = data.comments || [];
+                if (!comments.length) {
+                    list.innerHTML = '<div class="cp-empty">還沒有心得，成為第一個留言的人吧！✨</div>';
                     return;
                 }
-                list.innerHTML = MOCK_COMMENTS.map(c => `
+                list.innerHTML = comments.map(c => `
                     <div class="comment-item">
                         <div class="ci-top">
                             <span class="ci-name">${escHtml(c.name || '匿名')}</span>
@@ -844,10 +840,12 @@
                         <div class="ci-text">${escHtml(c.text)}</div>
                     </div>
                 `).join('');
-            }, 1000);
+            } catch(e) {
+                list.innerHTML = '<div class="cp-empty">載入失敗，請稍後再試</div>';
+            }
         }
 
-        function submitComment() {
+        async function submitComment() {
             const name = document.getElementById('cpName').value.trim();
             const text = document.getElementById('cpText').value.trim();
             if (!text) { alert('請輸入心得內容'); return; }
@@ -856,19 +854,23 @@
             btn.disabled = true;
             btn.textContent = '送出中…';
 
-            // 模擬送出
-            setTimeout(() => {
-                MOCK_COMMENTS.unshift({
-                    name: name || '匿名',
-                    date: new Date().toLocaleString('zh-TW', { hour12: false }).replace(/\//g, '-').slice(0, 16),
-                    text
-                });
-                document.getElementById('cpName').value = '';
-                document.getElementById('cpText').value = '';
+            try {
+                const url = `${GAS_URL}?mode=addComment&folderId=${encodeURIComponent(currentFolderId)}&name=${encodeURIComponent(name)}&text=${encodeURIComponent(text)}`;
+                const res  = await fetch(url);
+                const data = await res.json();
+                if (data.status === 'success') {
+                    document.getElementById('cpName').value = '';
+                    document.getElementById('cpText').value = '';
+                    loadComments(); // 重新讀取（快取已清除）
+                } else {
+                    alert('送出失敗：' + (data.message || '未知錯誤'));
+                }
+            } catch(e) {
+                alert('網路錯誤，請稍後再試');
+            } finally {
                 btn.disabled = false;
                 btn.textContent = '送出心得';
-                loadComments();
-            }, 800);
+            }
         }
 
         // ── 分享目前資料夾連結 ──
