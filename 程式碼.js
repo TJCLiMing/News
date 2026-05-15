@@ -177,14 +177,7 @@ function fetchFiles(folderId, type, targetMonths = []) {
  */
 function getComments(folderId) {
   try {
-    const props = PropertiesService.getScriptProperties();
-    const cacheKey = 'COMMENTS_' + folderId;
-    const cached = props.getProperty(cacheKey);
-    if (cached) {
-      Logger.log('[getComments] 快取命中 folderId=' + folderId);
-      return JSON.parse(cached);
-    }
-
+    const props   = PropertiesService.getScriptProperties();
     const sheetId = props.getProperty('FEEDBACK_SHEET_ID');
     if (!sheetId) return [];
 
@@ -202,9 +195,7 @@ function getComments(folderId) {
         });
       }
     }
-    comments.reverse(); // 最新在最上面
-
-    props.setProperty(cacheKey, JSON.stringify(comments));
+    comments.reverse();
     Logger.log('[getComments] 查詢完成，共 ' + comments.length + ' 則');
     return comments;
   } catch(e) {
@@ -233,8 +224,6 @@ function addComment(folderId, folderName, name, text) {
       folderId                 // G 相簿ID
     ]);
 
-    // 清除該資料夾快取，讓下次讀取重新撈最新資料
-    props.deleteProperty('COMMENTS_' + folderId);
     Logger.log('[addComment] 成功 folderId=' + folderId);
     return { status: 'success' };
   } catch(e) {
