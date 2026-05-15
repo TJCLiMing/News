@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>黎明相簿</title>
+    <link rel="icon" type="image/png" href="logo_10th.png">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #FF92A9;
+            --secondary: #FFD93D;
+            --accent: #6BCB77;
+            --sidebar-bg: #fff5f7;
+            --sidebar-width: 220px;
+            --text: #4D4D4D;
+            --header-h: 60px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background: #f8f9fa;
+            color: var(--text);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* ── Header ── */
+        header {
+            background: white;
+            border-bottom: 2px solid #ffe0e8;
+            padding: 0 20px;
+            height: var(--header-h);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-shrink: 0;
+            box-shadow: 0 2px 10px rgba(255,146,169,0.12);
+            z-index: 100;
+        }
+
+        .hamburger {
+            display: none;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 6px;
+            color: var(--primary);
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+        .hamburger:hover { background: #ffe8ee; }
+
+        header h1 {
+            font-size: 1.25rem;
+            color: var(--text);
+            font-weight: 700;
+        }
+
+        .back-link {
+            margin-left: auto;
+            color: #bbb;
+            text-decoration: none;
+            font-size: 0.88rem;
+            transition: color 0.2s;
+        }
+        .back-link:hover { color: var(--primary); }
+
+        /* ── Layout ── */
+        .layout {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* ── Sidebar ── */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--sidebar-bg);
+            border-right: 2px solid #ffe0e8;
+            overflow-y: auto;
+            flex-shrink: 0;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-title {
+            padding: 18px 16px 8px;
+            font-size: 0.7rem;
+            color: #ccc;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
+
+        .folder-item {
+            padding: 11px 16px;
+            cursor: pointer;
+            border-left: 3px solid transparent;
+            transition: all 0.18s;
+            font-size: 0.92rem;
+            color: #666;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            word-break: break-all;
+        }
+        .folder-item:hover { background: #ffe8ee; color: var(--primary); }
+        .folder-item.active {
+            border-left-color: var(--primary);
+            background: #fff0f4;
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        /* ── Content ── */
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+        }
+
+        .content-header {
+            margin-bottom: 20px;
+            display: none;
+        }
+        .content-header h2 { font-size: 1.35rem; }
+        .content-header small { color: #aaa; font-size: 0.83rem; }
+
+        /* ── Photo Grid (masonry) ── */
+        .photo-grid {
+            columns: 4 180px;
+            gap: 10px;
+        }
+
+        .photo-item, .video-item {
+            break-inside: avoid;
+            margin-bottom: 10px;
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .photo-item:hover, .video-item:hover {
+            transform: scale(1.025);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+        }
+
+        .photo-item img {
+            width: 100%;
+            height: auto;
+            display: block;
+            background: #eee;
+        }
+
+        .video-item {
+            background: #1a1a2e;
+            aspect-ratio: 16/9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        .play-btn {
+            width: 52px;
+            height: 52px;
+            background: rgba(255,255,255,0.88);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        .play-btn svg { width: 26px; height: 26px; fill: var(--primary); margin-left: 3px; }
+        .video-label {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            padding: 8px 10px;
+            background: linear-gradient(transparent, rgba(0,0,0,0.65));
+            color: white;
+            font-size: 0.78rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* ── Status messages ── */
+        .msg {
+            text-align: center;
+            padding: 70px 20px;
+            color: #bbb;
+            font-size: 1.05rem;
+        }
+
+        /* ── Lightbox ── */
+        .lightbox {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.93);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .lightbox.on { display: flex; }
+
+        .lb-content {
+            position: relative;
+            max-width: 90vw;
+            max-height: 90vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .lb-content img {
+            max-width: 88vw;
+            max-height: 84vh;
+            object-fit: contain;
+            border-radius: 8px;
+            display: block;
+        }
+        .lb-content iframe {
+            width: 78vw;
+            height: 43.875vw; /* 16:9 */
+            max-height: 80vh;
+            border: none;
+            border-radius: 8px;
+        }
+
+        .lb-close {
+            position: fixed;
+            top: 18px; right: 22px;
+            background: rgba(255,255,255,0.12);
+            border: none;
+            color: white;
+            font-size: 1.6rem;
+            cursor: pointer;
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            transition: background 0.2s;
+        }
+        .lb-close:hover { background: rgba(255,255,255,0.25); }
+
+        .lb-nav {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255,255,255,0.12);
+            border: none;
+            color: white;
+            font-size: 2rem;
+            cursor: pointer;
+            padding: 14px 18px;
+            border-radius: 10px;
+            transition: background 0.2s;
+            line-height: 1;
+        }
+        .lb-nav:hover { background: rgba(255,255,255,0.25); }
+        .lb-prev { left: 14px; }
+        .lb-next { right: 14px; }
+
+        .lb-caption {
+            position: fixed;
+            bottom: 18px;
+            left: 50%; transform: translateX(-50%);
+            color: rgba(255,255,255,0.6);
+            font-size: 0.85rem;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        /* ── Mobile overlay ── */
+        .overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.38);
+            z-index: 50;
+        }
+        .overlay.on { display: block; }
+
+        /* ── RWD ── */
+        @media (max-width: 768px) {
+            .hamburger { display: flex; }
+
+            .sidebar {
+                position: fixed;
+                left: 0;
+                top: var(--header-h);
+                bottom: 0;
+                z-index: 60;
+                transform: translateX(-100%);
+                width: 250px;
+                box-shadow: 4px 0 20px rgba(0,0,0,0.12);
+            }
+            .sidebar.on { transform: translateX(0); }
+
+            .content { padding: 16px; }
+            .photo-grid { columns: 2 130px; gap: 8px; }
+
+            .lb-nav { padding: 10px 13px; font-size: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <button class="hamburger" id="hamburger" aria-label="選單">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                <line x1="3" y1="6" x2="21" y2="6"/>
+                <line x1="3" y1="12" x2="21" y2="12"/>
+                <line x1="3" y1="18" x2="21" y2="18"/>
+            </svg>
+        </button>
+        <h1>🌸 黎明相簿</h1>
+        <a href="index.html" class="back-link">← 回到活動快報</a>
+    </header>
+
+    <div class="overlay" id="overlay"></div>
+
+    <div class="layout">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-title">活動相簿</div>
+            <div id="folderList"><div class="msg" style="padding:20px; font-size:0.9rem;">載入中...</div></div>
+        </aside>
+
+        <main class="content">
+            <div class="content-header" id="contentHeader">
+                <h2 id="folderTitle"></h2>
+                <small id="fileCount"></small>
+            </div>
+            <div class="photo-grid" id="photoGrid"></div>
+            <div class="msg" id="emptyMsg" style="display:none;">📭 這個資料夾沒有照片或影片</div>
+            <div class="msg" id="hintMsg">← 請選擇左側活動相簿</div>
+        </main>
+    </div>
+
+    <!-- Lightbox -->
+    <div class="lightbox" id="lightbox">
+        <button class="lb-close" id="lbClose">✕</button>
+        <button class="lb-nav lb-prev" id="lbPrev">‹</button>
+        <div class="lb-content" id="lbContent"></div>
+        <button class="lb-nav lb-next" id="lbNext">›</button>
+        <div class="lb-caption" id="lbCaption"></div>
+    </div>
+
+    <script>
+        // LINE 強制跳轉
+        (function() {
+            var ua = navigator.userAgent;
+            if (ua.indexOf('Line') > -1 && window.location.href.indexOf('openExternalBrowser=1') === -1) {
+                var url = window.location.href;
+                window.location.href = url + (url.indexOf('?') > -1 ? '&' : '?') + 'openExternalBrowser=1';
+            }
+        })();
+
+        const API_KEY   = 'AIzaSyCSDEHp-beHyJ21gepZ4hONAoS3MFXZ4so';
+        const ROOT_ID   = '12xTW7EdkKu4mPQead-0C7NTJT54gzZD3';
+        const BASE_URL  = 'https://www.googleapis.com/drive/v3/files';
+
+        // ── Hamburger ──
+        const hamburger = document.getElementById('hamburger');
+        const sidebar   = document.getElementById('sidebar');
+        const overlay   = document.getElementById('overlay');
+
+        hamburger.addEventListener('click', () => {
+            sidebar.classList.toggle('on');
+            overlay.classList.toggle('on');
+        });
+        overlay.addEventListener('click', closeSidebar);
+        function closeSidebar() {
+            sidebar.classList.remove('on');
+            overlay.classList.remove('on');
+        }
+
+        // ── Drive API helpers ──
+        async function driveList(q, extra = '') {
+            let all = [], token = '';
+            do {
+                const url = `${BASE_URL}?q=${encodeURIComponent(q)}&orderBy=name+desc&fields=nextPageToken,files(id,name,mimeType)&pageSize=200${token ? '&pageToken=' + token : ''}&key=${API_KEY}${extra}`;
+                const data = await fetch(url).then(r => r.json());
+                all = all.concat(data.files || []);
+                token = data.nextPageToken || '';
+            } while (token);
+            return all;
+        }
+
+        // ── 初始化資料夾清單 ──
+        async function initFolders() {
+            const folders = await driveList(
+                `'${ROOT_ID}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`
+            );
+            const list = document.getElementById('folderList');
+            if (!folders.length) {
+                list.innerHTML = '<div style="padding:16px; color:#ccc; font-size:0.9rem;">沒有資料夾</div>';
+                return;
+            }
+            list.innerHTML = folders.map(f =>
+                `<div class="folder-item" data-id="${f.id}" data-name="${escHtml(f.name)}">
+                    <span>📁</span><span>${escHtml(f.name)}</span>
+                </div>`
+            ).join('');
+
+            list.querySelectorAll('.folder-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    list.querySelectorAll('.folder-item').forEach(i => i.classList.remove('active'));
+                    item.classList.add('active');
+                    loadFolder(item.dataset.id, item.dataset.name);
+                    closeSidebar();
+                });
+            });
+        }
+
+        // ── 載入資料夾內容 ──
+        async function loadFolder(folderId, folderName) {
+            const grid     = document.getElementById('photoGrid');
+            const hintMsg  = document.getElementById('hintMsg');
+            const emptyMsg = document.getElementById('emptyMsg');
+            const header   = document.getElementById('contentHeader');
+
+            grid.innerHTML = '';
+            hintMsg.textContent = '⏳ 載入中...';
+            hintMsg.style.display = 'block';
+            emptyMsg.style.display = 'none';
+            header.style.display = 'none';
+
+            const files = await driveList(
+                `'${folderId}' in parents and trashed=false`
+            );
+            const media = files.filter(f =>
+                f.mimeType.startsWith('image/') || f.mimeType.startsWith('video/')
+            );
+
+            hintMsg.style.display = 'none';
+
+            if (!media.length) {
+                emptyMsg.style.display = 'block';
+                return;
+            }
+
+            document.getElementById('folderTitle').textContent = folderName;
+            document.getElementById('fileCount').textContent   = `共 ${media.length} 個檔案`;
+            header.style.display = 'block';
+
+            media.forEach((file, index) => {
+                const el = document.createElement('div');
+                if (file.mimeType.startsWith('video/')) {
+                    el.className = 'video-item';
+                    el.innerHTML = `
+                        <div class="play-btn">
+                            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                        </div>
+                        <div class="video-label">${escHtml(file.name)}</div>`;
+                } else {
+                    el.className = 'photo-item';
+                    el.innerHTML = `<img src="https://drive.google.com/thumbnail?sz=w400&id=${file.id}" alt="${escHtml(file.name)}" loading="lazy">`;
+                }
+                el.addEventListener('click', () => openLightbox(media, index));
+                grid.appendChild(el);
+            });
+        }
+
+        // ── Lightbox ──
+        let lbItems = [], lbIdx = 0;
+
+        function openLightbox(items, index) {
+            lbItems = items;
+            lbIdx   = index;
+            renderLb();
+            document.getElementById('lightbox').classList.add('on');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeLightbox() {
+            document.getElementById('lightbox').classList.remove('on');
+            document.getElementById('lbContent').innerHTML = '';
+            document.body.style.overflow = '';
+        }
+
+        function renderLb() {
+            const item    = lbItems[lbIdx];
+            const content = document.getElementById('lbContent');
+            const caption = document.getElementById('lbCaption');
+            if (item.mimeType.startsWith('video/')) {
+                content.innerHTML = `<iframe src="https://drive.google.com/file/d/${item.id}/preview" allowfullscreen></iframe>`;
+            } else {
+                content.innerHTML = `<img src="https://drive.google.com/uc?export=view&id=${item.id}" alt="${escHtml(item.name)}">`;
+            }
+            caption.textContent = `${item.name}　${lbIdx + 1} / ${lbItems.length}`;
+        }
+
+        document.getElementById('lbClose').addEventListener('click', closeLightbox);
+        document.getElementById('lbPrev').addEventListener('click', () => { lbIdx = (lbIdx - 1 + lbItems.length) % lbItems.length; renderLb(); });
+        document.getElementById('lbNext').addEventListener('click', () => { lbIdx = (lbIdx + 1) % lbItems.length; renderLb(); });
+        document.getElementById('lightbox').addEventListener('click', e => { if (e.target === e.currentTarget) closeLightbox(); });
+        document.addEventListener('keydown', e => {
+            if (!document.getElementById('lightbox').classList.contains('on')) return;
+            if (e.key === 'Escape')      closeLightbox();
+            if (e.key === 'ArrowLeft')  { lbIdx = (lbIdx - 1 + lbItems.length) % lbItems.length; renderLb(); }
+            if (e.key === 'ArrowRight') { lbIdx = (lbIdx + 1) % lbItems.length; renderLb(); }
+        });
+
+        function escHtml(str) {
+            return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        initFolders();
+    </script>
+</body>
+</html>
