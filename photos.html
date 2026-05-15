@@ -94,6 +94,29 @@
             font-weight: 700;
             letter-spacing: 1.5px;
             text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .sidebar-upload-btn {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            font-size: 1.2rem;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            flex-shrink: 0;
+            box-shadow: 0 2px 6px rgba(233,30,140,0.35);
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+        .sidebar-upload-btn:hover {
+            transform: scale(1.15);
+            box-shadow: 0 4px 10px rgba(233,30,140,0.45);
         }
 
         .folder-item {
@@ -338,7 +361,10 @@
 
     <div class="layout">
         <aside class="sidebar" id="sidebar">
-            <div class="sidebar-title">活動相簿</div>
+            <div class="sidebar-title">
+                <span>活動相簿</span>
+                <a href="https://tjc-km.github.io/LimingUploader/?openExternalBrowser=1" target="_blank" class="sidebar-upload-btn" title="上傳照片">+</a>
+            </div>
             <div id="folderList"><div class="msg" style="padding:20px; font-size:0.9rem;">載入中...</div></div>
         </aside>
 
