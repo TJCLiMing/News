@@ -75,10 +75,12 @@
             background: none;
             border: none;
             color: #ccc;
-            font-size: 0.82rem;
+            font-size: 1.2rem;
             cursor: pointer;
-            white-space: nowrap;
-            padding: 4px 8px;
+            padding: 4px 6px;
+            line-height: 1;
+            border-radius: 6px;
+            transition: color 0.2s;
         }
         .header-admin:hover { color: var(--primary); }
 
@@ -379,7 +381,6 @@
         @media (max-width: 768px) {
             .hamburger { display: flex; }
             .header-updated { display: none; }
-            .header-admin { display: none; }
 
             .sidebar {
                 position: fixed;
@@ -413,7 +414,7 @@
         <h1>🌸 黎明相簿</h1>
         <span id="updatedAt" class="header-updated"></span>
         <div class="header-spacer"></div>
-        <button onclick="adminUpdate()" class="header-admin">⚙ 管理員更新</button>
+        <button onclick="adminUpdate()" class="header-admin" title="管理員更新">⚙</button>
         <a href="index.html" class="back-link">← 活動快報</a>
     </header>
 
