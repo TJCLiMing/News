@@ -354,7 +354,8 @@
         </button>
         <h1>🌸 黎明相簿</h1>
         <span id="updatedAt" style="margin-left:10px; font-size:0.78rem; color:#ccc;"></span>
-        <a href="index.html" class="back-link">← 活動快報</a>
+        <button onclick="adminUpdate()" style="margin-left:auto; background:none; border:none; color:#ccc; font-size:0.82rem; cursor:pointer;">⚙ 管理員更新</button>
+        <a href="index.html" class="back-link" style="margin-left:12px;">← 活動快報</a>
     </header>
 
     <div class="overlay" id="overlay"></div>
@@ -557,6 +558,17 @@
 
         function escHtml(str) {
             return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        // ── 管理員更新（密碼保護）──
+        function adminUpdate() {
+            const pw = prompt('請輸入管理員密碼：');
+            if (pw === null) return;
+            if (pw === '52399254') {
+                window.open('https://github.com/TJCLiMing/News/actions/workflows/update-photos.yml', '_blank');
+            } else {
+                alert('密碼錯誤');
+            }
         }
 
         init();

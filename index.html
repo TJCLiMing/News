@@ -367,10 +367,7 @@
                     </h3>
                     <div class="desc-text">瀏覽歷次活動的精彩照片與影片<br><em style="color:#bbb; font-size:0.82rem;">每天晚上自動同步</em><br><br><em style="color:#aaa; font-size:0.9rem;">「這是耶和華所定的日子，<br>我們在其中要高興歡喜。」<br>— 詩篇 118:24</em></div>
                 </div>
-                <div style="display:flex; flex-direction:column; align-items:center; gap:10px; width:100%;">
-                    <a href="photos.html" target="_blank" class="btn" style="background: #e91e8c; box-shadow: 0 4px 0px #c2185b; width:100%; text-align:center;">查看相簿</a>
-                    <button onclick="adminUpdate()" style="background:none; border:none; color:#ccc; font-size:0.78rem; cursor:pointer; text-decoration:underline;">管理員更新</button>
-                </div>
+                <a href="photos.html" target="_blank" class="btn" style="background: #e91e8c; box-shadow: 0 4px 0px #c2185b;">查看相簿</a>
             </div>
 
         </div>
@@ -501,16 +498,6 @@
                 grid.appendChild(div);
                 observer.observe(div);
             });
-        }
-        // ── 管理員更新（密碼保護）──
-        function adminUpdate() {
-            const pw = prompt('請輸入管理員密碼：');
-            if (pw === null) return; // 取消
-            if (pw === '52399254') {
-                window.open('https://github.com/TJCLiMing/News/actions/workflows/update-photos.yml', '_blank');
-            } else {
-                alert('密碼錯誤');
-            }
         }
     </script>
 </body>
