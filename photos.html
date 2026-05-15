@@ -211,6 +211,151 @@
         }
         .share-toast.show { opacity: 1; }
 
+        /* ── 心得面板 ── */
+        .comment-panel {
+            position: fixed;
+            top: var(--header-h);
+            right: 0;
+            bottom: 0;
+            width: 360px;
+            background: white;
+            border-left: 2px solid #ffe0e8;
+            box-shadow: -4px 0 20px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            z-index: 200;
+            transform: translateX(100%);
+            transition: transform 0.28s ease;
+        }
+        .comment-panel.on { transform: translateX(0); }
+
+        .cp-header {
+            padding: 16px 18px 12px;
+            border-bottom: 1px solid #ffe0e8;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+        .cp-header h3 { font-size: 1rem; flex: 1; color: var(--text); }
+        .cp-folder-name {
+            font-size: 0.78rem;
+            color: #aaa;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 160px;
+        }
+        .cp-close {
+            background: none;
+            border: none;
+            font-size: 1.3rem;
+            color: #bbb;
+            cursor: pointer;
+            padding: 2px 6px;
+            border-radius: 6px;
+        }
+        .cp-close:hover { background: #ffe8ee; color: var(--primary); }
+
+        .cp-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 14px 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        .cp-empty {
+            text-align: center;
+            color: #ccc;
+            font-size: 0.9rem;
+            padding: 40px 0;
+        }
+        .cp-loading {
+            text-align: center;
+            color: #ccc;
+            font-size: 0.88rem;
+            padding: 30px 0;
+        }
+        .comment-item {
+            background: #fff8fa;
+            border-radius: 12px;
+            padding: 12px 14px;
+            border: 1px solid #ffe8ee;
+        }
+        .comment-item .ci-top {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+        .comment-item .ci-name {
+            font-weight: 700;
+            font-size: 0.88rem;
+            color: var(--primary);
+        }
+        .comment-item .ci-date {
+            font-size: 0.75rem;
+            color: #ccc;
+        }
+        .comment-item .ci-text {
+            font-size: 0.9rem;
+            color: #555;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        .cp-form {
+            padding: 14px 18px;
+            border-top: 1px solid #ffe0e8;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex-shrink: 0;
+            background: #fff5f7;
+        }
+        .cp-form input, .cp-form textarea {
+            border: 1.5px solid #ffd0e0;
+            border-radius: 10px;
+            padding: 9px 12px;
+            font-family: inherit;
+            font-size: 0.88rem;
+            color: var(--text);
+            outline: none;
+            transition: border-color 0.2s;
+            background: white;
+        }
+        .cp-form input:focus, .cp-form textarea:focus { border-color: var(--primary); }
+        .cp-form textarea { resize: none; height: 72px; }
+        .cp-submit {
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 10px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        .cp-submit:hover { opacity: 0.85; }
+        .cp-submit:disabled { opacity: 0.5; cursor: default; }
+
+        @media (max-width: 768px) {
+            .comment-panel {
+                width: 100%;
+                top: auto;
+                bottom: 0;
+                height: 72vh;
+                border-left: none;
+                border-top: 2px solid #ffe0e8;
+                border-radius: 20px 20px 0 0;
+                transform: translateY(100%);
+                transition: transform 0.28s ease;
+            }
+            .comment-panel.on { transform: translateY(0); }
+        }
+
         /* ── Photo Grid (masonry) ── */
         .photo-grid {
             columns: 4 180px;
@@ -435,12 +580,30 @@
                     <h2 id="folderTitle"></h2>
                     <small id="fileCount"></small>
                 </div>
+                <button class="share-btn" onclick="openComments()" style="border-color:#ffc8d8; color:#e91e8c;">💬 心得</button>
                 <button class="share-btn" onclick="shareFolder()">🔗 分享</button>
             </div>
             <div class="photo-grid" id="photoGrid"></div>
             <div class="msg" id="emptyMsg" style="display:none;">📭 這個資料夾沒有照片或影片</div>
             <div class="msg" id="hintMsg">← 請選擇左側活動相簿</div>
         </main>
+    </div>
+
+    <!-- 心得面板 -->
+    <div class="comment-panel" id="commentPanel">
+        <div class="cp-header">
+            <h3>💬 活動心得</h3>
+            <span class="cp-folder-name" id="cpFolderName"></span>
+            <button class="cp-close" onclick="closeComments()">✕</button>
+        </div>
+        <div class="cp-list" id="cpList">
+            <div class="cp-loading">載入中…</div>
+        </div>
+        <div class="cp-form">
+            <input type="text" id="cpName" placeholder="你的名字（可不填）" maxlength="20">
+            <textarea id="cpText" placeholder="寫下你對這次活動的心得或回響…" maxlength="300"></textarea>
+            <button class="cp-submit" id="cpSubmit" onclick="submitComment()">送出心得</button>
+        </div>
     </div>
 
     <!-- Toast -->
@@ -553,6 +716,7 @@
                 return;
             }
 
+            currentFolderName = folder.name;
             document.getElementById('folderTitle').textContent = folder.name;
             document.getElementById('fileCount').textContent   = `共 ${folder.files.length} 個檔案`;
             header.style.display = 'flex';
@@ -638,6 +802,73 @@
 
         function escHtml(str) {
             return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        // ── 心得面板（模擬） ──
+        let currentFolderName = '';
+
+        // 模擬資料（之後換成 GAS API）
+        const MOCK_COMMENTS = [
+            { name: '大衛', date: '2026-05-15 20:32', text: '這次活動真的很感動，謝謝弟兄姊妹的分享！' },
+            { name: '以斯帖', date: '2026-05-15 21:10', text: '照片拍得很好，每一張都充滿了愛❤️\n下次還要一起參加！' },
+            { name: '匿名', date: '2026-05-16 08:45', text: '感謝主，有這樣的團契真是祝福。' },
+        ];
+
+        function openComments() {
+            const panel = document.getElementById('commentPanel');
+            document.getElementById('cpFolderName').textContent = currentFolderName;
+            panel.classList.add('on');
+            loadComments();
+        }
+
+        function closeComments() {
+            document.getElementById('commentPanel').classList.remove('on');
+        }
+
+        function loadComments() {
+            const list = document.getElementById('cpList');
+            list.innerHTML = '<div class="cp-loading">載入中…</div>';
+
+            // 模擬 1 秒網路延遲
+            setTimeout(() => {
+                if (!MOCK_COMMENTS.length) {
+                    list.innerHTML = '<div class="cp-empty">還沒有心得，成為第一個留言的人吧！</div>';
+                    return;
+                }
+                list.innerHTML = MOCK_COMMENTS.map(c => `
+                    <div class="comment-item">
+                        <div class="ci-top">
+                            <span class="ci-name">${escHtml(c.name || '匿名')}</span>
+                            <span class="ci-date">${escHtml(c.date)}</span>
+                        </div>
+                        <div class="ci-text">${escHtml(c.text)}</div>
+                    </div>
+                `).join('');
+            }, 1000);
+        }
+
+        function submitComment() {
+            const name = document.getElementById('cpName').value.trim();
+            const text = document.getElementById('cpText').value.trim();
+            if (!text) { alert('請輸入心得內容'); return; }
+
+            const btn = document.getElementById('cpSubmit');
+            btn.disabled = true;
+            btn.textContent = '送出中…';
+
+            // 模擬送出
+            setTimeout(() => {
+                MOCK_COMMENTS.unshift({
+                    name: name || '匿名',
+                    date: new Date().toLocaleString('zh-TW', { hour12: false }).replace(/\//g, '-').slice(0, 16),
+                    text
+                });
+                document.getElementById('cpName').value = '';
+                document.getElementById('cpText').value = '';
+                btn.disabled = false;
+                btn.textContent = '送出心得';
+                loadComments();
+            }, 800);
         }
 
         // ── 分享目前資料夾連結 ──
