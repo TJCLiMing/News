@@ -271,7 +271,20 @@
             font-size: 0.85rem;
             text-align: center;
             white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 14px;
         }
+        .lb-open-btn {
+            color: rgba(255,255,255,0.75);
+            font-size: 0.8rem;
+            text-decoration: none;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 3px 10px;
+            border-radius: 12px;
+            transition: background 0.2s;
+        }
+        .lb-open-btn:hover { background: rgba(255,255,255,0.18); }
 
         /* ── Mobile overlay ── */
         .overlay {
@@ -318,13 +331,7 @@
         </button>
         <h1>🌸 黎明相簿</h1>
         <span id="updatedAt" style="margin-left:10px; font-size:0.78rem; color:#ccc;"></span>
-        <a href="https://github.com/TJCLiMing/News/actions/workflows/update-photos.yml"
-           target="_blank"
-           title="手動更新相簿資料"
-           style="margin-left:auto; background:#f0f7ff; border:1.5px solid #d0e7ff; color:#4a90e2; padding:6px 14px; border-radius:20px; font-size:0.82rem; text-decoration:none; white-space:nowrap;">
-           🔄 重新整理
-        </a>
-        <a href="index.html" class="back-link" style="margin-left:12px;">← 活動快報</a>
+        <a href="index.html" class="back-link">← 活動快報</a>
     </header>
 
     <div class="overlay" id="overlay"></div>
@@ -462,7 +469,7 @@
         }
 
         // ── Lightbox ──
-        let lbItems = [], lbIdx = 0;
+        let lbItems = [], lbIdx = 0, lbHistoryPushed = false;
 
         function openLightbox(items, index) {
             lbItems = items;
@@ -470,24 +477,45 @@
             renderLb();
             document.getElementById('lightbox').classList.add('on');
             document.body.style.overflow = 'hidden';
+            history.pushState({ lightbox: true }, '');
+            lbHistoryPushed = true;
         }
 
-        function closeLightbox() {
+        function closeLightboxUI() {
             document.getElementById('lightbox').classList.remove('on');
             document.getElementById('lbContent').innerHTML = '';
             document.body.style.overflow = '';
+            lbHistoryPushed = false;
         }
+
+        function closeLightbox() {
+            if (lbHistoryPushed) {
+                history.back(); // 會觸發 popstate → closeLightboxUI
+            } else {
+                closeLightboxUI();
+            }
+        }
+
+        // 按返回鍵（手機/瀏覽器上一頁）→ 關閉 lightbox 而非離開頁面
+        window.addEventListener('popstate', () => {
+            if (document.getElementById('lightbox').classList.contains('on')) {
+                closeLightboxUI();
+            }
+        });
 
         function renderLb() {
             const item    = lbItems[lbIdx];
             const content = document.getElementById('lbContent');
             const caption = document.getElementById('lbCaption');
+            const driveFileUrl = `https://drive.google.com/file/d/${item.id}/view`;
             if (item.mimeType.startsWith('video/')) {
                 content.innerHTML = `<iframe src="https://drive.google.com/file/d/${item.id}/preview" allowfullscreen></iframe>`;
             } else {
-                content.innerHTML = `<img src="https://drive.google.com/uc?export=view&id=${item.id}" alt="${escHtml(item.name)}">`;
+                // 使用 thumbnail 大圖（sz=w2048），與縮圖同一機制，不會被擋
+                content.innerHTML = `<img src="https://drive.google.com/thumbnail?sz=w2048&id=${item.id}" alt="${escHtml(item.name)}">`;
             }
-            caption.textContent = `${item.name}　${lbIdx + 1} / ${lbItems.length}`;
+            caption.innerHTML = `<span>${escHtml(item.name)}　${lbIdx + 1} / ${lbItems.length}</span>
+                <a class="lb-open-btn" href="${driveFileUrl}" target="_blank" rel="noopener">⤢ 開啟原檔</a>`;
         }
 
         document.getElementById('lbClose').addEventListener('click', closeLightbox);
