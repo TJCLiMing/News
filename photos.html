@@ -149,9 +149,44 @@
         .content-header {
             margin-bottom: 20px;
             display: none;
+            flex-direction: row;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
         }
+        .content-header-text { flex: 1; }
         .content-header h2 { font-size: 1.35rem; }
         .content-header small { color: #aaa; font-size: 0.83rem; }
+
+        .share-btn {
+            background: none;
+            border: 1.5px solid #ffc8d8;
+            color: var(--primary);
+            font-size: 0.82rem;
+            padding: 5px 14px;
+            border-radius: 20px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background 0.18s;
+            flex-shrink: 0;
+        }
+        .share-btn:hover { background: #fff0f4; }
+        .share-toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.75);
+            color: white;
+            padding: 10px 22px;
+            border-radius: 24px;
+            font-size: 0.9rem;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 2000;
+        }
+        .share-toast.show { opacity: 1; }
 
         /* ── Photo Grid (masonry) ── */
         .photo-grid {
@@ -371,14 +406,20 @@
 
         <main class="content">
             <div class="content-header" id="contentHeader">
-                <h2 id="folderTitle"></h2>
-                <small id="fileCount"></small>
+                <div class="content-header-text">
+                    <h2 id="folderTitle"></h2>
+                    <small id="fileCount"></small>
+                </div>
+                <button class="share-btn" onclick="shareFolder()">🔗 分享</button>
             </div>
             <div class="photo-grid" id="photoGrid"></div>
             <div class="msg" id="emptyMsg" style="display:none;">📭 這個資料夾沒有照片或影片</div>
             <div class="msg" id="hintMsg">← 請選擇左側活動相簿</div>
         </main>
     </div>
+
+    <!-- Toast -->
+    <div class="share-toast" id="shareToast">🔗 連結已複製！</div>
 
     <!-- Lightbox -->
     <div class="lightbox" id="lightbox">
@@ -443,16 +484,30 @@
 
                 list.querySelectorAll('.folder-item').forEach(item => {
                     item.addEventListener('click', () => {
-                        list.querySelectorAll('.folder-item').forEach(i => i.classList.remove('active'));
-                        item.classList.add('active');
-                        renderFolder(parseInt(item.dataset.idx));
+                        selectFolder(parseInt(item.dataset.idx));
                         closeSidebar();
                     });
                 });
 
+                // 頁面載入時，若 URL 有 hash 則自動跳到對應資料夾
+                const hashId = decodeURIComponent(location.hash.slice(1));
+                if (hashId) {
+                    const matchIdx = allFolders.findIndex(f => f.id === hashId);
+                    if (matchIdx >= 0) selectFolder(matchIdx);
+                }
+
             } catch (e) {
                 list.innerHTML = '<div style="padding:16px; color:#f66; font-size:0.85rem;">❌ 資料尚未產生，請按「🔄 重新整理」</div>';
             }
+        }
+
+        // ── 選取資料夾（更新 active 狀態 + hash）──
+        function selectFolder(idx) {
+            document.querySelectorAll('.folder-item').forEach(i => i.classList.remove('active'));
+            const item = document.querySelector(`.folder-item[data-idx="${idx}"]`);
+            if (item) item.classList.add('active');
+            history.replaceState(null, '', '#' + encodeURIComponent(allFolders[idx].id));
+            renderFolder(idx);
         }
 
         // ── 渲染資料夾內容（直接從 JSON，不需要 API）──
@@ -475,7 +530,7 @@
 
             document.getElementById('folderTitle').textContent = folder.name;
             document.getElementById('fileCount').textContent   = `共 ${folder.files.length} 個檔案`;
-            header.style.display = 'block';
+            header.style.display = 'flex';
 
             folder.files.forEach((file, index) => {
                 const el = document.createElement('div');
@@ -558,6 +613,16 @@
 
         function escHtml(str) {
             return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        // ── 分享目前資料夾連結 ──
+        function shareFolder() {
+            const url = location.href.split('#')[0] + location.hash;
+            navigator.clipboard.writeText(url).then(() => {
+                const toast = document.getElementById('shareToast');
+                toast.classList.add('show');
+                setTimeout(() => toast.classList.remove('show'), 2200);
+            });
         }
 
         // ── 管理員更新（密碼保護）──
