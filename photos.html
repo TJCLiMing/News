@@ -643,6 +643,12 @@
             overlay.classList.remove('on');
         }
 
+        // 手機版預設展開側邊欄
+        if (window.innerWidth <= 768) {
+            sidebar.classList.add('on');
+            overlay.classList.add('on');
+        }
+
         // ── 讀取靜態 JSON ──
         let allFolders = [];
 
