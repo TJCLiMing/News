@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>黎明教會月份安排表</title>
+    <link rel="icon" type="image/png" href="logo_10th.png">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #FF92A9;
+            --text: #4D4D4D;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background: linear-gradient(135deg, #FFF5F5 0%, #F0F7FF 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 32px;
+            padding-top: 20px;
+        }
+        header h1 {
+            font-size: 1.8rem;
+            color: var(--text);
+            font-weight: 700;
+        }
+        header h1::after {
+            content: '';
+            display: block;
+            width: 60px;
+            height: 4px;
+            background: var(--primary);
+            border-radius: 2px;
+            margin: 8px auto 0;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 960px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            width: 100%;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            border: 3px solid #FFF;
+            box-shadow: 6px 6px 0px rgba(0,0,0,0.05);
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.5s ease, transform 0.5s ease, box-shadow 0.2s;
+        }
+        .card.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .card:hover {
+            box-shadow: 8px 8px 0px rgba(255,146,169,0.2);
+        }
+
+        .img-container {
+            width: 100%;
+            overflow: hidden;
+        }
+        .img-container img {
+            width: 100%;
+            height: auto;
+            display: block;
+            transition: transform 0.3s;
+        }
+        .card:hover .img-container img { transform: scale(1.02); }
+
+        .info {
+            padding: 14px 16px;
+        }
+        .info h3 {
+            font-size: 1rem;
+            color: var(--text);
+            font-weight: 700;
+        }
+
+        #loading {
+            text-align: center;
+            padding: 40px;
+            color: #aaa;
+            font-size: 1rem;
+        }
+
+        footer {
+            margin-top: 40px;
+            padding: 20px;
+            color: #bbb;
+            font-size: 0.8rem;
+            text-align: center;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 24px;
+            color: #bbb;
+            text-decoration: none;
+            font-size: 0.88rem;
+        }
+        .back-link:hover { color: var(--primary); }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>📅 月份安排表</h1>
+        </header>
+
+        <a href="index.html" class="back-link">← 活動快報</a>
+
+        <div id="loading">✨ 正在載入安排表...</div>
+        <div class="grid" id="scheduleGrid"></div>
+    </div>
+
+    <footer>
+        最後更新：<span id="update-time">讀取中...</span>
+    </footer>
+
+    <script>
+        const API_URL = 'https://script.google.com/macros/s/AKfycbzWzh7mEl9wt7ehw7SWLQpwpJlbRB6AoDhSiFSex7YC2sp92ceICPct4AO64LiyN8lbPg/exec';
+
+        // LINE 強制跳轉
+        (function() {
+            var ua = navigator.userAgent;
+            if (ua.indexOf('Line') > -1 && window.location.href.indexOf('openExternalBrowser=1') === -1) {
+                var url = window.location.href;
+                window.location.href = url + (url.indexOf('?') > -1 ? '&' : '?') + 'openExternalBrowser=1';
+            }
+        })();
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) entry.target.classList.add('is-visible');
+            });
+        }, { threshold: 0.1 });
+
+        fetch(API_URL + '?mode=api')
+            .then(r => r.json())
+            .then(data => {
+                if (data.status === 'error') {
+                    document.getElementById('loading').innerHTML = '❌ 發生錯誤：' + data.message;
+                    return;
+                }
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('update-time').textContent = data.updateTime;
+                renderSchedule(data.schedules);
+            })
+            .catch(err => {
+                document.getElementById('loading').innerHTML = '❌ 無法連線：' + err.message;
+            });
+
+        function renderSchedule(items) {
+            const grid = document.getElementById('scheduleGrid');
+            if (!items || !items.length) {
+                grid.innerHTML = "<p style='color:#999; text-align:center; padding:40px;'>目前暫無安排表</p>";
+                return;
+            }
+            items.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = 'card';
+                div.style.transitionDelay = (index * 0.1) + 's';
+
+                const imgUrl   = 'https://drive.google.com/thumbnail?sz=w1000&id=' + item.id;
+                const rawUrl   = 'https://drive.google.com/uc?export=view&id=' + item.id;
+                const cleanTitle = item.name.replace(/^\d{4}-?\d{2}-?\d{2}/, '').replace(/^[ _]+/, '').split('.')[0];
+
+                div.innerHTML = `
+                    <div class="img-container">
+                        <a href="${rawUrl}" target="_blank">
+                            <img src="${imgUrl}" alt="${cleanTitle}" loading="lazy">
+                        </a>
+                    </div>
+                    <div class="info">
+                        <h3>${cleanTitle || item.name.split('.')[0]}</h3>
+                    </div>
+                `;
+                grid.appendChild(div);
+                observer.observe(div);
+            });
+        }
+    </script>
+</body>
+</html>
