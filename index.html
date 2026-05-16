@@ -101,21 +101,21 @@
             width: 100%;
         }
 
-        /* ── 手機版 3x2 圖示列 ── */
+        /* ── 手機版 2x3 圖示列 ── */
         .mobile-shortcuts {
             display: none;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 14px;
             width: 100%;
         }
         .ms-item {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 8px;
-            padding: 18px 8px 14px;
+            gap: 10px;
+            padding: 22px 12px 18px;
             background: white;
-            border-radius: 18px;
+            border-radius: 20px;
             border: 2px solid #ffe8ee;
             text-decoration: none;
             transition: transform 0.15s, box-shadow 0.15s;
@@ -123,24 +123,30 @@
         }
         .ms-item:active { transform: scale(0.93); }
         .ms-icon {
-            width: 50px;
-            height: 50px;
-            border-radius: 14px;
+            width: 62px;
+            height: 62px;
+            border-radius: 18px;
             display: flex;
             align-items: center;
             justify-content: center;
         }
-        .ms-icon svg { width: 26px; height: 26px; }
+        .ms-icon svg { width: 32px; height: 32px; }
         .ms-label {
-            font-size: 0.78rem;
+            font-size: 0.95rem;
             font-weight: 700;
             text-align: center;
-            color: #555;
-            line-height: 1.3;
+            color: #444;
+            line-height: 1.5;
+        }
+        .ms-label small {
+            display: block;
+            font-size: 0.78rem;
+            font-weight: 400;
+            color: #999;
         }
         @media (max-width: 768px) {
-            .mobile-shortcuts { display: grid; }
-            .action-grid { display: none; }
+            .mobile-shortcuts { display: grid !important; }
+            .action-grid { display: none !important; }
         }
 
         /* 卡片基礎設計 */
@@ -342,43 +348,43 @@
 
         <div class="section-divider">功能快捷鍵</div>
 
-        <!-- 手機版 3x2 圖示列 -->
+        <!-- 手機版 2x3 圖示列 -->
         <div class="mobile-shortcuts">
             <a href="https://meet.google.com/wfw-arii-kxw" target="_blank" class="ms-item">
                 <div class="ms-icon" style="background:#e8f0fe;">
                     <svg viewBox="0 0 24 24" fill="#4a90e2"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
                 </div>
-                <span class="ms-label">GoogleMeet</span>
+                <span class="ms-label">GoogleMeet<small>線上聚會</small></span>
             </a>
             <a href="https://meet.google.com/wfw-arii-kxw" target="_blank" class="ms-item">
                 <div class="ms-icon" style="background:#fffde7;">
                     <svg viewBox="0 0 24 24" fill="#fbc02d"><path d="M11 4h2v8h-2zm-4.24 1.76l1.41 1.42A6.978 6.978 0 0 0 5 12c0 3.86 3.14 7 7 7s7-3.14 7-7a6.978 6.978 0 0 0-3.17-5.82l1.41-1.42A8.966 8.966 0 0 1 21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9a8.966 8.966 0 0 1 3.76-7.24z"/></svg>
                 </div>
-                <span class="ms-label">禱告團契</span>
+                <span class="ms-label">禱告團契<small>每日晚上 9:30</small></span>
             </a>
             <a href="https://tjc-km.github.io/LimingUploader/?openExternalBrowser=1" target="_blank" class="ms-item">
                 <div class="ms-icon" style="background:#e8f5e9;">
                     <svg viewBox="0 0 24 24" fill="#6BCB77"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg>
                 </div>
-                <span class="ms-label">黎明寶庫</span>
+                <span class="ms-label">黎明寶庫<small>上傳分享</small></span>
             </a>
             <a href="https://docs.google.com/forms/d/e/1FAIpQLSefHtRz-OdeewdtKzQ1_I8UPKAqdrEyTNuC0zo1WTQdwv98fA/viewform?pli=1" target="_blank" class="ms-item">
                 <div class="ms-icon" style="background:#fff3e0;">
                     <svg viewBox="0 0 24 24" fill="#e67e22"><path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 16H7v-2h10v2zm0-4H7v-2h10v2zm0-4H7V8h10v2z"/></svg>
                 </div>
-                <span class="ms-label">文字記錄</span>
+                <span class="ms-label">文字記錄<small>聚會感動</small></span>
             </a>
             <a href="https://tjclimin20.my.canva.site/singlepageweb?openExternalBrowser=1" target="_blank" class="ms-item">
                 <div class="ms-icon" style="background:#f3e5f5;">
                     <svg viewBox="0 0 24 24" fill="#9c27b0"><path d="M12 3L4 9v12h16V9l-8-6zm-2 16h-2v-2h2v2zm0-4h-2v-2h2v2zm4 4h-2v-2h2v2zm0-4h-2v-2h2v2zm0-4h-2v-2h2v2z"/></svg>
                 </div>
-                <span class="ms-label">認識黎明</span>
+                <span class="ms-label">認識黎明<small>教會介紹</small></span>
             </a>
             <a href="photos.html" target="_blank" class="ms-item">
                 <div class="ms-icon" style="background:#fce4ec;">
                     <svg viewBox="0 0 24 24" fill="#e91e8c"><path d="M20 5h-3.17L15 3H9L7.17 5H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm-8 13c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
                 </div>
-                <span class="ms-label">活動照片</span>
+                <span class="ms-label">活動照片<small>相簿瀏覽</small></span>
             </a>
         </div>
 
