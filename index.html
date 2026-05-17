@@ -564,7 +564,7 @@
                     if (diffDays >= 0 && diffDays <= 10) badgeHtml = '<div class="badge">最新</div>';
                 }
 
-                const imgUrl = 'https://drive.google.com/thumbnail?sz=w1000&id=' + item.id;
+                const imgUrl = `https://lh3.googleusercontent.com/d/${item.id}=w1000`;
                 const rawImgUrl = 'https://drive.google.com/uc?export=view&id=' + item.id;
                 const cleanTitle = item.name.replace(/^\d{4}-?\d{2}-?\d{2}/, '').replace(/^[ _]+/, '').split('.')[0];
                 const labelKey = `[效能] 圖片載入: ${item.name}`;

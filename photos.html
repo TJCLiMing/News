@@ -739,7 +739,7 @@
                         <div class="video-label">${escHtml(file.name)}</div>`;
                 } else {
                     el.className = 'photo-item';
-                    el.innerHTML = `<img src="https://drive.google.com/thumbnail?sz=w400&id=${file.id}" alt="${escHtml(file.name)}" loading="lazy">`;
+                    el.innerHTML = `<img src="https://lh3.googleusercontent.com/d/${file.id}=w400" alt="${escHtml(file.name)}" loading="lazy">`;
                 }
                 el.addEventListener('click', () => openLightbox(folder.files, index));
                 grid.appendChild(el);
@@ -790,7 +790,7 @@
                 content.innerHTML = `<iframe src="https://drive.google.com/file/d/${item.id}/preview" allowfullscreen></iframe>`;
             } else {
                 // 使用 thumbnail 大圖（sz=w2048），與縮圖同一機制，不會被擋
-                content.innerHTML = `<img src="https://drive.google.com/thumbnail?sz=w2048&id=${item.id}" alt="${escHtml(item.name)}">`;
+                content.innerHTML = `<img src="https://lh3.googleusercontent.com/d/${item.id}=w2048" alt="${escHtml(item.name)}">`;
             }
             const downloadUrl = `https://drive.google.com/uc?export=download&id=${item.id}`;
             caption.innerHTML = `<span>${escHtml(item.name)}　${lbIdx + 1} / ${lbItems.length}</span>

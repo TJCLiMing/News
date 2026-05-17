@@ -181,7 +181,7 @@
                 div.className = 'card';
                 div.style.transitionDelay = (index * 0.1) + 's';
 
-                const imgUrl   = 'https://drive.google.com/thumbnail?sz=w1000&id=' + item.id;
+                const imgUrl   = `https://lh3.googleusercontent.com/d/${item.id}=w1000`;
                 const rawUrl   = 'https://drive.google.com/uc?export=view&id=' + item.id;
                 const cleanTitle = item.name.replace(/^\d{4}-?\d{2}-?\d{2}/, '').replace(/^[ _]+/, '').split('.')[0];
 
