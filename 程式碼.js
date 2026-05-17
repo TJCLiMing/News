@@ -13,6 +13,13 @@ function doGet(e) {
       .setMimeType(ContentService.MimeType.JSON);
   }
 
+  if (e && e.parameter && e.parameter.mode === 'getTodayFolders') {
+    const data = getTodayFolders();
+    return ContentService
+      .createTextOutput(JSON.stringify(data))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
   if (e && e.parameter && e.parameter.mode === 'getComments') {
     const folderId = e.parameter.folderId || '';
     const comments = getComments(folderId);
@@ -170,6 +177,52 @@ function fetchFiles(folderId, type, targetMonths = []) {
     }
   }
   return type === 'poster' ? results.sort((a, b) => a.date - b.date) : results.sort((a, b) => a.name.localeCompare(b.name));
+}
+
+/**
+ * 即時查詢今天日期的資料夾（用檔名比對）
+ * 支援格式：2026.05.17 / 2026-05-17 / 20260517
+ */
+function getTodayFolders() {
+  try {
+    const props  = PropertiesService.getScriptProperties();
+    const rootId = props.getProperty('PHOTO_FOLDER_ID') || '12xTW7EdkKu4mPQead-0C7NTJT54gzZD3';
+    const root   = DriveApp.getFolderById(rootId);
+
+    const now    = new Date();
+    const yyyy   = now.getFullYear();
+    const mm     = String(now.getMonth() + 1).padStart(2, '0');
+    const dd     = String(now.getDate()).padStart(2, '0');
+    const patterns = [
+      `${yyyy}.${mm}.${dd}`,
+      `${yyyy}-${mm}-${dd}`,
+      `${yyyy}${mm}${dd}`
+    ];
+
+    const folders = [];
+    const folderIter = root.getFolders();
+    while (folderIter.hasNext()) {
+      const folder = folderIter.next();
+      const name   = folder.getName();
+      if (patterns.some(p => name.includes(p))) {
+        const files = [];
+        const fileIter = folder.getFiles();
+        while (fileIter.hasNext()) {
+          const file = fileIter.next();
+          const mime = file.getMimeType();
+          if (mime.startsWith('image/') || mime.startsWith('video/')) {
+            files.push({ id: file.getId(), name: file.getName(), mimeType: mime });
+          }
+        }
+        files.sort((a, b) => b.name.localeCompare(a.name));
+        folders.push({ id: folder.getId(), name, files, isToday: true });
+      }
+    }
+
+    return { status: 'success', folders };
+  } catch(e) {
+    return { status: 'error', message: e.toString() };
+  }
 }
 
 /**

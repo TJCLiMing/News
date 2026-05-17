@@ -655,15 +655,25 @@
         async function init() {
             const list = document.getElementById('folderList');
             try {
-                const data = await fetch('photos-data.json?t=' + Date.now()).then(r => r.json());
+                // ① JSON 和 GAS 同時發出請求
+                const [jsonData, todayData] = await Promise.all([
+                    fetch('photos-data.json?t=' + Date.now()).then(r => r.json()),
+                    fetch(`${GAS_URL}?mode=getTodayFolders`).then(r => r.json()).catch(() => ({ folders: [] }))
+                ]);
 
-                if (data.status === 'error') {
-                    list.innerHTML = `<div style="padding:16px; color:#f66; font-size:0.85rem;">❌ ${data.message}</div>`;
+                if (jsonData.status === 'error') {
+                    list.innerHTML = `<div style="padding:16px; color:#f66; font-size:0.85rem;">❌ ${jsonData.message}</div>`;
                     return;
                 }
 
-                allFolders = data.folders || [];
-                document.getElementById('updatedAt').textContent = data.updatedAt ? `更新：${data.updatedAt}` : '';
+                const jsonFolders  = jsonData.folders || [];
+                const todayFolders = (todayData.folders || []).filter(
+                    tf => !jsonFolders.some(jf => jf.id === tf.id)  // 排除 JSON 已有的
+                );
+
+                // 今日新資料夾插到最上方
+                allFolders = [...todayFolders, ...jsonFolders];
+                document.getElementById('updatedAt').textContent = jsonData.updatedAt ? `更新：${jsonData.updatedAt}` : '';
 
                 if (!allFolders.length) {
                     list.innerHTML = '<div style="padding:16px; color:#ccc; font-size:0.9rem;">沒有相簿資料</div>';
@@ -672,7 +682,7 @@
 
                 list.innerHTML = allFolders.map((f, i) =>
                     `<div class="folder-item" data-idx="${i}">
-                        <span>📁</span><span>${escHtml(f.name)}</span>
+                        <span>${f.isToday ? '🆕' : '📁'}</span><span>${escHtml(f.name)}</span>
                     </div>`
                 ).join('');
 
@@ -688,10 +698,13 @@
                 if (hashId) {
                     const matchIdx = allFolders.findIndex(f => f.id === hashId);
                     if (matchIdx >= 0) selectFolder(matchIdx);
+                } else if (todayFolders.length > 0) {
+                    // 有今日新資料夾，自動展開第一個
+                    selectFolder(0);
                 }
 
             } catch (e) {
-                list.innerHTML = '<div style="padding:16px; color:#f66; font-size:0.85rem;">❌ 資料尚未產生，請按「🔄 重新整理」</div>';
+                list.innerHTML = '<div style="padding:16px; color:#f66; font-size:0.85rem;">❌ 資料尚未產生</div>';
             }
         }
 
