@@ -655,57 +655,63 @@
         async function init() {
             const list = document.getElementById('folderList');
             try {
-                // ① JSON 和 GAS 同時發出請求
-                const [jsonData, todayData] = await Promise.all([
-                    fetch('photos-data.json?t=' + Date.now()).then(r => r.json()),
-                    fetch(`${GAS_URL}?mode=getTodayFolders`).then(r => r.json()).catch(() => ({ folders: [] }))
-                ]);
+                // ① 先載入 JSON，立刻渲染
+                const jsonData = await fetch('photos-data.json?t=' + Date.now()).then(r => r.json());
 
                 if (jsonData.status === 'error') {
                     list.innerHTML = `<div style="padding:16px; color:#f66; font-size:0.85rem;">❌ ${jsonData.message}</div>`;
                     return;
                 }
 
-                const jsonFolders  = jsonData.folders || [];
-                const todayFolders = (todayData.folders || []).filter(
-                    tf => !jsonFolders.some(jf => jf.id === tf.id)  // 排除 JSON 已有的
-                );
-
-                // 今日新資料夾插到最上方
-                allFolders = [...todayFolders, ...jsonFolders];
+                allFolders = jsonData.folders || [];
                 document.getElementById('updatedAt').textContent = jsonData.updatedAt ? `更新：${jsonData.updatedAt}` : '';
+                renderFolderList();
 
-                if (!allFolders.length) {
-                    list.innerHTML = '<div style="padding:16px; color:#ccc; font-size:0.9rem;">沒有相簿資料</div>';
-                    return;
-                }
-
-                list.innerHTML = allFolders.map((f, i) =>
-                    `<div class="folder-item" data-idx="${i}">
-                        <span>${f.isToday ? '🆕' : '📁'}</span><span>${escHtml(f.name)}</span>
-                    </div>`
-                ).join('');
-
-                list.querySelectorAll('.folder-item').forEach(item => {
-                    item.addEventListener('click', () => {
-                        selectFolder(parseInt(item.dataset.idx));
-                        closeSidebar();
-                    });
-                });
-
-                // 頁面載入時，若 URL 有 hash 則自動跳到對應資料夾
+                // 若 URL 有 hash 則自動跳到對應資料夾
                 const hashId = decodeURIComponent(location.hash.slice(1));
                 if (hashId) {
                     const matchIdx = allFolders.findIndex(f => f.id === hashId);
                     if (matchIdx >= 0) selectFolder(matchIdx);
-                } else if (todayFolders.length > 0) {
-                    // 有今日新資料夾，自動展開第一個
-                    selectFolder(0);
                 }
+
+                // ② 背景查詢今日資料夾，不阻塞畫面
+                fetch(`${GAS_URL}?mode=getTodayFolders`)
+                    .then(r => r.json())
+                    .then(todayData => {
+                        const todayFolders = (todayData.folders || []).filter(
+                            tf => !allFolders.some(jf => jf.id === tf.id)
+                        );
+                        if (!todayFolders.length) return;
+                        // 新資料夾插到最上方，重新渲染清單
+                        allFolders = [...todayFolders, ...allFolders];
+                        renderFolderList();
+                        // 自動展開今日第一個資料夾
+                        if (!hashId) selectFolder(0);
+                    })
+                    .catch(() => {}); // 靜默失敗，不影響主流程
 
             } catch (e) {
                 list.innerHTML = '<div style="padding:16px; color:#f66; font-size:0.85rem;">❌ 資料尚未產生</div>';
             }
+        }
+
+        function renderFolderList() {
+            const list = document.getElementById('folderList');
+            if (!allFolders.length) {
+                list.innerHTML = '<div style="padding:16px; color:#ccc; font-size:0.9rem;">沒有相簿資料</div>';
+                return;
+            }
+            list.innerHTML = allFolders.map((f, i) =>
+                `<div class="folder-item" data-idx="${i}">
+                    <span>${f.isToday ? '🆕' : '📁'}</span><span>${escHtml(f.name)}</span>
+                </div>`
+            ).join('');
+            list.querySelectorAll('.folder-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    selectFolder(parseInt(item.dataset.idx));
+                    closeSidebar();
+                });
+            });
         }
 
         // ── 選取資料夾（更新 active 狀態 + hash）──
