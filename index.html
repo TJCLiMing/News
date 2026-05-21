@@ -3,8 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>黎明教會最新消息</title>
+    <title>黎明教會活動快報</title>
     <link rel="icon" type="image/png" href="logo_10th.png">
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="黎明快報">
+    <link rel="apple-touch-icon" href="logo_10th.png">
+    <meta name="theme-color" content="#FF92A9">
 
     <base target="_top">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
@@ -18,6 +24,42 @@
             --btn-prayer: #F9A825; 
             --btn-prayer-shadow: #F57F17;
             --line-green: #06C755;
+        }
+
+        /* ── iOS 加到主畫面引導橫幅 ── */
+        .pwa-banner {
+            display: none;
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            background: white;
+            border-top: 2px solid #ffe0e8;
+            padding: 16px 20px;
+            z-index: 9999;
+            box-shadow: 0 -4px 20px rgba(255,146,169,0.15);
+            flex-direction: column;
+            gap: 10px;
+        }
+        .pwa-banner.show { display: flex; }
+        .pwa-banner-top {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .pwa-banner img { width: 44px; height: 44px; border-radius: 10px; }
+        .pwa-banner-text { flex: 1; }
+        .pwa-banner-text strong { display: block; font-size: 0.95rem; color: #333; }
+        .pwa-banner-text span { font-size: 0.82rem; color: #888; }
+        .pwa-banner-close {
+            background: none; border: none; font-size: 1.3rem;
+            color: #bbb; cursor: pointer; padding: 0 4px;
+        }
+        .pwa-banner-steps {
+            background: #fff5f7;
+            border-radius: 12px;
+            padding: 12px 14px;
+            font-size: 0.85rem;
+            color: #555;
+            line-height: 1.9;
         }
 
         body {
@@ -491,9 +533,47 @@
         🚀 最後部署時間：<span id="update-time">讀取中...</span>
     </footer>
 
+    <!-- iOS 加到主畫面引導橫幅 -->
+    <div class="pwa-banner" id="pwaBanner">
+        <div class="pwa-banner-top">
+            <img src="logo_10th.png" alt="黎明教會">
+            <div class="pwa-banner-text">
+                <strong>加入主畫面，開啟更方便！</strong>
+                <span>像 App 一樣快速開啟活動快報</span>
+            </div>
+            <button class="pwa-banner-close" onclick="dismissPwaBanner()">✕</button>
+        </div>
+        <div class="pwa-banner-steps">
+            1️⃣ 點選 Safari 底部的 <strong>分享按鈕</strong> 📤<br>
+            2️⃣ 選擇「<strong>加入主畫面</strong>」<br>
+            3️⃣ 點右上角「<strong>新增</strong>」完成！
+        </div>
+    </div>
+
     <script>
         // ▼ GAS Web App 部署網址（部署後填入）
         const API_URL = 'https://script.google.com/macros/s/AKfycbzWzh7mEl9wt7ehw7SWLQpwpJlbRB6AoDhSiFSex7YC2sp92ceICPct4AO64LiyN8lbPg/exec';
+
+        // ── PWA：iOS 加到主畫面引導 ──
+        (function() {
+            const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+            const isInStandalone = window.navigator.standalone === true;
+            const dismissed = localStorage.getItem('pwaBannerDismissed');
+            if (isIos && !isInStandalone && !dismissed) {
+                document.getElementById('pwaBanner').classList.add('show');
+            }
+        })();
+
+        function dismissPwaBanner() {
+            document.getElementById('pwaBanner').classList.remove('show');
+            localStorage.setItem('pwaBannerDismissed', '1');
+        }
+
+        // Android Chrome：監聽安裝提示事件
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            // Chrome 會自動在網址列顯示安裝按鈕，不需要額外處理
+        });
 
         // 1. LINE 強制跳轉
         (function() {

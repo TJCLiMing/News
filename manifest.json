@@ -1,0 +1,26 @@
+{
+  "name": "黎明教會活動快報",
+  "short_name": "黎明快報",
+  "description": "黎明教會最新活動海報、月份安排表與相簿",
+  "start_url": "/News/",
+  "scope": "/News/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FFF5F5",
+  "theme_color": "#FF92A9",
+  "lang": "zh-TW",
+  "icons": [
+    {
+      "src": "logo_10th.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "logo_10th.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
