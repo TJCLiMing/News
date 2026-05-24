@@ -581,7 +581,8 @@
                     <small id="fileCount"></small>
                 </div>
                 <button class="share-btn" onclick="openComments()" style="border-color:#ffc8d8; color:#e91e8c;">💬 心得</button>
-                <button class="share-btn" onclick="shareFolder()">🔗 分享</button>
+                <button class="share-btn" onclick="shareGallery()">📁 分享資料夾</button>
+                <button class="share-btn" onclick="shareFolder()">🔗 分享相簿</button>
             </div>
             <div class="photo-grid" id="photoGrid"></div>
             <div class="msg" id="emptyMsg" style="display:none;">📭 這個資料夾沒有照片或影片</div>
@@ -898,6 +899,20 @@
                 btn.disabled = false;
                 btn.textContent = '送出心得';
             }
+        }
+
+        // ── 分享資料夾（LimingUploader gallery）──
+        function shareGallery() {
+            const url = `https://tjc-km.github.io/LimingUploader/gallery.html?folderId=${encodeURIComponent(currentFolderId)}&name=${encodeURIComponent(currentFolderName)}`;
+            navigator.clipboard.writeText(url).then(() => {
+                const toast = document.getElementById('shareToast');
+                toast.textContent = '📁 資料夾連結已複製！';
+                toast.classList.add('show');
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    toast.textContent = '🔗 連結已複製！';
+                }, 2200);
+            });
         }
 
         // ── 分享目前資料夾連結 ──
