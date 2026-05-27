@@ -161,6 +161,27 @@
             color: var(--primary);
             font-weight: 700;
         }
+        .folder-item.today {
+            background: #fff0f4;
+            border-left-color: var(--primary);
+            font-weight: 700;
+            color: #c0004e;
+        }
+        .folder-item.today:hover { background: #ffd8e6; }
+        .today-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--primary);
+            color: white;
+            font-size: 0.6rem;
+            font-weight: 700;
+            padding: 2px 5px;
+            border-radius: 4px;
+            letter-spacing: 0.5px;
+            flex-shrink: 0;
+            line-height: 1.5;
+        }
 
         /* ── Content ── */
         .content {
@@ -720,8 +741,11 @@
                 return;
             }
             list.innerHTML = allFolders.map((f, i) =>
-                `<div class="folder-item" data-idx="${i}">
-                    <span>${f.isToday ? '🆕' : '📁'}</span><span>${escHtml(f.name)}</span>
+                `<div class="folder-item${f.isToday ? ' today' : ''}" data-idx="${i}">
+                    ${f.isToday
+                        ? '<span class="today-badge">今日</span>'
+                        : '<span>📁</span>'}
+                    <span>${escHtml(f.name)}</span>
                 </div>`
             ).join('');
             list.querySelectorAll('.folder-item').forEach(item => {
