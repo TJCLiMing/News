@@ -1,11 +1,28 @@
 /**
  * 網頁進入點
- * ?mode=api          → 活動快報 JSON
- * ?mode=photos       → 相簿完整結構 JSON（供 GitHub Actions 產生靜態 JSON 用）
- * ?mode=getComments&folderId=xxx → 取得指定相簿心得
+ * ?mode=api                        → 活動快報 JSON
+ * ?mode=photos                     → 相簿完整結構 JSON（供 GitHub Actions 產生靜態 JSON 用）
+ * ?mode=getFolders                 → 相簿資料夾清單（含今日偵測）
+ * ?mode=getFolderFiles&folderId=xx → 指定資料夾的檔案列表
+ * ?mode=getComments&folderId=xxx   → 取得指定相簿心得
  * ?mode=addComment&folderId=xxx&name=xxx&text=xxx → 新增心得
  */
 function doGet(e) {
+  if (e && e.parameter && e.parameter.mode === 'getFolders') {
+    const data = getFoldersList();
+    return ContentService
+      .createTextOutput(JSON.stringify(data))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  if (e && e.parameter && e.parameter.mode === 'getFolderFiles') {
+    const folderId = e.parameter.folderId || '';
+    const data = getFolderFilesList(folderId);
+    return ContentService
+      .createTextOutput(JSON.stringify(data))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
   if (e && e.parameter && e.parameter.mode === 'photos') {
     const data = getPhotosData();
     return ContentService
@@ -317,6 +334,68 @@ function getPhotosData() {
       updatedAt: Utilities.formatDate(new Date(), 'GMT+8', 'yyyy-MM-dd HH:mm'),
       status: 'success'
     };
+  } catch (e) {
+    return { status: 'error', message: e.toString() };
+  }
+}
+
+/**
+ * 取得相簿資料夾清單（含今日偵測），不含檔案
+ */
+function getFoldersList() {
+  try {
+    const props  = PropertiesService.getScriptProperties();
+    const rootId = props.getProperty('PHOTO_FOLDER_ID') || '12xTW7EdkKu4mPQead-0C7NTJT54gzZD3';
+    const root   = DriveApp.getFolderById(rootId);
+
+    const now  = new Date();
+    const yyyy = now.getFullYear();
+    const mm   = String(now.getMonth() + 1).padStart(2, '0');
+    const dd   = String(now.getDate()).padStart(2, '0');
+    const todayPatterns = [
+      `${yyyy}.${mm}.${dd}`,
+      `${yyyy}-${mm}-${dd}`,
+      `${yyyy}${mm}${dd}`
+    ];
+
+    const folders = [];
+    const folderIter = root.getFolders();
+    while (folderIter.hasNext()) {
+      const folder  = folderIter.next();
+      const name    = folder.getName();
+      const isToday = todayPatterns.some(p => name.includes(p));
+      folders.push({ id: folder.getId(), name, isToday });
+    }
+    folders.sort((a, b) => b.name.localeCompare(a.name));
+
+    return {
+      folders,
+      updatedAt: Utilities.formatDate(new Date(), 'GMT+8', 'yyyy-MM-dd HH:mm'),
+      status: 'success'
+    };
+  } catch (e) {
+    return { status: 'error', message: e.toString() };
+  }
+}
+
+/**
+ * 取得指定資料夾的圖片／影片檔案列表
+ */
+function getFolderFilesList(folderId) {
+  try {
+    if (!folderId) throw new Error('未提供 folderId');
+    const folder   = DriveApp.getFolderById(folderId);
+    const files    = [];
+    const fileIter = folder.getFiles();
+    while (fileIter.hasNext()) {
+      const file = fileIter.next();
+      const mime = file.getMimeType();
+      if (mime.startsWith('image/') || mime.startsWith('video/')) {
+        files.push({ id: file.getId(), name: file.getName(), mimeType: mime });
+      }
+    }
+    files.sort((a, b) => b.name.localeCompare(a.name));
+    return { files, status: 'success' };
   } catch (e) {
     return { status: 'error', message: e.toString() };
   }
