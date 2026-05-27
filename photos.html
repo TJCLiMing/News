@@ -650,21 +650,21 @@
             overlay.classList.add('on');
         }
 
-        // ── 讀取線上資料 ──
+        // ── 兩段式載入：① 靜態 JSON 瞬間渲染，② 背景覆蓋今日更新資料 ──
         let allFolders = [];
 
         async function init() {
             const list = document.getElementById('folderList');
             try {
-                const data = await fetch(`${GAS_URL}?mode=getFolders`).then(r => r.json());
-
-                if (data.status === 'error') {
-                    list.innerHTML = `<div style="padding:16px; color:#f66; font-size:0.85rem;">❌ ${data.message}</div>`;
+                // ① 先讀靜態 JSON，立刻渲染
+                const jsonData = await fetch('photos-data.json?t=' + Date.now()).then(r => r.json());
+                if (jsonData.status === 'error') {
+                    list.innerHTML = `<div style="padding:16px; color:#f66; font-size:0.85rem;">❌ ${jsonData.message}</div>`;
                     return;
                 }
 
-                allFolders = data.folders || [];
-                document.getElementById('updatedAt').textContent = data.updatedAt ? `更新：${data.updatedAt}` : '';
+                allFolders = jsonData.folders || [];
+                document.getElementById('updatedAt').textContent = jsonData.updatedAt ? `更新：${jsonData.updatedAt}` : '';
                 renderFolderList();
 
                 // 若 URL 有 hash 則自動跳到對應資料夾
@@ -672,14 +672,44 @@
                 if (hashId) {
                     const matchIdx = allFolders.findIndex(f => f.id === hashId);
                     if (matchIdx >= 0) selectFolder(matchIdx);
-                } else {
-                    // 若有今日資料夾，自動展開第一個
-                    const todayIdx = allFolders.findIndex(f => f.isToday);
-                    if (todayIdx >= 0) selectFolder(todayIdx);
                 }
 
+                // ② 背景向 GAS 查詢今日新建或更新的資料夾，覆蓋靜態資料
+                fetch(`${GAS_URL}?mode=getTodayModified`)
+                    .then(r => r.json())
+                    .then(todayData => {
+                        const todayFolders = todayData.folders || [];
+                        if (!todayFolders.length) return;
+
+                        const newFolders = [];
+                        todayFolders.forEach(tf => {
+                            const idx = allFolders.findIndex(f => f.id === tf.id);
+                            if (idx >= 0) {
+                                allFolders[idx] = tf; // 覆蓋為最新資料
+                            } else {
+                                newFolders.push(tf);  // 靜態 JSON 沒有的新資料夾
+                            }
+                        });
+                        if (newFolders.length) allFolders = [...newFolders, ...allFolders];
+
+                        renderFolderList();
+
+                        // 若尚未選取資料夾，自動展開今日第一個
+                        if (!hashId && !currentFolderId) {
+                            const todayIdx = allFolders.findIndex(f => f.isToday);
+                            if (todayIdx >= 0) selectFolder(todayIdx);
+                        }
+
+                        // 若目前正在看的資料夾有更新，重新渲染內容
+                        if (currentFolderId && todayFolders.some(tf => tf.id === currentFolderId)) {
+                            const updatedIdx = allFolders.findIndex(f => f.id === currentFolderId);
+                            if (updatedIdx >= 0) renderFolder(updatedIdx);
+                        }
+                    })
+                    .catch(() => {}); // 靜默失敗，不影響主流程
+
             } catch (e) {
-                list.innerHTML = '<div style="padding:16px; color:#f66; font-size:0.85rem;">❌ 無法連線，請稍後再試</div>';
+                list.innerHTML = '<div style="padding:16px; color:#f66; font-size:0.85rem;">❌ 資料尚未產生</div>';
             }
         }
 
@@ -713,8 +743,8 @@
             renderFolder(idx);
         }
 
-        // ── 渲染資料夾內容（按需從 GAS 取得檔案，並快取在 allFolders）──
-        async function renderFolder(idx) {
+        // ── 渲染資料夾內容（直接從 allFolders.files，已由靜態 JSON 或 GAS overlay 填入）──
+        function renderFolder(idx) {
             const folder   = allFolders[idx];
             const grid     = document.getElementById('photoGrid');
             const hintMsg  = document.getElementById('hintMsg');
@@ -725,22 +755,6 @@
             hintMsg.style.display = 'none';
             emptyMsg.style.display = 'none';
             header.style.display = 'none';
-
-            // 若尚未載入過，向 GAS 取得檔案（載入後快取在 folder.files）
-            if (!folder.files) {
-                grid.innerHTML = '<div class="msg" style="padding:60px 20px;">📷 載入中…</div>';
-                try {
-                    const data = await fetch(`${GAS_URL}?mode=getFolderFiles&folderId=${encodeURIComponent(folder.id)}`).then(r => r.json());
-                    if (data.status === 'error') {
-                        grid.innerHTML = `<div class="msg" style="color:#f66;">❌ ${data.message}</div>`;
-                        return;
-                    }
-                    folder.files = data.files || [];
-                } catch(e) {
-                    grid.innerHTML = '<div class="msg" style="color:#f66;">❌ 載入失敗，請稍後再試</div>';
-                    return;
-                }
-            }
 
             grid.innerHTML = '';
 

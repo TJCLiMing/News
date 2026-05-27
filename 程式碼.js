@@ -2,12 +2,20 @@
  * 網頁進入點
  * ?mode=api                        → 活動快報 JSON
  * ?mode=photos                     → 相簿完整結構 JSON（供 GitHub Actions 產生靜態 JSON 用）
+ * ?mode=getTodayModified           → 今日新建或有更新的資料夾（含檔案）
  * ?mode=getFolders                 → 相簿資料夾清單（含今日偵測）
  * ?mode=getFolderFiles&folderId=xx → 指定資料夾的檔案列表
  * ?mode=getComments&folderId=xxx   → 取得指定相簿心得
  * ?mode=addComment&folderId=xxx&name=xxx&text=xxx → 新增心得
  */
 function doGet(e) {
+  if (e && e.parameter && e.parameter.mode === 'getTodayModified') {
+    const data = getTodayModified();
+    return ContentService
+      .createTextOutput(JSON.stringify(data))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
   if (e && e.parameter && e.parameter.mode === 'getFolders') {
     const data = getFoldersList();
     return ContentService
@@ -396,6 +404,58 @@ function getFolderFilesList(folderId) {
     }
     files.sort((a, b) => b.name.localeCompare(a.name));
     return { files, status: 'success' };
+  } catch (e) {
+    return { status: 'error', message: e.toString() };
+  }
+}
+
+/**
+ * 取得今日新建或有更新的資料夾（含最新檔案），用於覆蓋靜態 JSON
+ * 判斷依據：資料夾名稱含今日日期 OR 資料夾 lastUpdated >= 今日台灣時間 00:00
+ */
+function getTodayModified() {
+  try {
+    const props  = PropertiesService.getScriptProperties();
+    const rootId = props.getProperty('PHOTO_FOLDER_ID') || '12xTW7EdkKu4mPQead-0C7NTJT54gzZD3';
+    const root   = DriveApp.getFolderById(rootId);
+
+    // 今日台灣時間（UTC+8）00:00 對應的 UTC 時間
+    const todayStr = Utilities.formatDate(new Date(), 'GMT+8', 'yyyy-MM-dd');
+    const parts    = todayStr.split('-').map(Number);
+    // 台灣 00:00 = UTC 前一天 16:00，用 Date.UTC 負小時數自動進位
+    const todayStart = new Date(Date.UTC(parts[0], parts[1] - 1, parts[2], -8, 0, 0));
+
+    const todayPatterns = [
+      todayStr.replace(/-/g, '.'),  // yyyy.MM.dd
+      todayStr,                     // yyyy-MM-dd
+      todayStr.replace(/-/g, '')    // yyyyMMdd
+    ];
+
+    const folders = [];
+    const folderIter = root.getFolders();
+    while (folderIter.hasNext()) {
+      const folder  = folderIter.next();
+      const name    = folder.getName();
+      const isToday = todayPatterns.some(p => name.includes(p));
+      const isModifiedToday = folder.getLastUpdated() >= todayStart;
+
+      if (!isToday && !isModifiedToday) continue;
+
+      const files    = [];
+      const fileIter = folder.getFiles();
+      while (fileIter.hasNext()) {
+        const file = fileIter.next();
+        const mime = file.getMimeType();
+        if (mime.startsWith('image/') || mime.startsWith('video/')) {
+          files.push({ id: file.getId(), name: file.getName(), mimeType: mime });
+        }
+      }
+      files.sort((a, b) => b.name.localeCompare(a.name));
+      folders.push({ id: folder.getId(), name, files, isToday: true });
+    }
+    folders.sort((a, b) => b.name.localeCompare(a.name));
+
+    return { folders, status: 'success' };
   } catch (e) {
     return { status: 'error', message: e.toString() };
   }
