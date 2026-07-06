@@ -328,7 +328,7 @@
         /* 好友連結 QRCode 區塊 */
         .qr-container {
             display: flex;
-            gap: 30px;
+            gap: 24px;
             justify-content: center;
             flex-wrap: wrap;
             margin: 20px 0 60px;
@@ -336,7 +336,8 @@
 
         .qr-section {
             text-align: center;
-            max-width: 280px;
+            width: 200px;
+            flex-shrink: 0;
             opacity: 0;
             transform: translateY(20px);
             transition: 0.6s ease-out;
@@ -344,23 +345,30 @@
 
         .qr-card {
             background: white;
-            border-radius: 35px;
-            padding: 30px;
+            border-radius: 28px;
+            padding: 24px 20px;
             border: 4px solid #FFF;
             box-shadow: 10px 10px 0px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 240px;
+            box-sizing: border-box;
         }
 
         .qr-card img {
             width: 100%;
+            max-width: 160px;
             height: auto;
-            border-radius: 20px;
+            border-radius: 16px;
         }
 
         .qr-text {
-            margin-top: 18px;
+            margin-top: 16px;
             color: var(--line-green);
             font-weight: bold;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             letter-spacing: 1px;
         }
 
@@ -545,9 +553,25 @@
             </div>
             <div class="qr-section" style="opacity:1; transform:translateY(0);">
                 <a href="https://tjc-km.github.io/liming-meeting/" target="_blank" style="text-decoration:none;">
-                    <div class="qr-card" style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:160px; padding:30px 20px;">
+                    <div class="qr-card">
                         <svg viewBox="0 0 24 24" style="width:56px;height:56px;fill:#4a90e2;margin-bottom:12px;"><path d="M12 1c-4.97 0-9 4.03-9 9v7c0 1.66 1.34 3 3 3h3v-8H5v-2c0-3.87 3.13-7 7-7s7 3.13 7 7v2h-4v8h3c1.66 0 3-1.34 3-3v-7c0-4.97-4.03-9-9-9z"/></svg>
                         <div class="qr-text" style="color:#4a90e2;">聚會紀錄與錄音</div>
+                    </div>
+                </a>
+            </div>
+            <div class="qr-section" style="opacity:1; transform:translateY(0);">
+                <a href="https://sites.google.com/tjcedu.org/liming20testimony/%E9%A6%96%E9%A0%81" target="_blank" style="text-decoration:none;">
+                    <div class="qr-card">
+                        <svg viewBox="0 0 24 24" style="width:56px;height:56px;fill:#e91e63;margin-bottom:12px;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+                        <div class="qr-text" style="color:#e91e63;">二十週年見證</div>
+                    </div>
+                </a>
+            </div>
+            <div class="qr-section" style="opacity:1; transform:translateY(0);">
+                <a href="https://sites.google.com/tjcedu.org/liming20/%E9%A6%96%E9%A0%81" target="_blank" style="text-decoration:none;">
+                    <div class="qr-card">
+                        <svg viewBox="0 0 24 24" style="width:56px;height:56px;fill:#9c27b0;margin-bottom:12px;"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm4.24 16L12 15.45 7.77 18l1.12-4.81-3.73-3.23 4.92-.42L12 5l1.92 4.53 4.92.42-3.73 3.23L16.23 18z"/></svg>
+                        <div class="qr-text" style="color:#9c27b0;">二十週年紀念</div>
                     </div>
                 </a>
             </div>
