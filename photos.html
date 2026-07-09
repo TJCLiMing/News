@@ -678,7 +678,7 @@
             const list = document.getElementById('folderList');
             try {
                 // ① 先讀靜態 JSON，立刻渲染
-                const jsonData = await fetch('photos-data.json?t=' + Date.now()).then(r => r.json());
+                const jsonData = await fetch('photos-data.json').then(r => r.json());
                 if (jsonData.status === 'error') {
                     list.innerHTML = `<div style="padding:16px; color:#f66; font-size:0.85rem;">❌ ${jsonData.message}</div>`;
                     return;
