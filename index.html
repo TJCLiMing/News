@@ -641,39 +641,63 @@
         }, { threshold: 0.1 });
 
         // 2. 從後端取得最新資料並渲染
+        // 快取策略：先用 localStorage 的舊資料秒開畫面，GAS 回應後再無感更新
+        const HOME_CACHE_KEY = 'homeDataCacheV1';
+        let renderedJson = null;   // 已渲染資料的快照，避免重複重繪
+        let hasScrolled = false;
+
         function applyData(data) {
             if (data.status === "error") {
                 document.getElementById('loading').innerHTML = "❌ 發生錯誤：" + data.message;
                 return;
             }
+            const json = JSON.stringify(data);
+            if (json === renderedJson) return;   // 資料沒變，不重繪
+            renderedJson = json;
+
             document.getElementById('loading').style.display = 'none';
             document.getElementById('update-time').innerText = data.updateTime;
 
             renderSection('posterGrid', data.posters, true);
             renderSection('scheduleGrid', data.schedules, false);
 
-            // 若網址有 #schedule 則捲動過去
-            if (window.location.hash === '#schedule') {
+            // 若網址有 #schedule 則捲動過去（只做一次）
+            if (window.location.hash === '#schedule' && !hasScrolled) {
+                hasScrolled = true;
                 setTimeout(() => {
                     document.getElementById('schedule').scrollIntoView({ behavior: 'smooth' });
                 }, 100);
             }
         }
 
+        // 步驟一：先用上次的快取秒開
+        try {
+            const cached = JSON.parse(localStorage.getItem(HOME_CACHE_KEY) || 'null');
+            if (cached && cached.status !== 'error') applyData(cached);
+        } catch (e) { /* 快取壞掉就當沒有 */ }
+
+        // 步驟二：背景抓 GAS 最新資料，回來後更新畫面並存快取
         console.time('[效能] GAS API 總回應時間');
         fetch(API_URL + '?mode=api')
             .then(r => { console.timeLog('[效能] GAS API 總回應時間', '收到 response'); return r.json(); })
             .then(function(data) {
                 console.timeEnd('[效能] GAS API 總回應時間');
                 applyData(data);
+                if (data.status !== 'error') {
+                    try { localStorage.setItem(HOME_CACHE_KEY, JSON.stringify(data)); } catch (e) {}
+                }
             })
             .catch(function(err) {
                 console.timeEnd('[效能] GAS API 總回應時間');
-                document.getElementById('loading').innerHTML = "❌ 無法連線：" + err.message;
+                // 有快取畫面就不要蓋上錯誤訊息
+                if (renderedJson === null) {
+                    document.getElementById('loading').innerHTML = "❌ 無法連線：" + err.message;
+                }
             });
 
         function renderSection(containerId, items, isPoster) {
             const grid = document.getElementById(containerId);
+            grid.innerHTML = '';   // 先清空，避免快取與最新資料重複渲染
             if (!items || items.length === 0) {
                 grid.innerHTML = "<p style='color:#999; grid-column:1/-1; text-align:center;'>目前暫無相關資料</p>";
                 return;
