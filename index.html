@@ -12,9 +12,9 @@
     <link rel="apple-touch-icon" href="logo_10th.png">
     <meta name="theme-color" content="#FF92A9">
     <script>
-        // 在繪製前套用已儲存的風格，避免閃爍
+        // 若使用者上次選了科技版，直接導向（replace 不留歷史，返回鍵不會卡住）
         if (localStorage.getItem('uiStyle') === 'tech') {
-            document.documentElement.classList.add('tech');
+            location.replace('index-tech.html');
         }
     </script>
 
@@ -418,147 +418,6 @@
         .style-toggle:hover { transform: scale(1.12) rotate(15deg); }
         .style-toggle:active { transform: scale(0.9); }
 
-        /* ═══════════════════════════════════════════
-           🚀 科技感主題（html.tech 啟用）
-           ═══════════════════════════════════════════ */
-        html.tech body {
-            background: #070b18;
-            color: #c9d6f2;
-        }
-        /* 動態極光背景 */
-        html.tech body::before {
-            content: '';
-            position: fixed;
-            inset: 0;
-            z-index: -2;
-            background:
-                radial-gradient(ellipse 60% 45% at 20% 10%, rgba(0,229,255,0.16), transparent 60%),
-                radial-gradient(ellipse 55% 40% at 85% 25%, rgba(255,45,247,0.13), transparent 60%),
-                radial-gradient(ellipse 70% 50% at 50% 95%, rgba(124,77,255,0.18), transparent 65%),
-                #070b18;
-            animation: techAurora 14s ease-in-out infinite alternate;
-        }
-        /* 賽博網格 */
-        html.tech body::after {
-            content: '';
-            position: fixed;
-            inset: 0;
-            z-index: -1;
-            background-image:
-                linear-gradient(rgba(0,229,255,0.05) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0,229,255,0.05) 1px, transparent 1px);
-            background-size: 44px 44px;
-            mask-image: radial-gradient(ellipse 90% 70% at 50% 40%, black 40%, transparent 100%);
-            -webkit-mask-image: radial-gradient(ellipse 90% 70% at 50% 40%, black 40%, transparent 100%);
-            pointer-events: none;
-        }
-        @keyframes techAurora {
-            0%   { filter: hue-rotate(0deg) brightness(1); }
-            50%  { filter: hue-rotate(25deg) brightness(1.15); }
-            100% { filter: hue-rotate(-15deg) brightness(1.05); }
-        }
-
-        html.tech header h1 {
-            color: transparent;
-            background: linear-gradient(100deg, #00e5ff 10%, #a56bff 45%, #ff2df7 90%);
-            background-size: 200% auto;
-            -webkit-background-clip: text;
-            background-clip: text;
-            animation: techShine 4s linear infinite;
-            text-shadow: none;
-            filter: drop-shadow(0 0 18px rgba(0,229,255,0.35));
-            letter-spacing: 3px;
-        }
-        @keyframes techShine { to { background-position: 200% center; } }
-        html.tech header h1::after {
-            background: linear-gradient(90deg, #00e5ff, #ff2df7);
-            opacity: 0.9;
-            height: 3px;
-            bottom: -10px;
-            box-shadow: 0 0 12px rgba(0,229,255,0.8), 0 0 30px rgba(255,45,247,0.5);
-        }
-
-        html.tech .section-divider { color: #e6efff; text-shadow: 0 0 20px rgba(0,229,255,0.35); }
-        html.tech .section-divider::before {
-            background: linear-gradient(180deg, #00e5ff, #ff2df7);
-            box-shadow: 0 0 12px rgba(0,229,255,0.9);
-        }
-
-        /* 卡片 → 玻璃霓虹 */
-        html.tech .card,
-        html.tech .work-card {
-            background: rgba(13, 20, 44, 0.72) !important;
-            border: 1px solid rgba(0, 229, 255, 0.28) !important;
-            backdrop-filter: blur(14px);
-            -webkit-backdrop-filter: blur(14px);
-            box-shadow: 0 0 0 1px rgba(0,229,255,0.06), 0 8px 32px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.06) !important;
-        }
-        @media (hover: hover) {
-            html.tech .card:hover {
-                transform: translateY(-6px) scale(1.02);
-                border-color: rgba(0,229,255,0.7) !important;
-                box-shadow: 0 0 24px rgba(0,229,255,0.35), 0 0 60px rgba(255,45,247,0.18), 0 12px 40px rgba(0,0,0,0.6) !important;
-            }
-        }
-        html.tech .img-container { background: #0a1024; }
-        html.tech .work-card h3 { color: #eaf3ff; text-shadow: 0 0 14px rgba(0,229,255,0.4); }
-        html.tech .desc-text { color: #9fb0d8; }
-        html.tech .info { border-top: 1px dashed rgba(0,229,255,0.25); }
-        html.tech .info h3 { color: #dce8ff; }
-        html.tech .badge {
-            background: linear-gradient(135deg, #ff2df7, #7c4dff);
-            box-shadow: 0 0 14px rgba(255,45,247,0.7);
-        }
-
-        /* 按鈕 → 霓虹漸層 */
-        html.tech .btn {
-            background: linear-gradient(135deg, #00c6ff, #7c4dff) !important;
-            box-shadow: 0 0 16px rgba(0,198,255,0.5), 0 4px 0 rgba(0,0,0,0.35) !important;
-            border: 1px solid rgba(255,255,255,0.25);
-            text-shadow: 0 0 8px rgba(255,255,255,0.5);
-        }
-        html.tech .btn:active {
-            transform: translateY(2px);
-            box-shadow: 0 0 10px rgba(0,198,255,0.4), 0 2px 0 rgba(0,0,0,0.35) !important;
-        }
-
-        /* 手機快捷鍵 */
-        html.tech .ms-item {
-            background: rgba(13, 20, 44, 0.72);
-            border: 1px solid rgba(0,229,255,0.28);
-            backdrop-filter: blur(14px);
-            -webkit-backdrop-filter: blur(14px);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-        }
-        html.tech .ms-icon {
-            background: rgba(255,255,255,0.07) !important;
-            box-shadow: inset 0 0 14px rgba(0,229,255,0.15), 0 0 10px rgba(0,229,255,0.12);
-        }
-        html.tech .ms-label { color: #dce8ff; }
-        html.tech .ms-label small { color: #7d8fc0; }
-
-        /* 好友連結卡片 */
-        html.tech .qr-card {
-            background: rgba(13, 20, 44, 0.72);
-            border: 1px solid rgba(0,229,255,0.28);
-            backdrop-filter: blur(14px);
-            -webkit-backdrop-filter: blur(14px);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.55);
-        }
-        html.tech .qr-card img { box-shadow: 0 0 16px rgba(0,229,255,0.25); }
-
-        html.tech #loading { color: #6fe3ff; text-shadow: 0 0 12px rgba(0,229,255,0.5); }
-        html.tech footer { color: #5d6f9e; border-top: 1px solid rgba(0,229,255,0.12); }
-
-        html.tech .pwa-banner { background: #0d142c; border-top-color: rgba(0,229,255,0.3); }
-        html.tech .pwa-banner-text strong { color: #eaf3ff; }
-        html.tech .pwa-banner-steps { background: rgba(0,229,255,0.07); color: #b8c6e8; }
-
-        html.tech .style-toggle {
-            background: rgba(13,20,44,0.85);
-            border-color: rgba(0,229,255,0.6);
-            box-shadow: 0 0 14px rgba(0,229,255,0.5);
-        }
     </style>
 </head>
 <body>
@@ -776,18 +635,11 @@
         // ▼ GAS Web App 部署網址（部署後填入）
         const API_URL = 'https://script.google.com/macros/s/AKfycbzWzh7mEl9wt7ehw7SWLQpwpJlbRB6AoDhSiFSex7YC2sp92ceICPct4AO64LiyN8lbPg/exec';
 
-        // ── 風格切換（可愛 ⇄ 科技感）──
-        function syncStyleToggleUi() {
-            const isTech = document.documentElement.classList.contains('tech');
-            document.getElementById('styleToggle').textContent = isTech ? '🌸' : '⚡';
-            document.querySelector('meta[name="theme-color"]').setAttribute('content', isTech ? '#070b18' : '#FF92A9');
-        }
+        // ── 風格切換：跳到科技版 ──
         function toggleUiStyle() {
-            const isTech = document.documentElement.classList.toggle('tech');
-            localStorage.setItem('uiStyle', isTech ? 'tech' : 'cute');
-            syncStyleToggleUi();
+            localStorage.setItem('uiStyle', 'tech');
+            location.href = 'index-tech.html';
         }
-        syncStyleToggleUi();
 
         // ── PWA：iOS 加到主畫面引導 ──
         (function() {

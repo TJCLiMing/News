@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>黎明教會活動快報 — TECH</title>
+    <link rel="icon" type="image/png" href="logo_10th.png">
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="黎明快報">
+    <link rel="apple-touch-icon" href="logo_10th.png">
+    <meta name="theme-color" content="#05070f">
+
+    <base target="_top">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Share+Tech+Mono&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #04060d;
+            --panel: #0a0f1e;
+            --cyan: #00f0ff;
+            --magenta: #ff003c;
+            --lime: #aefb2a;
+            --violet: #8b5cf6;
+            --amber: #ffb300;
+            --txt: #d7e4ff;
+            --dim: #5a6b94;
+            --mono: 'Share Tech Mono', monospace;
+            --orbit: 'Orbitron', 'Noto Sans TC', sans-serif;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background: var(--bg);
+            color: var(--txt);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* 星空畫布 */
+        #starfield {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* 掃描線 + 暈影 */
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            z-index: 2;
+            pointer-events: none;
+            background:
+                repeating-linear-gradient(0deg, rgba(255,255,255,0.015) 0 1px, transparent 1px 3px),
+                radial-gradient(ellipse 120% 90% at 50% 30%, transparent 55%, rgba(0,0,0,0.55) 100%);
+        }
+
+        .wrap {
+            position: relative;
+            z-index: 3;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 18px 40px;
+        }
+
+        /* ── 頂部狀態列 ── */
+        .statusbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: var(--mono);
+            font-size: 0.72rem;
+            color: var(--dim);
+            letter-spacing: 2px;
+            padding: 14px 4px;
+            border-bottom: 1px solid rgba(0,240,255,0.15);
+        }
+        .statusbar .dot {
+            display: inline-block;
+            width: 7px; height: 7px;
+            border-radius: 50%;
+            background: var(--lime);
+            box-shadow: 0 0 8px var(--lime);
+            margin-right: 7px;
+            animation: pulse 1.6s infinite;
+        }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.25} }
+
+        /* ── 標題區 ── */
+        .hero {
+            text-align: center;
+            padding: 58px 0 46px;
+            position: relative;
+        }
+        .hero .glitch {
+            font-family: var(--orbit);
+            font-weight: 900;
+            font-size: clamp(2.4rem, 8vw, 4.2rem);
+            letter-spacing: 8px;
+            color: #fff;
+            position: relative;
+            display: inline-block;
+            animation: glitchShift 3.2s infinite steps(1);
+        }
+        @keyframes glitchShift {
+            0%, 92%  { text-shadow: 2px 0 var(--cyan), -2px 0 var(--magenta); }
+            93%      { text-shadow: -4px 2px var(--cyan), 4px -2px var(--magenta); transform: translateX(2px); }
+            95%      { text-shadow: 3px -1px var(--cyan), -3px 1px var(--magenta); transform: translateX(-2px) skewX(3deg); }
+            97%      { text-shadow: -2px 0 var(--cyan), 2px 0 var(--magenta); transform: none; }
+        }
+        .hero .sub {
+            font-family: var(--mono);
+            color: var(--cyan);
+            font-size: 0.85rem;
+            letter-spacing: 5px;
+            margin-top: 16px;
+            text-shadow: 0 0 10px rgba(0,240,255,0.6);
+        }
+        .hero .sub::after {
+            content: '▊';
+            animation: pulse 0.9s infinite;
+        }
+        .hero .tagline {
+            color: var(--dim);
+            font-size: 0.85rem;
+            letter-spacing: 3px;
+            margin-top: 10px;
+        }
+
+        /* ── 區塊標題 ── */
+        .sec {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            font-family: var(--orbit);
+            font-size: 1.05rem;
+            font-weight: 700;
+            letter-spacing: 3px;
+            color: #fff;
+            margin: 54px 0 22px;
+            text-transform: uppercase;
+        }
+        .sec .tag {
+            font-family: var(--mono);
+            color: var(--bg);
+            background: var(--cyan);
+            padding: 2px 10px;
+            font-size: 0.72rem;
+            letter-spacing: 2px;
+            clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 100%, 8px 100%);
+            box-shadow: 0 0 14px rgba(0,240,255,0.55);
+        }
+        .sec .line {
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, rgba(0,240,255,0.5), transparent);
+        }
+        .sec .zh { color: var(--dim); font-size: 0.8rem; font-weight: 400; letter-spacing: 4px; }
+
+        /* ── 功能模組面板 ── */
+        .modules {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 14px;
+        }
+        .module {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 18px 20px;
+            background: linear-gradient(135deg, rgba(10,15,30,0.92), rgba(13,20,44,0.85));
+            border: 1px solid rgba(0,240,255,0.22);
+            clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 18px 100%, 0 calc(100% - 18px));
+            text-decoration: none;
+            color: var(--txt);
+            overflow: hidden;
+            transition: border-color 0.25s, transform 0.2s;
+        }
+        .module::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -80%;
+            width: 55%; height: 100%;
+            background: linear-gradient(105deg, transparent, rgba(0,240,255,0.14), transparent);
+            transform: skewX(-20deg);
+            transition: left 0.5s;
+        }
+        .module:hover { border-color: var(--cyan); transform: translateY(-3px); }
+        .module:hover::before { left: 130%; }
+        .module:active { transform: scale(0.97); }
+
+        .m-num {
+            font-family: var(--mono);
+            font-size: 0.7rem;
+            color: var(--dim);
+            position: absolute;
+            top: 7px; right: 14px;
+            letter-spacing: 1px;
+        }
+        .m-icon {
+            width: 52px; height: 52px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid;
+            clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+        }
+        .m-icon svg { width: 26px; height: 26px; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+        .m-body { flex: 1; min-width: 0; }
+        .m-title {
+            font-family: var(--orbit);
+            font-weight: 700;
+            font-size: 1.02rem;
+            letter-spacing: 1px;
+            color: #fff;
+            margin: 0 0 4px;
+        }
+        .m-desc {
+            font-family: var(--mono);
+            font-size: 0.74rem;
+            color: var(--dim);
+            letter-spacing: 1px;
+            margin: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .m-arrow {
+            font-family: var(--mono);
+            color: var(--cyan);
+            font-size: 1.1rem;
+            text-shadow: 0 0 8px rgba(0,240,255,0.7);
+        }
+
+        /* 各模組主色 */
+        .c-cyan    .m-icon { border-color: var(--cyan);    background: rgba(0,240,255,0.08);  box-shadow: 0 0 14px rgba(0,240,255,0.25) inset; }
+        .c-cyan    .m-icon svg { stroke: var(--cyan); }
+        .c-amber   .m-icon { border-color: var(--amber);   background: rgba(255,179,0,0.08);  box-shadow: 0 0 14px rgba(255,179,0,0.25) inset; }
+        .c-amber   .m-icon svg { stroke: var(--amber); }
+        .c-lime    .m-icon { border-color: var(--lime);    background: rgba(174,251,42,0.08); box-shadow: 0 0 14px rgba(174,251,42,0.25) inset; }
+        .c-lime    .m-icon svg { stroke: var(--lime); }
+        .c-violet  .m-icon { border-color: var(--violet);  background: rgba(139,92,246,0.1);  box-shadow: 0 0 14px rgba(139,92,246,0.3) inset; }
+        .c-violet  .m-icon svg { stroke: var(--violet); }
+        .c-magenta .m-icon { border-color: var(--magenta); background: rgba(255,0,60,0.08);   box-shadow: 0 0 14px rgba(255,0,60,0.25) inset; }
+        .c-magenta .m-icon svg { stroke: var(--magenta); }
+
+        /* ── 資料流卡片（海報/安排表） ── */
+        .feed {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 20px;
+        }
+        .feed-card {
+            position: relative;
+            background: var(--panel);
+            border: 1px solid rgba(0,240,255,0.18);
+            padding: 10px;
+            transition: border-color 0.25s, transform 0.2s, box-shadow 0.25s;
+        }
+        /* 四角括號 */
+        .feed-card::before, .feed-card::after {
+            content: '';
+            position: absolute;
+            width: 14px; height: 14px;
+            border: 2px solid var(--cyan);
+            opacity: 0.85;
+            transition: 0.25s;
+        }
+        .feed-card::before { top: -2px; left: -2px; border-right: none; border-bottom: none; }
+        .feed-card::after  { bottom: -2px; right: -2px; border-left: none; border-top: none; }
+        .feed-card:hover {
+            border-color: rgba(0,240,255,0.6);
+            transform: translateY(-4px);
+            box-shadow: 0 0 24px rgba(0,240,255,0.18);
+        }
+        .feed-card:hover::before, .feed-card:hover::after { width: 24px; height: 24px; }
+
+        .feed-card a { display: block; }
+        .feed-card .shot {
+            width: 100%;
+            aspect-ratio: 2 / 3;
+            object-fit: contain;
+            background: #060a16;
+            display: block;
+        }
+        .feed-meta {
+            padding: 12px 6px 6px;
+        }
+        .feed-meta .date {
+            font-family: var(--mono);
+            font-size: 0.7rem;
+            color: var(--cyan);
+            letter-spacing: 2px;
+        }
+        .feed-meta h3 {
+            margin: 6px 0 0;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #eef4ff;
+            letter-spacing: 1px;
+        }
+        .badge-new {
+            position: absolute;
+            top: 14px; left: -6px;
+            font-family: var(--mono);
+            font-size: 0.68rem;
+            letter-spacing: 2px;
+            background: var(--magenta);
+            color: #fff;
+            padding: 3px 12px;
+            z-index: 2;
+            clip-path: polygon(0 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
+            box-shadow: 0 0 14px rgba(255,0,60,0.8);
+            animation: pulse 1.4s infinite;
+        }
+
+        #loading {
+            font-family: var(--mono);
+            text-align: center;
+            padding: 60px 0;
+            color: var(--cyan);
+            letter-spacing: 3px;
+            text-shadow: 0 0 12px rgba(0,240,255,0.5);
+        }
+        .feed-empty {
+            grid-column: 1 / -1;
+            font-family: var(--mono);
+            color: var(--dim);
+            text-align: center;
+            padding: 30px 0;
+            letter-spacing: 2px;
+        }
+
+        /* ── 外部連結節點 ── */
+        .nodes {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 16px;
+        }
+        .node {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            min-height: 200px;
+            padding: 20px 14px;
+            background: var(--panel);
+            border: 1px solid rgba(139,92,246,0.3);
+            clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+            text-decoration: none;
+            transition: border-color 0.25s, transform 0.2s, box-shadow 0.25s;
+        }
+        .node:hover {
+            border-color: var(--violet);
+            transform: translateY(-4px);
+            box-shadow: 0 0 22px rgba(139,92,246,0.3);
+        }
+        .node img {
+            width: 100%;
+            max-width: 110px;
+            border: 1px solid rgba(255,255,255,0.15);
+        }
+        .node svg { width: 46px; height: 46px; }
+        .node .label {
+            font-family: var(--mono);
+            font-size: 0.78rem;
+            letter-spacing: 2px;
+            color: var(--txt);
+            text-align: center;
+        }
+
+        footer {
+            margin-top: 70px;
+            padding: 26px 4px 30px;
+            border-top: 1px solid rgba(0,240,255,0.15);
+            font-family: var(--mono);
+            font-size: 0.72rem;
+            color: var(--dim);
+            letter-spacing: 2px;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        /* ── 風格切換小按鈕 ── */
+        .style-toggle {
+            position: fixed;
+            bottom: 18px;
+            right: 18px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 1px solid rgba(0,240,255,0.6);
+            background: rgba(10,15,30,0.88);
+            font-size: 1.1rem;
+            cursor: pointer;
+            z-index: 100;
+            box-shadow: 0 0 14px rgba(0,240,255,0.45);
+            transition: transform 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+        .style-toggle:hover { transform: scale(1.12) rotate(-15deg); }
+        .style-toggle:active { transform: scale(0.9); }
+
+        @media (max-width: 640px) {
+            .hero { padding: 40px 0 34px; }
+            .hero .glitch { letter-spacing: 4px; }
+            .modules { grid-template-columns: 1fr; }
+            .nodes { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="starfield"></canvas>
+
+    <div class="wrap">
+        <div class="statusbar">
+            <span><span class="dot"></span>SYS.ONLINE</span>
+            <span>LI-MING-TJC.ORG</span>
+            <span id="clock">--:--:--</span>
+        </div>
+
+        <div class="hero">
+            <div class="glitch">黎明教會</div>
+            <div class="sub" id="typeline"></div>
+            <div class="tagline">TRUE JESUS CHURCH · LIMING</div>
+        </div>
+
+        <!-- 功能快捷 -->
+        <div class="sec"><span class="tag">01</span>QUICK ACCESS<span class="zh">功能快捷</span><span class="line"></span></div>
+        <div class="modules">
+            <a href="https://meet.google.com/wfw-arii-kxw" target="google-meet" class="module c-cyan">
+                <span class="m-num">MOD.01</span>
+                <div class="m-icon"><svg viewBox="0 0 24 24"><rect x="2" y="6" width="13" height="12" rx="2"/><path d="M15 10.5 22 7v10l-7-3.5"/></svg></div>
+                <div class="m-body"><p class="m-title">GoogleMeet</p><p class="m-desc">線上聚會 // LIVE MEETING</p></div>
+                <span class="m-arrow">›</span>
+            </a>
+            <a href="https://meet.google.com/wfw-arii-kxw" target="google-meet" class="module c-amber">
+                <span class="m-num">MOD.02</span>
+                <div class="m-icon"><svg viewBox="0 0 24 24"><path d="M12 2v8"/><path d="M6.3 5.5a8 8 0 1 0 11.4 0"/></svg></div>
+                <div class="m-body"><p class="m-title">禱告團契</p><p class="m-desc">每日 21:30 // PRAYER LINK</p></div>
+                <span class="m-arrow">›</span>
+            </a>
+            <a href="https://tjc-km.github.io/LimingUploader/?openExternalBrowser=1" target="liming-uploader" class="module c-lime">
+                <span class="m-num">MOD.03</span>
+                <div class="m-icon"><svg viewBox="0 0 24 24"><path d="M12 16V4"/><path d="m6 10 6-6 6 6"/><path d="M4 20h16"/></svg></div>
+                <div class="m-body"><p class="m-title">黎明寶庫</p><p class="m-desc">上傳分享 // DATA UPLOAD</p></div>
+                <span class="m-arrow">›</span>
+            </a>
+            <a href="https://tjc-km.github.io/prayer-roster/" target="prayer-roster" class="module c-violet">
+                <span class="m-num">MOD.04</span>
+                <div class="m-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="0.8"/></svg></div>
+                <div class="m-body"><p class="m-title">禱告記錄板</p><p class="m-desc">一起訂目標禱告 // TARGET</p></div>
+                <span class="m-arrow">›</span>
+            </a>
+            <a href="https://docs.google.com/forms/d/e/1FAIpQLSefHtRz-OdeewdtKzQ1_I8UPKAqdrEyTNuC0zo1WTQdwv98fA/viewform?pli=1" target="google-forms" class="module c-amber">
+                <span class="m-num">MOD.05</span>
+                <div class="m-icon"><svg viewBox="0 0 24 24"><path d="M4 20h4L20 8l-4-4L4 16v4z"/><path d="m13 7 4 4"/></svg></div>
+                <div class="m-body"><p class="m-title">文字記錄</p><p class="m-desc">聚會感動 // TEXT LOG</p></div>
+                <span class="m-arrow">›</span>
+            </a>
+            <a href="https://tjclimin20.my.canva.site/singlepageweb?openExternalBrowser=1" target="canva-liming" class="module c-cyan">
+                <span class="m-num">MOD.06</span>
+                <div class="m-icon"><svg viewBox="0 0 24 24"><path d="M3 11 12 3l9 8"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg></div>
+                <div class="m-body"><p class="m-title">認識黎明</p><p class="m-desc">教會介紹 // ABOUT US</p></div>
+                <span class="m-arrow">›</span>
+            </a>
+            <a href="photos.html" class="module c-magenta">
+                <span class="m-num">MOD.07</span>
+                <div class="m-icon"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="14" rx="2"/><circle cx="12" cy="13" r="4"/><path d="M9 6l1.5-2h3L15 6"/></svg></div>
+                <div class="m-body"><p class="m-title">活動照片</p><p class="m-desc">相簿瀏覽 // GALLERY</p></div>
+                <span class="m-arrow">›</span>
+            </a>
+        </div>
+
+        <!-- 海報 -->
+        <div class="sec"><span class="tag">02</span>DATA FEED<span class="zh">精彩活動海報</span><span class="line"></span></div>
+        <div id="loading">&gt;&gt; SYNCING DATA STREAM...</div>
+        <div class="feed" id="posterGrid"></div>
+
+        <!-- 安排表 -->
+        <div class="sec" id="schedule"><span class="tag">03</span>TIMETABLE<span class="zh">月份安排表</span><span class="line"></span></div>
+        <div class="feed" id="scheduleGrid"></div>
+
+        <!-- 外部連結 -->
+        <div class="sec"><span class="tag">04</span>EXT.LINKS<span class="zh">好友連結</span><span class="line"></span></div>
+        <div class="nodes">
+            <a href="https://lin.ee/RInugzP" target="_blank" class="node">
+                <img src="官方LineQR.png" alt="Line QRCode">
+                <span class="label">黎明官方帳號</span>
+            </a>
+            <a href="https://lin.ee/x37YBt8" target="_blank" class="node">
+                <img src="小幫手QRCode.png" alt="小幫手 QRCode">
+                <span class="label" style="color:var(--amber);">小幫手</span>
+            </a>
+            <a href="https://tjc-km.github.io/liming-meeting/" target="liming-meeting" class="node">
+                <svg viewBox="0 0 24 24" style="fill:none;stroke:var(--cyan);stroke-width:1.6;filter:drop-shadow(0 0 6px rgba(0,240,255,0.6));"><path d="M12 3a8 8 0 0 0-8 8v6a2 2 0 0 0 2 2h2v-6H5v-2a7 7 0 0 1 14 0v2h-3v6h2a2 2 0 0 0 2-2v-6a8 8 0 0 0-8-8z"/></svg>
+                <span class="label" style="color:var(--cyan);">聚會紀錄與錄音</span>
+            </a>
+            <a href="https://sites.google.com/tjcedu.org/liming20testimony/%E9%A6%96%E9%A0%81" target="_blank" class="node">
+                <img src="人.png" alt="二十週年見證">
+                <span class="label" style="color:var(--magenta);">二十週年見證</span>
+            </a>
+            <a href="https://sites.google.com/tjcedu.org/liming20/%E9%A6%96%E9%A0%81" target="_blank" class="node">
+                <img src="logo_20th.png" alt="二十週年紀念">
+                <span class="label" style="color:var(--violet);">二十週年紀念</span>
+            </a>
+        </div>
+
+        <footer>
+            <span>LAST.DEPLOY :: <span id="update-time">LOADING...</span></span>
+            <span>POWERED BY FAITH ✝</span>
+        </footer>
+    </div>
+
+    <button class="style-toggle" onclick="toggleUiStyle()" title="切換回可愛版">🌸</button>
+
+    <script>
+        const API_URL = 'https://script.google.com/macros/s/AKfycbzWzh7mEl9wt7ehw7SWLQpwpJlbRB6AoDhSiFSex7YC2sp92ceICPct4AO64LiyN8lbPg/exec';
+
+        // ── 風格切換：回到可愛版 ──
+        function toggleUiStyle() {
+            localStorage.setItem('uiStyle', 'cute');
+            location.href = 'index.html';
+        }
+
+        // ── LINE 強制跳轉外部瀏覽器 ──
+        (function() {
+            var ua = navigator.userAgent;
+            if (ua.indexOf("Line") > -1 && window.location.href.indexOf('openExternalBrowser=1') === -1) {
+                var url = window.location.href;
+                var sep = url.indexOf('?') > -1 ? '&' : '?';
+                window.location.href = url + sep + 'openExternalBrowser=1';
+            }
+        })();
+
+        // ── 時鐘 ──
+        setInterval(() => {
+            document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-GB');
+        }, 1000);
+
+        // ── 打字機副標 ──
+        (function() {
+            const text = 'ACTIVITY BULLETIN SYSTEM v2.0';
+            const el = document.getElementById('typeline');
+            let i = 0;
+            (function type() {
+                if (i <= text.length) {
+                    el.textContent = text.slice(0, i++);
+                    setTimeout(type, 55);
+                }
+            })();
+        })();
+
+        // ── 星空粒子 ──
+        (function() {
+            const cv = document.getElementById('starfield');
+            const ctx = cv.getContext('2d');
+            let stars = [];
+            function resize() {
+                cv.width = innerWidth;
+                cv.height = innerHeight;
+                stars = Array.from({length: Math.min(140, innerWidth / 8)}, () => ({
+                    x: Math.random() * cv.width,
+                    y: Math.random() * cv.height,
+                    r: Math.random() * 1.4 + 0.3,
+                    s: Math.random() * 0.35 + 0.05,
+                    tw: Math.random() * Math.PI * 2
+                }));
+            }
+            resize();
+            addEventListener('resize', resize);
+            (function draw() {
+                ctx.clearRect(0, 0, cv.width, cv.height);
+                const t = Date.now() / 1000;
+                for (const st of stars) {
+                    st.y -= st.s;
+                    if (st.y < -2) { st.y = cv.height + 2; st.x = Math.random() * cv.width; }
+                    const a = 0.35 + 0.45 * Math.abs(Math.sin(t * 1.3 + st.tw));
+                    ctx.beginPath();
+                    ctx.arc(st.x, st.y, st.r, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(0,240,255,${a})`;
+                    ctx.fill();
+                }
+                requestAnimationFrame(draw);
+            })();
+        })();
+
+        // ── 資料載入（與可愛版共用同一份快取） ──
+        const HOME_CACHE_KEY = 'homeDataCacheV1';
+        let renderedJson = null;
+        let hasScrolled = false;
+
+        function applyData(data) {
+            if (data.status === "error") {
+                document.getElementById('loading').innerHTML = "!! ERROR :: " + data.message;
+                return;
+            }
+            const json = JSON.stringify(data);
+            if (json === renderedJson) return;
+            renderedJson = json;
+
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('update-time').innerText = data.updateTime;
+
+            renderFeed('posterGrid', data.posters, true);
+            renderFeed('scheduleGrid', data.schedules, false);
+
+            if (window.location.hash === '#schedule' && !hasScrolled) {
+                hasScrolled = true;
+                setTimeout(() => {
+                    document.getElementById('schedule').scrollIntoView({ behavior: 'smooth' });
+                }, 100);
+            }
+        }
+
+        function renderFeed(containerId, items, isPoster) {
+            const grid = document.getElementById(containerId);
+            grid.innerHTML = '';
+            if (!items || items.length === 0) {
+                grid.innerHTML = '<p class="feed-empty">// NO DATA AVAILABLE</p>';
+                return;
+            }
+            const now = new Date();
+            items.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'feed-card';
+
+                let badgeHtml = '';
+                if (isPoster) {
+                    const fileDate = new Date(item.name.substring(0, 10));
+                    const diffDays = (fileDate - now) / 86400000;
+                    if (diffDays >= 0 && diffDays <= 10) badgeHtml = '<span class="badge-new">NEW</span>';
+                }
+
+                const imgUrl = `https://lh3.googleusercontent.com/d/${item.id}=w1000`;
+                const rawImgUrl = 'https://drive.google.com/uc?export=view&id=' + item.id;
+                const cleanTitle = item.name.replace(/^\d{4}-?\d{2}-?\d{2}/, '').replace(/^[ _]+/, '').split('.')[0];
+
+                div.innerHTML = `
+                    ${badgeHtml}
+                    <a href="${rawImgUrl}" target="_blank">
+                        <img class="shot" src="${imgUrl}" alt="圖片" loading="lazy">
+                    </a>
+                    <div class="feed-meta">
+                        ${isPoster ? `<span class="date">▸ ${item.name.substring(0, 10)}</span>` : ''}
+                        <h3>${cleanTitle || 'UNTITLED'}</h3>
+                    </div>
+                `;
+                grid.appendChild(div);
+            });
+        }
+
+        // 步驟一：先用快取秒開
+        try {
+            const cached = JSON.parse(localStorage.getItem(HOME_CACHE_KEY) || 'null');
+            if (cached && cached.status !== 'error') applyData(cached);
+        } catch (e) {}
+
+        // 步驟二：背景抓最新
+        fetch(API_URL + '?mode=api')
+            .then(r => r.json())
+            .then(function(data) {
+                applyData(data);
+                if (data.status !== 'error') {
+                    try { localStorage.setItem(HOME_CACHE_KEY, JSON.stringify(data)); } catch (e) {}
+                }
+            })
+            .catch(function(err) {
+                if (renderedJson === null) {
+                    document.getElementById('loading').innerHTML = "!! CONNECTION LOST :: " + err.message;
+                }
+            });
+    </script>
+</body>
+</html>
