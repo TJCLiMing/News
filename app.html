@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>黎明教會活動快報</title>
+    <link rel="icon" type="image/png" href="logo_10th.png">
+    <meta name="theme-color" content="#FF92A9">
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+            background: #F0F7FF;
+        }
+
+        #frame {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
+            display: block;
+        }
+
+        /* 載入中遮罩 */
+        #loading {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #F0F7FF;
+            transition: opacity 0.3s;
+            z-index: 5;
+        }
+        #loading.hide {
+            opacity: 0;
+            pointer-events: none;
+        }
+        #loading img {
+            width: 72px;
+            height: 72px;
+            animation: pulse 1.2s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1);    opacity: 1;   }
+            50%      { transform: scale(0.88); opacity: 0.55;}
+        }
+
+        /* 回首頁浮動鈕：只在離開首頁時出現 */
+        #home-btn {
+            position: fixed;
+            right: 16px;
+            bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+            width: 52px;
+            height: 52px;
+            border: 0;
+            border-radius: 50%;
+            background: rgba(255, 146, 169, 0.94);
+            color: #fff;
+            font-size: 1.5rem;
+            line-height: 1;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
+            z-index: 10;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            -webkit-tap-highlight-color: transparent;
+        }
+        #home-btn.show { display: flex; }
+        #home-btn:active { transform: scale(0.9); }
+    </style>
+</head>
+<body>
+
+    <iframe id="frame"
+            src="index.html"
+            title="黎明教會活動快報"
+            allow="fullscreen; clipboard-write"></iframe>
+
+    <div id="loading"><img src="logo_10th.png" alt="載入中"></div>
+
+    <button id="home-btn" type="button" title="回首頁" aria-label="回首頁">🏠</button>
+
+    <script>
+        (function () {
+            'use strict';
+
+            var HOME  = 'index.html';
+            var frame = document.getElementById('frame');
+            var btn   = document.getElementById('home-btn');
+            var load  = document.getElementById('loading');
+
+            // 首頁清單：能讀到路徑（同網域）且落在這些頁面才算「在首頁」
+            function isHomePath(path) {
+                return /(^|\/)(index\.html|index-tech\.html)$/.test(path) || /\/$/.test(path);
+            }
+
+            // 跨網域時讀取 location 會丟出例外 —— 這正好代表「已經離開首頁」
+            function refreshHomeBtn() {
+                var atHome = false;
+                try {
+                    atHome = isHomePath(frame.contentWindow.location.pathname);
+                } catch (e) {
+                    atHome = false;
+                }
+                btn.classList.toggle('show', !atHome);
+            }
+
+            frame.addEventListener('load', function () {
+                load.classList.add('hide');
+                refreshHomeBtn();
+            });
+
+            btn.addEventListener('click', function () {
+                frame.src = HOME;
+            });
+
+            // 保險：萬一 load 事件沒觸發，3 秒後也要收掉遮罩
+            setTimeout(function () { load.classList.add('hide'); }, 3000);
+        })();
+    </script>
+
+</body>
+</html>
