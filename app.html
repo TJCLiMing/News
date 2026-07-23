@@ -6,6 +6,11 @@
     <title>黎明教會活動快報</title>
     <link rel="icon" type="image/png" href="logo_10th.png">
     <meta name="theme-color" content="#FF92A9">
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="黎明快報">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <style>
         html, body {
             margin: 0;
@@ -95,6 +100,19 @@
             var btn   = document.getElementById('home-btn');
             var load  = document.getElementById('loading');
 
+            // 深層連結：app.html#schedule / #photos（manifest shortcuts 也用這個）
+            var ROUTES = {
+                '#schedule': 'index.html#schedule',
+                '#photos':   'photos.html'
+            };
+            function applyRoute() {
+                var r = ROUTES[location.hash];
+                if (r) frame.src = r;
+            }
+            applyRoute();
+            // 已經開著 app.html 時再點捷徑，只會變 hash 不會重載，要另外接
+            window.addEventListener('hashchange', applyRoute);
+
             // 首頁清單：能讀到路徑（同網域）且落在這些頁面才算「在首頁」
             function isHomePath(path) {
                 return /(^|\/)(index\.html|index-tech\.html)$/.test(path) || /\/$/.test(path);
@@ -122,6 +140,21 @@
 
             // 保險：萬一 load 事件沒觸發，3 秒後也要收掉遮罩
             setTimeout(function () { load.classList.add('hide'); }, 3000);
+
+            // Service Worker：離線快取 + Android 安裝提示
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function () {
+                    navigator.serviceWorker.register('sw.js').catch(function () { /* 失敗就當作沒有 */ });
+                });
+
+                // 換新版時自動重新整理一次，避免使用者卡在舊版
+                var reloaded = false;
+                navigator.serviceWorker.addEventListener('controllerchange', function () {
+                    if (reloaded) return;
+                    reloaded = true;
+                    location.reload();
+                });
+            }
         })();
     </script>
 
