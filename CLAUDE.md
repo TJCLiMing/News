@@ -27,7 +27,7 @@ li-ming-tjc.org/        → index.html（外殼，全螢幕 iframe）
 | `index.html` | 外殼 | 只在調整回首頁鈕、hash 路由時才動 |
 | `index-tech.html` | 科技版內容頁 | 對應 `home.html` 的另一種風格 |
 | `photos.html` | 相簿頁 | |
-| `schedule.html` | 安排表頁 | |
+| `schedule.html` | 安排表**單頁版**（獨立呼叫 API 讀安排表圖檔）| 沒有頁面連到它，靠直接輸入網址進入；`home.html` 內也有同樣的安排表區塊 |
 | `app.html` | 轉址頁 | 保留舊 `/app.html` 連結用，**不要刪** |
 | `frame-nav.js` | iframe 內的連結導向控制 | 新增可嵌入網域時要改 |
 | `sw.js` | Service Worker（離線快取）| 見下方版本規則 |
