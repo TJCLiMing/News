@@ -1,7 +1,7 @@
 /**
- * frame-nav.js — 外殼（app.html）內的連結導向控制
+ * frame-nav.js — 外殼（index.html）內的連結導向控制
  *
- * 只有在被 app.html 的 iframe 載入時才會作用；
+ * 只有在被外殼的 iframe 載入時才會作用；
  * 直接開啟頁面（不在 iframe 內）時完全不做任何事，行為與現在一模一樣。
  *
  * 規則：

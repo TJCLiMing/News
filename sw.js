@@ -9,13 +9,14 @@
  * ⚠️ 改版時記得把 VERSION 加一，舊快取才會被清掉。
  */
 
-var VERSION = 'v1';
+var VERSION = 'v2';
 var CACHE = 'liming-news-' + VERSION;
 
 // 安裝時先抓下來的核心檔案（單檔失敗不影響整體安裝）
 var PRECACHE = [
-    'app.html',
+    './',
     'index.html',
+    'home.html',
     'index-tech.html',
     'photos.html',
     'frame-nav.js',
@@ -82,7 +83,7 @@ self.addEventListener('fetch', function (event) {
                 return res;
             }).catch(function () {
                 return caches.match(req).then(function (hit) {
-                    return hit || caches.match('app.html');
+                    return hit || caches.match('index.html');
                 });
             })
         );

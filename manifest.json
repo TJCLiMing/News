@@ -3,7 +3,7 @@
   "name": "黎明教會活動快報",
   "short_name": "黎明快報",
   "description": "黎明教會最新活動海報、月份安排表與相簿",
-  "start_url": "app.html",
+  "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
@@ -40,12 +40,12 @@
     {
       "name": "月份安排表",
       "short_name": "安排表",
-      "url": "app.html#schedule"
+      "url": "./#schedule"
     },
     {
       "name": "活動相簿",
       "short_name": "相簿",
-      "url": "app.html#photos"
+      "url": "./#photos"
     }
   ]
 }
