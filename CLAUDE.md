@@ -133,6 +133,12 @@ git push
 # ⚠️ 不要用 clasp pull（會覆蓋 HTML，GAS 的 HTML 是過時版本）
 ```
 
+> ⚠️ **`.claspignore` 不要刪**
+> 它讓 `clasp push` 只推 `程式碼.js` 和 `appsscript.json`。
+> 少了它，`frame-nav.js` 和 `sw.js` 會被一起推上 GAS——這兩個檔案最外層直接用了
+> `window` / `self` / `document`，GAS 載入時會 ReferenceError，**整個後端 API 會掛掉**。
+> 確認方式：`clasp status`，Tracked files 應該只有那兩個檔。
+
 ### 本機預覽前端
 
 ```bash

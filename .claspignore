@@ -1,0 +1,10 @@
+# clasp push 只推後端程式，前端檔案一律不要推上 GAS
+#
+# ⚠️ 沒有這個檔案的話，clasp push 會把 frame-nav.js、sw.js 一起推上去，
+#    它們的最外層直接用了 window / self / document，
+#    GAS 載入時會 ReferenceError，導致整個後端 API 掛掉。
+
+**/**
+
+!程式碼.js
+!appsscript.json
