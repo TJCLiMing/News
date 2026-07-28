@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>年度活動海報總覽</title>
+    <link rel="icon" type="image/png" href="logo_10th.png">
+    <script src="frame-nav.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #FF92A9;
+            --secondary: #FFD93D;
+            --text: #4D4D4D;
+            --header-h: 60px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background: linear-gradient(135deg, #FFF5F5 0%, #F0F7FF 100%);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* ── Header ── */
+        header {
+            position: sticky;
+            top: 0;
+            background: white;
+            border-bottom: 2px solid #ffe0e8;
+            padding: 0 16px;
+            height: var(--header-h);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 2px 10px rgba(255,146,169,0.12);
+            z-index: 100;
+        }
+        header h1 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        .header-spacer { flex: 1; }
+        .back-link {
+            color: #bbb;
+            text-decoration: none;
+            font-size: 0.88rem;
+            white-space: nowrap;
+            transition: color 0.2s;
+        }
+        .back-link:hover { color: var(--primary); }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px 16px 60px;
+        }
+
+        /* ── 年份切換 ── */
+        .year-tabs {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 10px 0 26px;
+        }
+        .year-tab {
+            border: 2px solid #ffd6e0;
+            background: white;
+            color: #b98;
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: 700;
+            padding: 8px 22px;
+            border-radius: 40px;
+            cursor: pointer;
+            transition: all 0.2s;
+            letter-spacing: 1px;
+        }
+        .year-tab:hover { border-color: var(--primary); color: var(--primary); }
+        .year-tab.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+            box-shadow: 0 4px 12px rgba(255,146,169,0.4);
+        }
+
+        /* ── 月份區塊 ── */
+        .month-block { margin-bottom: 30px; }
+        .month-title {
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .month-title .m {
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: #e56a8c;
+        }
+        .month-title .count {
+            font-size: 0.8rem;
+            color: #ccc;
+        }
+        .month-title::after {
+            content: '';
+            flex: 1;
+            height: 2px;
+            background: linear-gradient(90deg, #ffe0e8, transparent);
+            border-radius: 2px;
+            align-self: center;
+        }
+
+        /* ── 海報列（文字為主、小縮圖） ── */
+        .poster-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            background: white;
+            border: 2px solid #fff;
+            border-radius: 18px;
+            padding: 10px 14px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            box-shadow: 4px 4px 0 rgba(0,0,0,0.04);
+            transition: transform 0.15s, box-shadow 0.2s, border-color 0.2s;
+        }
+        .poster-row:hover {
+            transform: translateX(4px);
+            border-color: #ffd6e0;
+            box-shadow: 6px 6px 0 rgba(255,146,169,0.15);
+        }
+        .poster-thumb {
+            width: 54px;
+            height: 72px;
+            object-fit: cover;
+            border-radius: 10px;
+            background: #f6f6f8;
+            flex-shrink: 0;
+        }
+        .poster-info { flex: 1; min-width: 0; }
+        .poster-info .title {
+            font-size: 1.02rem;
+            font-weight: 700;
+            color: #444;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .poster-info .date {
+            font-size: 0.8rem;
+            color: #c9a;
+            margin-top: 3px;
+        }
+        .poster-row .go {
+            color: #ffc8d8;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        #status {
+            text-align: center;
+            padding: 70px 0;
+            color: #888;
+            font-size: 1.1rem;
+        }
+
+        /* ── 燈箱 ── */
+        .lightbox {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.88);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 14px;
+            z-index: 500;
+            padding: 20px;
+        }
+        .lightbox.show { display: flex; }
+        .lightbox img {
+            max-width: 100%;
+            max-height: calc(100vh - 120px);
+            border-radius: 12px;
+            box-shadow: 0 10px 50px rgba(0,0,0,0.5);
+        }
+        .lb-bar {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            color: white;
+            font-size: 0.92rem;
+        }
+        .lb-bar a {
+            color: #ffd6e0;
+            text-decoration: none;
+            border: 1px solid rgba(255,214,224,0.5);
+            padding: 4px 14px;
+            border-radius: 20px;
+        }
+        .lb-close {
+            position: absolute;
+            top: 14px;
+            right: 18px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.8rem;
+            cursor: pointer;
+            line-height: 1;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>📅 年度活動海報</h1>
+        <div class="header-spacer"></div>
+        <a class="back-link" href="index.html">← 活動快報</a>
+    </header>
+
+    <div class="container">
+        <div class="year-tabs" id="yearTabs"></div>
+        <div id="status">✨ 正在整理海報...</div>
+        <div id="listArea"></div>
+    </div>
+
+    <div class="lightbox" id="lightbox">
+        <button class="lb-close" id="lbClose">✕</button>
+        <img id="lbImg" src="" alt="海報">
+        <div class="lb-bar">
+            <span id="lbTitle"></span>
+            <a id="lbOpen" href="" target="_blank" rel="noopener">⤢ 開啟原檔</a>
+        </div>
+    </div>
+
+    <script>
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbzWzh7mEl9wt7ehw7SWLQpwpJlbRB6AoDhSiFSex7YC2sp92ceICPct4AO64LiyN8lbPg/exec';
+        const POSTER_FOLDER_ID = '1kkkt_UT-ZYT36ti_nlXnChKjKVm6Hu00';
+        const CACHE_KEY = 'posterArchiveCacheV1';
+
+        let allPosters = [];      // { id, name, y, m, d, title }
+        let currentYear = null;
+        let renderedJson = null;
+
+        // 檔名「2026-08-29 中堅團契.png」→ 結構化資料
+        function parsePoster(f) {
+            const match = f.name.match(/^(\d{4})-?(\d{2})-?(\d{2})/);
+            if (!match) return null;
+            const title = f.name
+                .replace(/^\d{4}-?\d{2}-?\d{2}/, '')
+                .replace(/^[ _]+/, '')
+                .replace(/\.[^.]+$/, '');
+            return {
+                id: f.id,
+                y: +match[1], m: +match[2], d: +match[3],
+                title: title || '未命名活動'
+            };
+        }
+
+        function applyData(files) {
+            const json = JSON.stringify(files);
+            if (json === renderedJson) return;
+            renderedJson = json;
+
+            allPosters = files.map(parsePoster).filter(Boolean);
+            if (!allPosters.length) {
+                document.getElementById('status').textContent = '目前沒有海報資料';
+                return;
+            }
+            document.getElementById('status').style.display = 'none';
+
+            // 年份清單（新到舊）
+            const years = [...new Set(allPosters.map(p => p.y))].sort((a, b) => b - a);
+            if (!years.includes(currentYear)) currentYear = years[0];
+            renderYearTabs(years);
+            renderYear(currentYear);
+        }
+
+        function renderYearTabs(years) {
+            document.getElementById('yearTabs').innerHTML = years.map(y =>
+                `<button class="year-tab${y === currentYear ? ' active' : ''}" data-y="${y}">${y}</button>`
+            ).join('');
+        }
+
+        document.getElementById('yearTabs').addEventListener('click', e => {
+            const btn = e.target.closest('.year-tab');
+            if (!btn) return;
+            currentYear = +btn.dataset.y;
+            document.querySelectorAll('.year-tab').forEach(b =>
+                b.classList.toggle('active', +b.dataset.y === currentYear));
+            renderYear(currentYear);
+        });
+
+        function renderYear(year) {
+            const area = document.getElementById('listArea');
+            const posters = allPosters
+                .filter(p => p.y === year)
+                .sort((a, b) => (a.m - b.m) || (a.d - b.d));
+
+            const byMonth = {};
+            posters.forEach(p => (byMonth[p.m] = byMonth[p.m] || []).push(p));
+
+            area.innerHTML = Object.keys(byMonth).map(Number).sort((a, b) => a - b).map(m => `
+                <div class="month-block">
+                    <div class="month-title"><span class="m">${m} 月</span><span class="count">${byMonth[m].length} 場活動</span></div>
+                    ${byMonth[m].map(p => `
+                        <div class="poster-row" data-id="${p.id}" data-title="${escHtml(p.title)}">
+                            <img class="poster-thumb" src="https://lh3.googleusercontent.com/d/${p.id}=w160" loading="lazy" alt="">
+                            <div class="poster-info">
+                                <div class="title">${escHtml(p.title)}</div>
+                                <div class="date">${p.y}-${String(p.m).padStart(2,'0')}-${String(p.d).padStart(2,'0')}</div>
+                            </div>
+                            <span class="go">›</span>
+                        </div>
+                    `).join('')}
+                </div>
+            `).join('');
+        }
+
+        function escHtml(s) {
+            return String(s).replace(/[&<>"']/g, c =>
+                ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+        }
+
+        // ── 燈箱 ──
+        const lb = document.getElementById('lightbox');
+        document.getElementById('listArea').addEventListener('click', e => {
+            const row = e.target.closest('.poster-row');
+            if (!row) return;
+            document.getElementById('lbImg').src = `https://lh3.googleusercontent.com/d/${row.dataset.id}=w1200`;
+            document.getElementById('lbTitle').textContent = row.dataset.title;
+            document.getElementById('lbOpen').href = 'https://drive.google.com/uc?export=view&id=' + row.dataset.id;
+            lb.classList.add('show');
+        });
+        document.getElementById('lbClose').addEventListener('click', () => lb.classList.remove('show'));
+        lb.addEventListener('click', e => { if (e.target === lb) lb.classList.remove('show'); });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') lb.classList.remove('show'); });
+
+        // ── 載入：快取秒開 + 背景更新 ──
+        try {
+            const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null');
+            if (cached && Array.isArray(cached)) applyData(cached);
+        } catch (e) {}
+
+        fetch(`${GAS_URL}?mode=getFolderFiles&folderId=${POSTER_FOLDER_ID}`)
+            .then(r => r.json())
+            .then(data => {
+                if (data.status === 'success' && Array.isArray(data.files)) {
+                    applyData(data.files);
+                    try { localStorage.setItem(CACHE_KEY, JSON.stringify(data.files)); } catch (e) {}
+                } else if (renderedJson === null) {
+                    document.getElementById('status').textContent = '❌ 讀取失敗：' + (data.message || '未知錯誤');
+                }
+            })
+            .catch(err => {
+                if (renderedJson === null) {
+                    document.getElementById('status').textContent = '❌ 無法連線：' + err.message;
+                }
+            });
+    </script>
+</body>
+</html>
