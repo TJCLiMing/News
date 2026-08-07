@@ -646,18 +646,36 @@
         }
 
         // ── PWA：iOS 加到主畫面引導 ──
+        // 按 ✕ 只「暫停」PWA_SNOOZE_DAYS 天，之後會再次提醒（想更頻繁就把天數改小）
+        const PWA_SNOOZE_DAYS = 3;
+
+        // 是否已在 APP 模式（加到主畫面後開啟）
+        // 注意：home.html 跑在外殼的 iframe 內，iframe 讀不到 navigator.standalone，
+        // 要向最外層視窗（同網域，可安全存取）詢問真正的狀態。
+        function isPwaStandalone() {
+            try {
+                if ((window.top || window).navigator.standalone === true) return true;
+            } catch (e) { /* 跨網域才會進來，這裡不會發生 */ }
+            try {
+                if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) return true;
+            } catch (e) {}
+            return false;
+        }
+
         (function() {
             const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
-            const isInStandalone = window.navigator.standalone === true;
-            const dismissed = localStorage.getItem('pwaBannerDismissed');
-            if (isIos && !isInStandalone && !dismissed) {
+            const snoozeUntil = parseInt(localStorage.getItem('pwaBannerSnooze') || '0', 10);
+            const snoozed = Date.now() < snoozeUntil;
+            if (isIos && !isPwaStandalone() && !snoozed) {
                 document.getElementById('pwaBanner').classList.add('show');
             }
         })();
 
         function dismissPwaBanner() {
             document.getElementById('pwaBanner').classList.remove('show');
-            localStorage.setItem('pwaBannerDismissed', '1');
+            // 暫停 N 天後再次提醒（不是永久關閉）
+            const until = Date.now() + PWA_SNOOZE_DAYS * 24 * 60 * 60 * 1000;
+            localStorage.setItem('pwaBannerSnooze', String(until));
         }
 
         // Android Chrome：監聽安裝提示事件
