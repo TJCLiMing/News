@@ -759,13 +759,14 @@
             }
             const json = JSON.stringify(data);
             if (json === renderedJson) return;   // 資料沒變，不重繪
+            const isRerender = renderedJson !== null;   // 第二次以後的渲染不重播進場動畫
             renderedJson = json;
 
             document.getElementById('loading').style.display = 'none';
             document.getElementById('update-time').innerText = data.updateTime;
 
-            renderSection('posterGrid', data.posters, true);
-            renderSection('scheduleGrid', data.schedules, false);
+            renderSection('posterGrid', data.posters, true, isRerender);
+            renderSection('scheduleGrid', data.schedules, false, isRerender);
 
             // 若網址有 #schedule 則捲動過去（只做一次）
             if (window.location.hash === '#schedule' && !hasScrolled) {
@@ -801,7 +802,7 @@
                 }
             });
 
-        function renderSection(containerId, items, isPoster) {
+        function renderSection(containerId, items, isPoster, instant) {
             const grid = document.getElementById(containerId);
             grid.innerHTML = '';   // 先清空，避免快取與最新資料重複渲染
             if (!items || items.length === 0) {
@@ -813,8 +814,9 @@
 
             items.forEach((item, index) => {
                 const div = document.createElement('div');
-                div.className = 'card';
-                div.style.transitionDelay = (index * 0.1) + 's';
+                // 重繪（instant）時直接顯示，不重播進場動畫，避免畫面閃一下
+                div.className = instant ? 'card is-visible' : 'card';
+                if (!instant) div.style.transitionDelay = (index * 0.1) + 's';
 
                 let badgeHtml = '';
                 if (isPoster) {
@@ -846,7 +848,7 @@
                 imgEl.addEventListener('error', () => console.timeEnd(labelKey + ' ❌ 失敗'));
 
                 grid.appendChild(div);
-                observer.observe(div);
+                if (!instant) observer.observe(div);
             });
         }
     </script>

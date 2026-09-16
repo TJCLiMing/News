@@ -15,7 +15,17 @@
         // 防止外殼被自己的 iframe 載入而層層疊套：
         // photos.html / schedule.html 的「← 活動快報」指向 index.html，
         // 在外殼內點下去會落到這裡，直接換成內容頁即可。
-        if (window.self !== window.top) location.replace('home.html');
+        if (window.self !== window.top) {
+            var __home = 'home.html';
+            try { if (localStorage.getItem('uiStyle') === 'tech') __home = 'index-tech.html'; } catch (e) {}
+            location.replace(__home);
+        }
+        // 科技版使用者：外殼背景改深色，避免載入時閃一下白色
+        try {
+            if (localStorage.getItem('uiStyle') === 'tech') {
+                document.documentElement.classList.add('tech');
+            }
+        } catch (e) {}
     </script>
     <style>
         html, body {
@@ -24,6 +34,10 @@
             height: 100%;
             overflow: hidden;
             background: #F0F7FF;
+        }
+        /* 科技版：外殼與載入遮罩改深色，避免深色頁面載入前閃白 */
+        html.tech, html.tech body, html.tech #loading {
+            background: #04060d;
         }
 
         #frame {
@@ -89,7 +103,6 @@
 <body>
 
     <iframe id="frame"
-            src="home.html"
             title="黎明教會活動快報"
             allow="fullscreen; clipboard-write"></iframe>
 
@@ -101,23 +114,33 @@
         (function () {
             'use strict';
 
-            var HOME  = 'home.html';
             var frame = document.getElementById('frame');
             var btn   = document.getElementById('home-btn');
             var load  = document.getElementById('loading');
 
+            // 依使用者上次選的風格決定首頁（科技版直接載入，不經過 home.html 中轉）
+            function homePage() {
+                try {
+                    return localStorage.getItem('uiStyle') === 'tech' ? 'index-tech.html' : 'home.html';
+                } catch (e) { return 'home.html'; }
+            }
+
             // 深層連結：/#schedule、/#photos（manifest shortcuts 也用這個）
             var ROUTES = {
-                '#schedule': 'home.html#schedule',
-                '#photos':   'photos.html'
+                '#schedule': function () { return homePage() + '#schedule'; },
+                '#photos':   function () { return 'photos.html'; }
             };
-            function applyRoute() {
-                var r = ROUTES[location.hash];
-                if (r) frame.src = r;
+            function routeFor(hash) {
+                var r = ROUTES[hash];
+                return r ? r() : null;
             }
-            applyRoute();
+            // 初始載入：有深層連結走深層連結，否則載入對應風格的首頁
+            frame.src = routeFor(location.hash) || homePage();
             // 已經開著外殼時再點捷徑，只會變 hash 不會重載，要另外接
-            window.addEventListener('hashchange', applyRoute);
+            window.addEventListener('hashchange', function () {
+                var r = routeFor(location.hash);
+                if (r) frame.src = r;
+            });
 
             // 首頁清單：能讀到路徑（同網域）且落在這些頁面才算「在首頁」
             // 注意不能把根目錄「/」算進來 —— 根目錄現在是外殼本身
@@ -142,24 +165,19 @@
             });
 
             btn.addEventListener('click', function () {
-                frame.src = HOME;
+                frame.src = homePage();
             });
 
             // 保險：萬一 load 事件沒觸發，3 秒後也要收掉遮罩
             setTimeout(function () { load.classList.add('hide'); }, 3000);
 
             // Service Worker：離線快取 + Android 安裝提示
+            // 不做 controllerchange 自動 reload：HTML 本來就網路優先（永遠最新），
+            // SW 版本只影響圖片/JS 快取，讓新版下次訪問自然接手即可，
+            // 當場 reload 反而造成「載入後閃一下重刷」。
             if ('serviceWorker' in navigator) {
                 window.addEventListener('load', function () {
                     navigator.serviceWorker.register('sw.js').catch(function () { /* 失敗就當作沒有 */ });
-                });
-
-                // 換新版時自動重新整理一次，避免使用者卡在舊版
-                var reloaded = false;
-                navigator.serviceWorker.addEventListener('controllerchange', function () {
-                    if (reloaded) return;
-                    reloaded = true;
-                    location.reload();
                 });
             }
         })();
