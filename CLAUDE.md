@@ -116,28 +116,59 @@ li-ming-tjc.org/#photos     → photos.html（相簿）
 
 ## 常用指令
 
-### 所有操作都在 `News` 目錄
+### 前端（HTML、圖片）→ GitHub，在 `News` 目錄
 ```bash
-# 後端（程式碼.js）→ GAS
-clasp push
-clasp version "說明"
-clasp deploy --versionNumber X --deploymentId <ID> --description "說明"
-clasp deployments                 # 查看所有部署
-
-# 前端（HTML、圖片）→ GitHub
 git pull
 git add .
 git commit -m "說明"
 git push
-
-# ⚠️ 不要用 clasp pull（會覆蓋 HTML，GAS 的 HTML 是過時版本）
 ```
 
-> ⚠️ **`.claspignore` 不要刪**
-> 它讓 `clasp push` 只推 `程式碼.js` 和 `appsscript.json`。
-> 少了它，`frame-nav.js` 和 `sw.js` 會被一起推上 GAS——這兩個檔案最外層直接用了
+### 後端（程式碼.js）→ GAS
+
+> 🛑 **不要在 `News` 目錄直接 `clasp push`**
+>
+> GAS 專案裡有 5 個檔：`程式碼.js`、`appsscript.json`，以及改版前的
+> `index.html`、`photos.html`、`schedule.html`。
+> 這三個舊 HTML **還在用**——`doGet()` 沒帶 `mode` 參數時會回傳 GAS 的 `index.html`，
+> 舊的 GAS 網址與書籤靠它運作。
+>
+> 但 `News` 裡同名的 HTML 已經是 GitHub Pages 版本（`index.html` 甚至是 APP 外殼），
+> 內容完全不同，所以 `.claspignore` 把它們排除，只推 `程式碼.js` 與 `appsscript.json`。
+> **`clasp push` 會把遠端換成本機的檔案集合**，從 `News` 推就會**刪掉那三個舊 HTML**。
+>
+> 另外 `News` 的 `appsscript.json` 是 CRLF、遠端是 LF，clasp 會誤判 manifest 有改動，
+> 非互動環境下直接顯示 `Skipping push` 而不推。
+
+**正確做法：從遠端副本推**
+
+```bash
+# 1. 把遠端完整拉到暫存資料夾（不要在 News 裡做）
+mkdir C:\temp\gas-push && cd C:\temp\gas-push
+clasp clone 17krkepdEYq5nr0idnFi2zbqn8bYowJZDbWF5RZUhaFoI2ERUvp4NlXq5
+
+# 2. 只換掉程式碼（轉成 LF，跟遠端一致）
+tr -d '\r' < C:/Users/c3012/GoogleAppsScript/News/程式碼.js > 程式碼.js
+
+# 3. 確認 5 個檔都在，再推
+clasp status
+clasp push
+
+# 4. 部署（必須是 lmf@tjcedu.org，見下方）
+clasp version "說明"
+clasp deploy --versionNumber X --deploymentId <主要部署 ID> --description "說明"
+```
+
+> ⚠️ **`.claspignore` 仍然不要刪**
+> 少了它，`frame-nav.js` 和 `sw.js` 也會被推上 GAS——這兩個檔案最外層直接用了
 > `window` / `self` / `document`，GAS 載入時會 ReferenceError，**整個後端 API 會掛掉**。
-> 確認方式：`clasp status`，Tracked files 應該只有那兩個檔。
+> 它是最後一道防線，萬一有人在 `News` 誤下 `clasp push`，至少不會推壞 API。
+
+> ⚠️ **不要用 `clasp pull`**——會用 GAS 上的版本覆蓋本機的 `程式碼.js`。
+
+> ⚠️ **觸發器跑的是最新推送的程式碼（HEAD），不是部署版本**
+> `keepWarm()` 每 5 分鐘執行一次，`clasp push` 後立刻就會用新程式碼。
+> 推之前務必確認語法正確：`node --check 程式碼.js`
 
 ### 本機預覽前端
 
@@ -175,8 +206,30 @@ AKfycbzWzh7mEl9wt7ehw7SWLQpwpJlbRB6AoDhSiFSex7YC2sp92ceICPct4AO64LiyN8lbPg
 ## 每次部署流程
 
 1. **確認 clasp 帳號**：`clasp login` 確認為 `lmf@tjcedu.org`
-2. **GAS 推送**：`clasp push`
+2. **GAS 推送**：從遠端副本推，**不要在 News 裡推**（見上方「後端 → GAS」）
 3. **建立版本**：`clasp version "說明"`
 4. **部署**：`clasp deploy --versionNumber X ...`
 5. **更新部署時間**：在 GAS 編輯器執行 `setDeployTime()`
 6. **GitHub 推送**：`git add . && git commit -m "說明" && git push`
+
+> ⚠️ **為什麼部署一定要用 `lmf@tjcedu.org`，不只是權限問題**
+> `appsscript.json` 設定 `executeAs: USER_DEPLOYING`——網頁應用程式是**以部署者的身分執行**的，
+> 讀海報、安排表、相簿的雲端硬碟資料夾時用的也是部署者的權限。
+> 若改用其他帳號部署，而那個帳號沒有這些資料夾的存取權，**API 就讀不到資料，整個網站會空掉**。
+
+---
+
+## 相簿資料同步
+
+`photos-data.json` 由 GitHub Actions（`.github/workflows/update-photos.yml`）更新：
+
+- **每 3 小時**呼叫 GAS `?mode=photos`，存成靜態檔（單次約 60 秒）
+- 先驗證是合格 JSON（`status` 為 `success`、`folders` 非空）才覆蓋；失敗重試 3 次
+- 三次都失敗 → 保留原檔、job 失敗、GitHub 寄信通知
+- 相簿內容沒變就不 commit；但超過 30 天沒更新會強制更新一次，避免 GitHub 停用排程
+- 手動觸發：GitHub → Actions → 更新相簿資料 → Run workflow
+
+前端（`photos.html`）先讀靜態檔，再向 GAS `?mode=getTodayModified` 補上**最近 24 小時**有更新的資料夾。
+
+> 過去 GAS 偶爾回 Google 錯誤頁（HTML），舊版 workflow 沒檢查就存進去，相簿頁顯示「資料尚未產生」。
+> 若再看到這個訊息，先檢查 `photos-data.json` 是不是 HTML。
