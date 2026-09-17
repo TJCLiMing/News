@@ -2,7 +2,10 @@ name: 更新相簿資料
 
 on:
   schedule:
-    - cron: '0 16 * * *'   # 每天台灣時間凌晨 00:00（UTC 16:00）
+    # 每 3 小時一次。原本一天一次，新上傳的相簿一過午夜就不算「今日」，
+    # 要等到隔天機器人跑完才會出現；那晚若又失敗，就消失一整天。
+    # 實測一次約 60 秒，而且相簿沒變就不 commit，拉高頻率不會製造雜訊。
+    - cron: '0 */3 * * *'
   workflow_dispatch:         # 手動觸發按鈕
 
 jobs:
@@ -16,17 +19,56 @@ jobs:
 
       - name: 從 GAS 取得相簿資料
         run: |
-          curl -L \
-            "https://script.google.com/macros/s/AKfycbzWzh7mEl9wt7ehw7SWLQpwpJlbRB6AoDhSiFSex7YC2sp92ceICPct4AO64LiyN8lbPg/exec?mode=photos" \
-            -o photos-data.json
-          echo "取得完成，檔案大小："
-          wc -c photos-data.json
+          URL="https://script.google.com/macros/s/AKfycbzWzh7mEl9wt7ehw7SWLQpwpJlbRB6AoDhSiFSex7YC2sp92ceICPct4AO64LiyN8lbPg/exec?mode=photos"
+
+          # 合格條件：是 JSON、status 為 success、folders 是非空陣列。
+          # GAS 偶爾會回 Google 的「unable to open the file」錯誤頁（HTML），
+          # 以前沒檢查就直接覆蓋，相簿頁整個壞掉（09-08、09-14、09-16 都發生過）。
+          VALID='.status == "success" and (.folders | type == "array") and (.folders | length > 0)'
+
+          got=""
+          for i in 1 2 3; do
+            echo "── 第 $i 次嘗試 ──"
+            rm -f tmp.json
+            if curl -sSL --max-time 400 "$URL" -o tmp.json \
+               && jq -e "$VALID" tmp.json > /dev/null 2>&1; then
+              got=1
+              break
+            fi
+            echo "內容不合格，開頭是："
+            head -c 200 tmp.json 2>/dev/null || true
+            echo
+            if [ "$i" -lt 3 ]; then sleep 90; fi
+          done
+
+          # 三次都失敗：不動原檔，讓 job 失敗，GitHub 會寄信通知
+          if [ -z "$got" ]; then
+            rm -f tmp.json
+            echo "::error::連續 3 次都拿不到合格的相簿資料，保留原本的 photos-data.json"
+            exit 1
+          fi
+
+          echo "✅ 取得 $(jq '.folders | length' tmp.json) 個相簿，$(wc -c < tmp.json) bytes"
+
+          # 相簿內容真的變了才更新。updatedAt 每次都不同，不能拿來比，否則天天都會 commit
+          if jq -e . photos-data.json > /dev/null 2>&1 \
+             && jq -e --slurpfile old photos-data.json '.folders == $old[0].folders' tmp.json > /dev/null 2>&1; then
+            echo "相簿內容沒有變動，不更新"
+            rm -f tmp.json
+          else
+            mv tmp.json photos-data.json
+          fi
 
       - name: Commit & Push
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
           git add photos-data.json
-          git diff --staged --quiet && echo "資料無變動，略過 commit" || \
+          if git diff --staged --quiet; then
+            echo "資料無變動，略過 commit"
+            exit 0
+          fi
           git commit -m "chore: update photos-data.json [skip ci]"
+          # 機器人跑的期間若有人推了別的 commit，先接上再推，避免 push 被拒
+          git pull --rebase
           git push
