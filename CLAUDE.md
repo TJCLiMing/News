@@ -205,12 +205,21 @@ AKfycbzWzh7mEl9wt7ehw7SWLQpwpJlbRB6AoDhSiFSex7YC2sp92ceICPct4AO64LiyN8lbPg
 
 ## 每次部署流程
 
-1. **確認 clasp 帳號**：`clasp login` 確認為 `lmf@tjcedu.org`
-2. **GAS 推送**：從遠端副本推，**不要在 News 裡推**（見上方「後端 → GAS」）
-3. **建立版本**：`clasp version "說明"`
-4. **部署**：`clasp deploy --versionNumber X ...`
-5. **更新部署時間**：在 GAS 編輯器執行 `setDeployTime()`
-6. **GitHub 推送**：`git add . && git commit -m "說明" && git push`
+1. **推送程式碼**：從遠端副本推，**不要在 News 裡推**（見上方「後端 → GAS」）
+   — 編輯者帳號 `c3012312@gmail.com` 就能推，不必切換
+2. **部署（建議用網頁編輯器，不用切換 clasp 帳號）**
+   - 開 <https://script.google.com/d/17krkepdEYq5nr0idnFi2zbqn8bYowJZDbWF5RZUhaFoI2ERUvp4NlXq5/edit>
+   - ⚠️ **先確認右上角頭像是 `lmf@tjcedu.org`**
+   - 部署 → 管理部署作業 → 主要部署（ID 開頭 `AKfycbzWzh7m`）→ 鉛筆 → 版本選「新版本」→ 填說明 → 部署
+3. **更新部署時間**：同一個編輯器，函式選 `setDeployTime` → 執行
+   — 約 5 分鐘後 `keepWarm` 重建快取才會反映在網站頁尾
+4. **GitHub 推送**：`git add . && git commit -m "說明" && git push`
+5. **驗證**：`?mode=api` 回傳 `status: success` 且有海報資料，代表新版本讀得到雲端硬碟
+
+> 用 clasp 部署也可以（`clasp version` → `clasp deploy --versionNumber X --deploymentId ...`），
+> 但必須先把 clasp 切到 `lmf@tjcedu.org`。
+> `clasp login` 產生的網址沒有 `prompt=select_account`，瀏覽器只登入一個帳號時會**不跳選擇畫面直接用那個帳號**，
+> 很容易以為切換了其實沒有。部署前一定要用 `clasp show-authorized-user` 確認。
 
 > ⚠️ **為什麼部署一定要用 `lmf@tjcedu.org`，不只是權限問題**
 > `appsscript.json` 設定 `executeAs: USER_DEPLOYING`——網頁應用程式是**以部署者的身分執行**的，
