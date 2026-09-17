@@ -2,7 +2,7 @@
  * 網頁進入點
  * ?mode=api                        → 活動快報 JSON
  * ?mode=photos                     → 相簿完整結構 JSON（供 GitHub Actions 產生靜態 JSON 用）
- * ?mode=getTodayModified           → 今日新建或有更新的資料夾（含檔案）
+ * ?mode=getTodayModified           → 最近 24 小時新建或有更新的資料夾（含檔案）
  * ?mode=getFolders                 → 相簿資料夾清單（含今日偵測）
  * ?mode=getFolderFiles&folderId=xx → 指定資料夾的檔案列表
  * ?mode=getComments&folderId=xxx   → 取得指定相簿心得
@@ -410,8 +410,15 @@ function getFolderFilesList(folderId) {
 }
 
 /**
- * 取得今日新建或有更新的資料夾（含最新檔案），用於覆蓋靜態 JSON
- * 判斷依據：資料夾名稱含今日日期 OR 資料夾 lastUpdated >= 今日台灣時間 00:00
+ * 取得最近新建或有更新的資料夾（含最新檔案），用於覆蓋靜態 JSON
+ * 回傳條件：資料夾名稱含今日日期 OR lastUpdated 在最近 24 小時內
+ *
+ * 用「最近 24 小時」而不是「今天 00:00 之後」：
+ * 靜態 JSON 由 GitHub Actions 每 3 小時更新一次，但排程常延遲。
+ * 若只看今天，前一晚上傳的相簿一過午夜就不算今天、靜態檔又還沒收進去，
+ * 會暫時從相簿頁消失（2026-09 靈恩會的相簿就發生過）。
+ *
+ * isToday 仍只標記真正屬於「今天」的資料夾——前端會據此顯示「今日」徽章。
  */
 function getTodayModified() {
   try {
@@ -419,8 +426,12 @@ function getTodayModified() {
     const rootId = props.getProperty('PHOTO_FOLDER_ID') || '12xTW7EdkKu4mPQead-0C7NTJT54gzZD3';
     const root   = DriveApp.getFolderById(rootId);
 
-    // 今日台灣時間（UTC+8）00:00 對應的 UTC 時間
-    const todayStr = Utilities.formatDate(new Date(), 'GMT+8', 'yyyy-MM-dd');
+    const now = new Date();
+    // 回傳範圍：最近 24 小時
+    const since = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+
+    // 「今日」徽章的判斷：台灣時間（UTC+8）今天 00:00 之後
+    const todayStr = Utilities.formatDate(now, 'GMT+8', 'yyyy-MM-dd');
     const parts    = todayStr.split('-').map(Number);
     // 台灣 00:00 = UTC 前一天 16:00，用 Date.UTC 負小時數自動進位
     const todayStart = new Date(Date.UTC(parts[0], parts[1] - 1, parts[2], -8, 0, 0));
@@ -434,12 +445,12 @@ function getTodayModified() {
     const folders = [];
     const folderIter = root.getFolders();
     while (folderIter.hasNext()) {
-      const folder  = folderIter.next();
-      const name    = folder.getName();
-      const isToday = todayPatterns.some(p => name.includes(p));
-      const isModifiedToday = folder.getLastUpdated() >= todayStart;
+      const folder      = folderIter.next();
+      const name        = folder.getName();
+      const lastUpdated = folder.getLastUpdated();
+      const nameIsToday = todayPatterns.some(p => name.includes(p));
 
-      if (!isToday && !isModifiedToday) continue;
+      if (!nameIsToday && lastUpdated < since) continue;
 
       const files    = [];
       const fileIter = folder.getFiles();
@@ -451,7 +462,8 @@ function getTodayModified() {
         }
       }
       files.sort((a, b) => b.name.localeCompare(a.name));
-      folders.push({ id: folder.getId(), name, files, isToday: true });
+      const isToday = nameIsToday || lastUpdated >= todayStart;
+      folders.push({ id: folder.getId(), name, files, isToday });
     }
     folders.sort((a, b) => b.name.localeCompare(a.name));
 
