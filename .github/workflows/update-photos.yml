@@ -50,12 +50,23 @@ jobs:
 
           echo "✅ 取得 $(jq '.folders | length' tmp.json) 個相簿，$(wc -c < tmp.json) bytes"
 
-          # 相簿內容真的變了才更新。updatedAt 每次都不同，不能拿來比，否則天天都會 commit
-          if jq -e . photos-data.json > /dev/null 2>&1 \
+          # 相簿內容真的變了才更新。updatedAt 每次都不同，不能拿來比，否則每 3 小時就 commit 一次。
+          # 例外：超過 30 天沒更新就強制更新一次——GitHub 會停用「60 天沒有活動」的
+          # 公開 repo 的排程，若一直沒有新相簿，機器人會被悄悄關掉。
+          stale=""
+          old_ts=$(jq -r '.updatedAt // empty' photos-data.json 2>/dev/null || true)
+          old_epoch=$(date -d "$old_ts +0800" +%s 2>/dev/null || true)
+          if [ -n "$old_ts" ] && [ -n "$old_epoch" ]; then
+            if [ $(( $(date +%s) - old_epoch )) -gt $(( 30 * 86400 )) ]; then stale=1; fi
+          fi
+
+          if [ -z "$stale" ] \
+             && jq -e . photos-data.json > /dev/null 2>&1 \
              && jq -e --slurpfile old photos-data.json '.folders == $old[0].folders' tmp.json > /dev/null 2>&1; then
             echo "相簿內容沒有變動，不更新"
             rm -f tmp.json
           else
+            if [ -n "$stale" ]; then echo "已超過 30 天沒更新，強制更新一次以維持排程"; fi
             mv tmp.json photos-data.json
           fi
 
