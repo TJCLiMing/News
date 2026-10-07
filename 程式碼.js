@@ -1,7 +1,8 @@
 /**
  * 網頁進入點
- * ?mode=api                        → 活動快報 JSON
- * ?mode=photos                     → 相簿完整結構 JSON（供 GitHub Actions 產生靜態 JSON 用）
+ * ?mode=api                        → 活動快報 JSON（讀快取，由 keepWarm 每 5 分鐘更新）
+ * ?mode=refresh                    → 立即重掃海報與安排表並更新快取（60 秒內最多重掃一次）
+ * ?mode=photos                    → 相簿完整結構 JSON（供 GitHub Actions 產生靜態 JSON 用）
  * ?mode=getTodayModified           → 最近 24 小時新建或有更新的資料夾（含檔案）
  * ?mode=getFolders                 → 相簿資料夾清單（含今日偵測）
  * ?mode=getFolderFiles&folderId=xx → 指定資料夾的檔案列表
@@ -69,6 +70,12 @@ function doGet(e) {
       .setMimeType(ContentService.MimeType.JSON);
   }
 
+  if (e && e.parameter && e.parameter.mode === 'refresh') {
+    return ContentService
+      .createTextOutput(refreshCache())
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
   if (e && e.parameter && e.parameter.mode === 'api') {
     const props = PropertiesService.getScriptProperties();
     const cached = props.getProperty('CACHED_DATA');
@@ -79,10 +86,8 @@ function doGet(e) {
         .setMimeType(ContentService.MimeType.JSON);
     }
     Logger.log('[快取] 未命中，重新查詢 Drive');
-    const data = getDashboardData();
-    props.setProperty('CACHED_DATA', JSON.stringify(data));
     return ContentService
-      .createTextOutput(JSON.stringify(data))
+      .createTextOutput(rebuildCache())
       .setMimeType(ContentService.MimeType.JSON);
   }
   return HtmlService.createTemplateFromFile('index')
@@ -138,10 +143,57 @@ function getDashboardData() {
 
 // 每 5 分鐘預先抓資料並存進快取，讓使用者來時可以瞬間回傳
 function keepWarm() {
-  const data = getDashboardData();
-  PropertiesService.getScriptProperties()
-    .setProperty('CACHED_DATA', JSON.stringify(data));
+  rebuildCache();
   Logger.log('[keepWarm] 快取已更新');
+}
+
+/**
+ * 重掃海報與安排表資料夾，寫入快取，回傳 JSON 字串
+ * - cachedAt：快取建立時間（台灣時間），前端頁尾顯示「資料更新於」
+ * - 只有成功才寫入：雲端硬碟偶爾出錯時，保留上一份好的快取，不讓網站整個變成錯誤訊息
+ */
+function rebuildCache() {
+  const data = getDashboardData();
+  if (data.status !== 'success') return JSON.stringify(data);
+
+  data.cachedAt = Utilities.formatDate(new Date(), 'GMT+8', 'yyyy-MM-dd HH:mm');
+  const json = JSON.stringify(data);
+  PropertiesService.getScriptProperties().setProperties({
+    CACHED_DATA: json,
+    CACHED_AT: String(Date.now())
+  });
+  return json;
+}
+
+// 網站上的「重新整理」按鈕是公開的，冷卻時間內再按只回傳現有快取，
+// 避免有人連按把 GAS 的每日執行配額用完
+const REFRESH_COOLDOWN_MS = 60 * 1000;
+
+/**
+ * 立即重掃並更新快取（給頁尾的重新整理按鈕用）
+ * 用 LockService 避免多人同時按時重複掃描
+ */
+function refreshCache() {
+  const props = PropertiesService.getScriptProperties();
+  const cached = () => props.getProperty('CACHED_DATA');
+  const isFresh = () => Date.now() - Number(props.getProperty('CACHED_AT') || 0) < REFRESH_COOLDOWN_MS;
+  // 重掃失敗（雲端硬碟暫時出錯）就回傳現有快取——按了按鈕不該讓畫面變差
+  const rebuildOrKeep = () => {
+    const json = rebuildCache();
+    return JSON.parse(json).status === 'success' ? json : (cached() || json);
+  };
+
+  if (isFresh() && cached()) return cached();
+
+  const lock = LockService.getScriptLock();
+  if (!lock.tryLock(15000)) return cached() || rebuildCache();
+  try {
+    // 拿到鎖之後再確認一次：等鎖的時候可能已經有人更新過了
+    if (isFresh() && cached()) return cached();
+    return rebuildOrKeep();
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 // 執行一次即可安裝定時觸發器

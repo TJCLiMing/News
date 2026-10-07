@@ -200,6 +200,32 @@ AKfycbzWzh7mEl9wt7ehw7SWLQpwpJlbRB6AoDhSiFSex7YC2sp92ceICPct4AO64LiyN8lbPg
 | `QRCODE_FILE_ID` | 黎明官方帳號 QRCode 圖片 Drive ID |
 | `HELPER_QRCODE_FILE_ID` | 小幫手 QRCode 圖片 Drive ID |
 | `DEPLOY_TIME` | 最後部署時間（執行 `setDeployTime()` 更新） |
+| `CACHED_DATA` | 海報與安排表的快取（JSON），程式自動寫入，**不要手動改** |
+| `CACHED_AT` | 快取建立時間（毫秒），程式自動寫入，用來判斷重新整理的冷卻時間 |
+
+---
+
+## 海報與安排表的快取
+
+海報**不是即時讀雲端硬碟**，共三層：
+
+| 層 | 位置 | 更新時機 |
+|----|------|---------|
+| 瀏覽器 | `localStorage` 的 `homeDataCacheV1` | 開頁面先顯示上次的資料，背景抓新的後更新 |
+| GAS | Script Property `CACHED_DATA` | `?mode=api` 一律回這份，不碰雲端硬碟 |
+| 觸發器 | `keepWarm()` | 每 5 分鐘重掃資料夾、覆蓋 `CACHED_DATA` |
+
+所以新增海報後**最多約 5 分鐘**才會出現。要立刻看到，按網站頁尾「資料更新於」旁的 **↻ 按鈕**
+（呼叫 `?mode=refresh`，立刻重掃）。
+
+- 頁尾的「資料更新於」是快取建立時間；不是今天會顯示日期，舊資料一眼看得出來
+- `?mode=refresh` 是公開的，**60 秒內最多重掃一次**，其他人在冷卻中按只拿現有快取，避免被連按用完配額
+- 重掃失敗（雲端硬碟暫時出錯）時**保留原本的快取**，不會讓網站變成錯誤訊息
+- 加到主畫面的 APP 模式沒有瀏覽器的重新整理鍵，也靠這顆按鈕
+
+> ⚠️ `CACHED_DATA` 沒有有效期限，只靠 `keepWarm` 覆蓋。
+> 若觸發器被刪或停擺，網站會**一直顯示舊資料而且不會報錯**——這時頁尾「資料更新於」會停在某個舊時間。
+> 檢查方式：GAS 編輯器左側「觸發條件」，看 `keepWarm` 的最近執行時間。
 
 ---
 
