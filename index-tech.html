@@ -393,6 +393,28 @@
             gap: 8px;
         }
 
+        /* ── 資料同步時間與重新整理鈕 ── */
+        .refresh-btn {
+            margin-left: 8px;
+            width: 24px;
+            height: 24px;
+            padding: 0;
+            border: 1px solid rgba(0,240,255,0.45);
+            border-radius: 4px;
+            background: transparent;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            vertical-align: middle;
+            cursor: pointer;
+        }
+        .refresh-btn svg { width: 14px; height: 14px; fill: var(--cyan); }
+        .refresh-btn:hover { background: rgba(0,240,255,0.1); }
+        .refresh-btn:disabled { cursor: default; opacity: 0.6; }
+        .refresh-btn:focus-visible { outline: 1px solid var(--cyan); outline-offset: 2px; }
+        .refresh-btn.spinning svg { animation: refresh-spin 0.8s linear infinite; }
+        @keyframes refresh-spin { to { transform: rotate(360deg); } }
+
         /* ── 風格切換小按鈕 ── */
         .style-toggle {
             position: fixed;
@@ -534,6 +556,7 @@
         </div>
 
         <footer>
+            <span>DATA.SYNC :: <span id="data-time">--</span><button class="refresh-btn" id="refreshBtn" type="button" title="立即更新海報與安排表" aria-label="立即更新海報與安排表"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.65 6.35A7.96 7.96 0 0 0 12 4a8 8 0 1 0 7.73 10h-2.08A6 6 0 1 1 12 6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg></button></span>
             <span>LAST.DEPLOY :: <span id="update-time">LOADING...</span></span>
             <span>POWERED BY FAITH ✝</span>
         </footer>
@@ -622,7 +645,10 @@
                 document.getElementById('loading').innerHTML = "!! ERROR :: " + data.message;
                 return;
             }
-            const json = JSON.stringify(data);
+            showDataTime(data.cachedAt);
+            // cachedAt 每 5 分鐘都會變，不列入比較——否則每次開頁面都會整片重繪
+            const { cachedAt, ...content } = data;
+            const json = JSON.stringify(content);
             if (json === renderedJson) return;
             renderedJson = json;
 
@@ -697,6 +723,37 @@
                     document.getElementById('loading').innerHTML = "!! CONNECTION LOST :: " + err.message;
                 }
             });
+
+        // 頁尾 DATA.SYNC：今天只顯示時間，不是今天就加上日期
+        function showDataTime(cachedAt) {
+            const el = document.getElementById('data-time');
+            if (!el || !cachedAt) return;
+            const [day, time] = cachedAt.split(' ');
+            const d = new Date();
+            const today = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+            el.textContent = day === today ? time : day.slice(5).replace('-', '/') + ' ' + time;
+        }
+
+        // 重新整理鈕：請 GAS 立刻重掃資料夾（APP 模式沒有瀏覽器的重新整理鍵）
+        document.getElementById('refreshBtn').addEventListener('click', function () {
+            const btn = this;
+            if (btn.disabled) return;
+            btn.disabled = true;
+            btn.classList.add('spinning');
+            fetch(API_URL + '?mode=refresh')
+                .then(r => r.json())
+                .then(data => {
+                    applyData(data);
+                    if (data.status !== 'error') {
+                        try { localStorage.setItem(HOME_CACHE_KEY, JSON.stringify(data)); } catch (e) {}
+                    }
+                })
+                .catch(() => { /* 更新失敗就維持目前畫面 */ })
+                .finally(() => {
+                    btn.disabled = false;
+                    btn.classList.remove('spinning');
+                });
+        });
     </script>
 </body>
 </html>
