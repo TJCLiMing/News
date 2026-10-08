@@ -108,9 +108,21 @@ li-ming-tjc.org/#photos     → photos.html（相簿）
 部署 ID：`AKfycbw4peRpwBaI5-i1eTGR54Uo9HNSaPw3hj-tDW9g07fB8XcYvEfA6RSResxfy4RuFQ`
 
 ### GitHub
-| 帳號 | Repo |
+| 項目 | 內容 |
 |------|------|
-| `TJCLiMing` | https://github.com/TJCLiMing/News.git |
+| Repo | https://github.com/TJCLiMing/News.git（擁有者 `TJCLiMing`）|
+| 推送帳號 | **`TJC-KM`**（有寫入權）|
+| commit 作者 | `TJCLiMing <lmf@tjcedu.org>`（repo 的 `user.name` / `user.email`）|
+
+這台電腦的認證管理員存了 `TJCLiMing` 與 `TJC-KM` 兩個帳號，沒指定時每次推送都會跳出
+「Select an account」視窗等人選，自動化的推送會卡住。已在此 repo 指定推送帳號：
+
+```bash
+git config credential.https://github.com.username TJC-KM
+```
+
+> 這是本機的 `.git/config`，**不會跟著 git 同步**——另一台電腦要再設一次。
+> 推送帳號與 commit 作者是分開的，改推送帳號不會改變 commit 上顯示的作者。
 
 ---
 
