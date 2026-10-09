@@ -72,8 +72,12 @@ li-ming-tjc.org/#photos     → photos.html（相簿）
 
 | 資源 | 策略 |
 |------|------|
-| HTML / JSON | 網路優先（不會卡舊版）|
-| 圖片 / JS | 快取優先 → **所以改了要升版本** |
+| HTML / JSON / JS | 網路優先（不會卡舊版）|
+| 圖片 | 快取優先 → **所以改了要升版本** |
+
+> **改 `frame-nav.js` 時，同時把頁面引用的 `frame-nav.js?v=N` 版本號加一**（`home.html`、`index-tech.html`、`photos.html`、`posters.html`、`schedule.html` 共 5 處）。
+> 還在用舊版 Service Worker 的使用者會先拿快取裡的舊 JS，換網址才能讓他們第一次開啟就拿到新版。
+> 曾經發生過：外殼已經是新版，但 `frame-nav.js` 還是舊的，結果外部網站重新整理會跳回首頁。
 | 跨網域（GAS API、Google Fonts、tjc-km）| 完全不攔截 |
 
 ### PWA icon

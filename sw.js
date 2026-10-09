@@ -2,14 +2,15 @@
  * sw.js — 黎明教會活動快報 Service Worker
  *
  * 策略：
- *   HTML / JSON  → 網路優先，失敗才用快取（確保內容永遠是最新的，離線時仍可看）
- *   圖片 / JS    → 快取優先，同時背景更新（開啟速度快）
- *   跨網域請求   → 完全不攔截（GAS API、Google Fonts、tjc-km 等一律直接走網路）
+ *   HTML / JSON / JS → 網路優先，失敗才用快取（確保內容永遠是最新的，離線時仍可看）
+ *                      JS 也走網路優先：frame-nav.js 決定外殼行為，用到舊版會跟新外殼對不上
+ *   圖片             → 快取優先，同時背景更新（開啟速度快）
+ *   跨網域請求       → 完全不攔截（GAS API、Google Fonts、tjc-km 等一律直接走網路）
  *
  * ⚠️ 改版時記得把 VERSION 加一，舊快取才會被清掉。
  */
 
-var VERSION = 'v11';
+var VERSION = 'v12';
 var CACHE = 'liming-news-' + VERSION;
 
 // 安裝時先抓下來的核心檔案（單檔失敗不影響整體安裝）
@@ -60,7 +61,7 @@ self.addEventListener('activate', function (event) {
 });
 
 function isNetworkFirst(url) {
-    return /\.(html|json)$/i.test(url.pathname) || url.pathname.endsWith('/');
+    return /\.(html|json|js)$/i.test(url.pathname) || url.pathname.endsWith('/');
 }
 
 self.addEventListener('fetch', function (event) {
