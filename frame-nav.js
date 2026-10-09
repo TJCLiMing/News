@@ -8,6 +8,8 @@
  *   1. 自家 / tjc-km 的 GitHub Pages → target="_self"，留在 iframe 內（不開新分頁）
  *   2. 其他外部網站（Google、LINE、Canva…）→ 共用同一個具名分頁，
  *      所以不管點幾個，最多只會佔用 1 個額外分頁
+ *   3. 點進可嵌入的「跨網域」網站（tjc-km…）時通知外殼網址，
+ *      因為瀏覽器不讓外殼讀跨網域 iframe 的位置，重新整理時才能回到同一個網站
  */
 (function () {
     'use strict';
@@ -55,6 +57,16 @@
         // 純錨點與 javascript: 不處理
         if (href.charAt(0) === '#' || href.toLowerCase().indexOf('javascript:') === 0) return;
 
-        a.target = canEmbed(a.href) ? '_self' : EXTERNAL_TARGET;
+        var embed = canEmbed(a.href);
+        a.target = embed ? '_self' : EXTERNAL_TARGET;
+
+        if (embed) {
+            try {
+                if (new URL(a.href).origin !== location.origin) {
+                    // targetOrigin 限定同網域：只有自家外殼收得到
+                    window.parent.postMessage({ type: 'liming-frame-nav', url: a.href }, location.origin);
+                }
+            } catch (err) { /* 通知失敗不影響點擊 */ }
+        }
     }, true);
 })();

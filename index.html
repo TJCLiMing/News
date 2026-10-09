@@ -98,6 +98,44 @@
         }
         #home-btn.show { display: flex; }
         #home-btn:active { transform: scale(0.9); }
+
+        /* 重新整理目前頁面：疊在回首頁鈕上方，同樣只在離開首頁時出現 */
+        #reload-btn {
+            position: fixed;
+            right: 20px;
+            bottom: calc(16px + 52px + 12px + env(safe-area-inset-bottom, 0px));
+            width: 44px;
+            height: 44px;
+            border: 2px solid rgba(255, 146, 169, 0.9);
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.95);
+            color: #e56a8c;
+            font-size: 1.35rem;
+            font-weight: 700;
+            line-height: 1;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+            z-index: 10;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+        #reload-btn.show { display: flex; }
+        #reload-btn:active { transform: scale(0.9); }
+
+        html.tech #home-btn {
+            background: rgba(10, 15, 30, 0.92);
+            border: 1px solid rgba(0, 240, 255, 0.6);
+            box-shadow: 0 0 14px rgba(0, 240, 255, 0.4);
+        }
+        html.tech #reload-btn {
+            background: rgba(10, 15, 30, 0.92);
+            border: 1px solid rgba(0, 240, 255, 0.6);
+            color: #00f0ff;
+            box-shadow: 0 0 14px rgba(0, 240, 255, 0.4);
+        }
     </style>
 </head>
 <body>
@@ -108,21 +146,95 @@
 
     <div id="loading"><img src="logo_10th.png" alt="載入中"></div>
 
+    <button id="reload-btn" type="button" title="重新整理這一頁" aria-label="重新整理這一頁">↻</button>
     <button id="home-btn" type="button" title="回首頁" aria-label="回首頁">🏠</button>
 
     <script>
         (function () {
             'use strict';
 
-            var frame = document.getElementById('frame');
-            var btn   = document.getElementById('home-btn');
-            var load  = document.getElementById('loading');
+            var frame     = document.getElementById('frame');
+            var btn       = document.getElementById('home-btn');
+            var reloadBtn = document.getElementById('reload-btn');
+            var load      = document.getElementById('loading');
+
+            // 重新整理後要回到的頁面。用 sessionStorage：同一個分頁重新整理會保留，
+            // 關掉分頁或 APP 重開則從首頁開始
+            var SAVE_KEY = 'shellFrameUrl';
+
+            // 與 frame-nav.js 相同：可以嵌在 iframe 內的網域
+            var EMBEDDABLE_HOSTS = [
+                'li-ming-tjc.org',
+                'www.li-ming-tjc.org',
+                'tjcliming.github.io',
+                'tjc-km.github.io'
+            ];
+
+            // 跨網域 iframe 讀不到位置，只能記住「從自家頁面點進去時的網址」
+            var externalUrl = null;
 
             // 依使用者上次選的風格決定首頁（科技版直接載入，不經過 home.html 中轉）
             function homePage() {
                 try {
                     return localStorage.getItem('uiStyle') === 'tech' ? 'index-tech.html' : 'home.html';
                 } catch (e) { return 'home.html'; }
+            }
+
+            function parseUrl(url) {
+                try { return new URL(url, location.href); } catch (e) { return null; }
+            }
+
+            // 只還原可嵌入的網址，避免被塞入任意網址
+            function isAllowed(url) {
+                var u = parseUrl(url);
+                if (!u || (u.protocol !== 'http:' && u.protocol !== 'https:')) return false;
+                return u.origin === location.origin || EMBEDDABLE_HOSTS.indexOf(u.hostname) !== -1;
+            }
+
+            function isCrossOrigin(url) {
+                var u = parseUrl(url);
+                return !!u && u.origin !== location.origin;
+            }
+
+            function setFrame(url) {
+                externalUrl = isCrossOrigin(url) ? url : null;
+                frame.src = url;
+            }
+
+            // 首頁清單：能讀到路徑（同網域）且落在這些頁面才算「在首頁」
+            // 注意不能把根目錄「/」算進來 —— 根目錄現在是外殼本身
+            function isHomePath(path) {
+                return /(^|\/)(home\.html|index-tech\.html)$/.test(path);
+            }
+
+            // iframe 目前的完整網址；跨網域時讀取會丟例外，改用點進去時記下的網址
+            function currentFrameUrl() {
+                try {
+                    var href = frame.contentWindow.location.href;
+                    return (href && href !== 'about:blank') ? href : null;
+                } catch (e) {
+                    return externalUrl;
+                }
+            }
+
+            function saveFrameUrl() {
+                var url = currentFrameUrl();
+                var u = url && parseUrl(url);
+                if (!u) return;
+                try {
+                    if (u.origin === location.origin && isHomePath(u.pathname)) {
+                        sessionStorage.removeItem(SAVE_KEY);
+                    } else {
+                        sessionStorage.setItem(SAVE_KEY, u.href);
+                    }
+                } catch (e) { /* 無痕模式等情況存不了就算了 */ }
+            }
+
+            function savedFrameUrl() {
+                try {
+                    var url = sessionStorage.getItem(SAVE_KEY);
+                    return (url && isAllowed(url)) ? url : null;
+                } catch (e) { return null; }
             }
 
             // 深層連結：/#schedule、/#photos（manifest shortcuts 也用這個）
@@ -134,22 +246,37 @@
                 var r = ROUTES[hash];
                 return r ? r() : null;
             }
-            // 初始載入：有深層連結走深層連結，否則載入對應風格的首頁
-            frame.src = routeFor(location.hash) || homePage();
+            // 套用後清掉外殼網址的 hash：否則離開該頁再重新整理又會被拉回深層連結，
+            // 而且清掉後再點同一個捷徑才會再觸發 hashchange
+            function clearShellHash() {
+                if (location.hash) history.replaceState(null, '', location.pathname + location.search);
+            }
+
+            // 初始載入：深層連結 > 重新整理前的頁面 > 對應風格的首頁
+            var route = routeFor(location.hash);
+            setFrame(route || savedFrameUrl() || homePage());
+            if (route) clearShellHash();
+
             // 已經開著外殼時再點捷徑，只會變 hash 不會重載，要另外接
             window.addEventListener('hashchange', function () {
                 var r = routeFor(location.hash);
-                if (r) frame.src = r;
+                if (r) {
+                    setFrame(r);
+                    clearShellHash();
+                }
             });
 
-            // 首頁清單：能讀到路徑（同網域）且落在這些頁面才算「在首頁」
-            // 注意不能把根目錄「/」算進來 —— 根目錄現在是外殼本身
-            function isHomePath(path) {
-                return /(^|\/)(home\.html|index-tech\.html)$/.test(path);
-            }
+            // frame-nav.js 通知：從自家頁面點進了跨網域網站
+            window.addEventListener('message', function (e) {
+                if (e.origin !== location.origin || e.source !== frame.contentWindow) return;
+                var d = e.data;
+                if (!d || d.type !== 'liming-frame-nav' || !isAllowed(d.url)) return;
+                externalUrl = d.url;
+                saveFrameUrl();
+            });
 
             // 跨網域時讀取 location 會丟出例外 —— 這正好代表「已經離開首頁」
-            function refreshHomeBtn() {
+            function refreshButtons() {
                 var atHome = false;
                 try {
                     atHome = isHomePath(frame.contentWindow.location.pathname);
@@ -157,15 +284,36 @@
                     atHome = false;
                 }
                 btn.classList.toggle('show', !atHome);
+                reloadBtn.classList.toggle('show', !atHome);
             }
 
             frame.addEventListener('load', function () {
                 load.classList.add('hide');
-                refreshHomeBtn();
+                refreshButtons();
+                saveFrameUrl();
             });
 
             btn.addEventListener('click', function () {
-                frame.src = homePage();
+                setFrame(homePage());
+            });
+
+            // 只重新整理 iframe 內容：同網域可原地重載（留在同一頁），
+            // 跨網域不允許從外面呼叫 reload，只能重新載入點進去時的網址
+            reloadBtn.addEventListener('click', function () {
+                load.classList.remove('hide');
+                setTimeout(function () { load.classList.add('hide'); }, 3000);
+                try {
+                    frame.contentWindow.location.reload();
+                } catch (e) {
+                    setFrame(externalUrl || savedFrameUrl() || homePage());
+                }
+            });
+
+            // 相簿換相簿用的是 replaceState，不會觸發任何事件，
+            // 所以在離開／重新整理／切到背景的當下再讀一次最新位置
+            window.addEventListener('pagehide', saveFrameUrl);
+            document.addEventListener('visibilitychange', function () {
+                if (document.visibilityState === 'hidden') saveFrameUrl();
             });
 
             // 保險：萬一 load 事件沒觸發，3 秒後也要收掉遮罩

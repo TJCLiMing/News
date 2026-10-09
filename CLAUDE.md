@@ -29,7 +29,7 @@ li-ming-tjc.org/        → index.html（外殼，全螢幕 iframe）
 | `photos.html` | 相簿頁 | |
 | `schedule.html` | 安排表**單頁版**（獨立呼叫 API 讀安排表圖檔）| 沒有頁面連到它，靠直接輸入網址進入；`home.html` 內也有同樣的安排表區塊 |
 | `app.html` | 轉址頁 | 保留舊 `/app.html` 連結用，**不要刪** |
-| `frame-nav.js` | iframe 內的連結導向控制 | 新增可嵌入網域時要改 |
+| `frame-nav.js` | iframe 內的連結導向控制 | 新增可嵌入網域時要改（`index.html` 也要同步改）|
 | `sw.js` | Service Worker（離線快取）| 見下方版本規則 |
 | `manifest.json` | PWA 設定 | |
 
@@ -45,6 +45,19 @@ li-ming-tjc.org/        → index.html（外殼，全螢幕 iframe）
 
 外殼有**防疊套保護**：被自己的 iframe 載入時會 `location.replace('home.html')`，
 所以任何頁面連到 `index.html` 都不會變成外殼裡再包一層外殼。
+
+### 重新整理與位置記憶
+
+網址列一直停在 `li-ming-tjc.org/`，所以外殼自己記住 iframe 目前在哪一頁：
+
+- **記在 `sessionStorage` 的 `shellFrameUrl`**：同一個分頁重新整理會回到原本那頁；關掉分頁或 APP 重開則從首頁開始
+- **自家頁面**（相簿、海報…）：精確回到原本位置，包括相簿的 `#相簿ID`
+- **跨網域網站**（`tjc-km.github.io`）：瀏覽器不讓外殼讀它的位置，只能回到**當初點進去的入口網址**。
+  入口網址由 `frame-nav.js` 在點擊時用 `postMessage` 通知外殼
+- **右下角 ↻ 按鈕**（離開首頁才出現，疊在 🏠 上方）：只重新整理 iframe。同網域原地重載；跨網域重新載入入口網址
+- 深層連結 `#schedule` / `#photos` 套用後會清掉外殼網址的 hash，之後重新整理才不會一直被拉回去
+
+> `frame-nav.js` 與 `index.html` 各有一份 `EMBEDDABLE_HOSTS`，新增可嵌入網域時**兩邊都要改**。
 
 ### 深層連結
 
