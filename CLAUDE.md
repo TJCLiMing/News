@@ -29,6 +29,7 @@ li-ming-tjc.org/        → index.html（外殼，全螢幕 iframe）
 | `photos.html` | 相簿頁 | |
 | `schedule.html` | 安排表**單頁版**（獨立呼叫 API 讀安排表圖檔）| 沒有頁面連到它，靠直接輸入網址進入；`home.html` 內也有同樣的安排表區塊 |
 | `app.html` | 轉址頁 | 保留舊 `/app.html` 連結用，**不要刪** |
+| `prayer.html` | 代禱事項維護（讀寫「02.代禱事項」試算表）| 首頁沒有連結，直接給網址；可被其他網頁嵌入，見下方「代禱事項維護」 |
 | `frame-nav.js` | iframe 內的連結導向控制 | 新增可嵌入網域時要改（`index.html` 也要同步改）|
 | `sw.js` | Service Worker（離線快取）| 見下方版本規則 |
 | `manifest.json` | PWA 設定 | |
@@ -231,6 +232,31 @@ AKfycbzWzh7mEl9wt7ehw7SWLQpwpJlbRB6AoDhSiFSex7YC2sp92ceICPct4AO64LiyN8lbPg
 | `DEPLOY_TIME` | 最後部署時間（執行 `setDeployTime()` 更新） |
 | `CACHED_DATA` | 海報與安排表的快取（JSON），程式自動寫入，**不要手動改** |
 | `CACHED_AT` | 快取建立時間（毫秒），程式自動寫入，用來判斷重新整理的冷卻時間 |
+| `PRAYER_SHEET_ID` | （選填）代禱事項試算表 ID；沒設定時用程式內預設的「02.代禱事項」 |
+
+---
+
+## 代禱事項維護（`prayer.html`）
+
+網址：<https://li-ming-tjc.org/prayer.html>，試玩假資料：`prayer.html?demo=1`（不會寫入試算表）
+
+- 讀寫試算表「02.代禱事項」，後端是 `程式碼.js` 的 `doPost`（`action: prayerGet / prayerSave`）
+- **不需要登入，任何人都能改**，也**不記錄修改者**（使用者決定）
+- 只動「近期代禱」「長期關懷代禱」「近期事工」三個分頁的 A、B 欄資料列，以及「規範說明」分頁「經文」那一列的 B、C 欄。
+  **分頁名稱不能改**——試算表另有投影程式靠分頁名稱讀資料
+- 字數上限（前後端都檢查）：近期代禱 15、長期關懷 5、近期事工 30。改規範時 `程式碼.js` 的 `PRAYER_TABS` 與 `prayer.html` 的 `CATS` 要一起改
+- 兩人同時改：儲存時比對讀取當下的版本，被別人改過就**拒絕儲存**並請使用者重新載入，不會互相覆蓋
+- 後端以部署者 `lmf@tjcedu.org` 身分寫入，所以這個帳號必須對試算表有編輯權
+
+### 嵌入其他網頁
+
+```html
+<iframe src="https://li-ming-tjc.org/prayer.html" style="width:100%;height:720px;border:0"></iframe>
+```
+
+- 被 iframe 嵌入時**自動隱藏綠色標題列**（宿主網頁通常有自己的標題）；`?header=1` 強制顯示、`?header=0` 強制隱藏
+- **請給固定高度**（建議 600～800px），讓頁面在框內自己捲動。
+  底部的「儲存」列和編輯彈窗都是貼齊框的可視範圍，若把 iframe 撐成跟內容一樣高，這兩個會跑到宿主畫面外面看不到
 
 ---
 

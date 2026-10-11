@@ -524,3 +524,159 @@ function getTodayModified() {
     return { status: 'error', message: e.toString() };
   }
 }
+
+/* ════════════════════════════════════════════════════════════
+ * 代禱事項維護（prayer.html 使用）
+ *
+ * POST，body 為 JSON：
+ *   { action: 'prayerGet' }                → 讀取四個分類
+ *   { action: 'prayerSave', changes: {...} } → 寫回有變更的分類
+ *
+ * 不需要登入，任何人都可以改（使用者的決定）。
+ * 試算表分頁名稱不能改，投影程式靠分頁名稱讀資料。
+ * 只動各分頁 A、B 欄的資料列（第 2 列起），標題列與其他欄不動。
+ * ════════════════════════════════════════════════════════════ */
+
+const PRAYER_SHEET_ID_DEFAULT = '1hl8-L9KOFU1fLyJGGMfAB5cFjZ2fJZWrrVeR34NcQww';
+const PRAYER_TABS = {
+  recent:   { sheet: '近期代禱',     limit: 15 },
+  longterm: { sheet: '長期關懷代禱', limit: 5  },
+  ministry: { sheet: '近期事工',     limit: 30 }
+};
+// 經文放在這個分頁「類型 = 經文」那一列：B 欄經文、C 欄出處
+const PRAYER_RULE_SHEET = '規範說明';
+const PRAYER_MAX_ROWS = 100;
+
+function doPost(e) {
+  let req;
+  try {
+    req = JSON.parse(e.postData.contents);
+  } catch (err) {
+    return prayerJson_({ status: 'error', message: '格式錯誤' });
+  }
+  if (req.action === 'prayerGet')  return prayerJson_(prayerGet_());
+  if (req.action === 'prayerSave') return prayerJson_(prayerSave_(req.changes || {}));
+  return prayerJson_({ status: 'error', message: '未知的 action' });
+}
+
+function prayerBook_() {
+  const id = PropertiesService.getScriptProperties().getProperty('PRAYER_SHEET_ID') || PRAYER_SHEET_ID_DEFAULT;
+  return SpreadsheetApp.openById(id);
+}
+
+function prayerHash_(obj) {
+  const bytes = Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, JSON.stringify(obj), Utilities.Charset.UTF_8);
+  return Utilities.base64Encode(bytes);
+}
+
+// 讀一個分頁的 A、B 欄（第 2 列起），略過整列空白
+function prayerReadRows_(sh) {
+  const last = sh.getLastRow();
+  if (last < 2) return [];
+  return sh.getRange(2, 1, last - 1, 2).getDisplayValues()
+    .map(r => [String(r[0]).trim(), String(r[1]).trim()])
+    .filter(r => r[0] || r[1]);
+}
+
+function prayerFindVerseRow_(sh) {
+  if (!sh) return null;
+  const values = sh.getDataRange().getDisplayValues();
+  for (let i = 0; i < values.length; i++) {
+    if (String(values[i][0]).trim() === '經文') {
+      return { row: i + 1, text: String(values[i][1] || '').trim(), ref: String(values[i][2] || '').trim() };
+    }
+  }
+  return null;
+}
+
+function prayerReadAll_(book) {
+  const data = {};
+  Object.keys(PRAYER_TABS).forEach(k => {
+    const sh = book.getSheetByName(PRAYER_TABS[k].sheet);
+    if (!sh) throw new Error('找不到分頁：' + PRAYER_TABS[k].sheet);
+    const rows = prayerReadRows_(sh);
+    data[k] = { rows, hash: prayerHash_(rows) };
+  });
+  const v = prayerFindVerseRow_(book.getSheetByName(PRAYER_RULE_SHEET));
+  data.verse = v
+    ? { text: v.text, ref: v.ref, hash: prayerHash_([v.text, v.ref]), available: true }
+    : { text: '', ref: '', hash: prayerHash_(['', '']), available: false };
+  return data;
+}
+
+function prayerGet_() {
+  try {
+    return { status: 'success', data: prayerReadAll_(prayerBook_()) };
+  } catch (err) {
+    return { status: 'error', message: String(err) };
+  }
+}
+
+function prayerSave_(changes) {
+  const lock = LockService.getScriptLock();
+  if (!lock.tryLock(10000)) return { status: 'error', message: '其他人正在儲存，請稍後再試' };
+  try {
+    const book = prayerBook_();
+    const now = prayerReadAll_(book);
+    const keys = Object.keys(changes);
+
+    // 1. 內容驗證（不相信前端）
+    for (const k of keys) {
+      if (k === 'verse') {
+        if (!now.verse.available) return { status: 'error', message: '規範說明分頁找不到「經文」那一列' };
+        if (!String(changes.verse.text || '').trim()) return { status: 'error', message: '經文不能空白' };
+        continue;
+      }
+      if (!PRAYER_TABS[k]) return { status: 'error', message: '未知的分類：' + k };
+      const rows = changes[k].rows;
+      if (!Array.isArray(rows) || rows.length > PRAYER_MAX_ROWS) return { status: 'error', message: '資料格式錯誤' };
+      for (const r of rows) {
+        const main = String((r && r[0]) || '').trim();
+        if (!main || Array.from(main).length > PRAYER_TABS[k].limit) {
+          return { status: 'error', message: PRAYER_TABS[k].sheet + '有項目空白或超過字數' };
+        }
+      }
+    }
+
+    // 2. 有任何一個分類在讀取後被別人改過，整批都不寫，避免蓋掉對方的內容
+    const conflicts = keys.filter(k => now[k].hash !== changes[k].baseHash);
+    if (conflicts.length) {
+      return {
+        status: 'error',
+        code: 'CONFLICT',
+        sheets: conflicts.map(k => (k === 'verse' ? '經文' : PRAYER_TABS[k].sheet))
+      };
+    }
+
+    // 3. 寫入：清掉舊資料列的 A、B 欄再寫新的（標題列不動）
+    keys.forEach(k => {
+      if (k === 'verse') {
+        const sh = book.getSheetByName(PRAYER_RULE_SHEET);
+        const v = prayerFindVerseRow_(sh);
+        sh.getRange(v.row, 2, 1, 2).setValues([[
+          String(changes.verse.text).trim(),
+          String(changes.verse.ref || '').trim()
+        ]]);
+        return;
+      }
+      const sh = book.getSheetByName(PRAYER_TABS[k].sheet);
+      const rows = changes[k].rows.map(r => [String(r[0]).trim(), String(r[1] || '').trim()]);
+      const last = sh.getLastRow();
+      if (last >= 2) sh.getRange(2, 1, last - 1, 2).clearContent();
+      // 先設成純文字，避免「10/24」之類被試算表自動轉成日期
+      if (rows.length) sh.getRange(2, 1, rows.length, 2).setNumberFormat('@').setValues(rows);
+    });
+    SpreadsheetApp.flush();
+
+    Logger.log('[prayerSave] 更新：' + keys.join(', '));
+    return { status: 'success' };
+  } catch (err) {
+    return { status: 'error', message: String(err) };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function prayerJson_(obj) {
+  return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
+}

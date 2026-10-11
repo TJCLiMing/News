@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="theme-color" content="#227700">
+    <title>代禱事項維護</title>
+    <link rel="icon" type="image/png" href="logo_10th.png">
+    <script>
+        // 嵌入模式：被其他網頁用 iframe 嵌入時隱藏標題列（宿主網頁通常已有自己的標題）
+        // 網址參數可強制指定：?header=0 隱藏、?header=1 顯示
+        (function () {
+            var p = new URLSearchParams(location.search).get('header');
+            var embedded = window.self !== window.top;
+            if (p === '0' || (p !== '1' && embedded)) document.documentElement.classList.add('embed');
+        })();
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --green: #227700;
+            --green-dark: #1a5c00;
+            --green-mid: #4f9a2a;
+            --green-soft: #eaf6df;
+            --green-pale: #f6fbf1;
+            --line: #d3eabf;
+            --text: #33402b;
+            --dim: #8a9a80;
+            --warn: #b07a00;
+            --danger: #d0392b;
+        }
+        * { box-sizing: border-box; }
+        html { background: #eef7e6; }
+        body {
+            margin: 0;
+            font-family: 'Noto Sans TC', sans-serif;
+            background: linear-gradient(160deg, #f4fbec 0%, #e7f4dc 100%);
+            color: var(--text);
+            min-height: 100vh;
+            padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+        }
+        button { font-family: inherit; }
+
+        /* ── 標題列（嵌入時隱藏） ── */
+        header {
+            background: var(--green);
+            color: #fff;
+            padding: 14px 18px;
+            padding-top: calc(14px + env(safe-area-inset-top, 0px));
+        }
+        header h1 { margin: 0; font-size: 1.2rem; font-weight: 700; letter-spacing: 1px; }
+        html.embed header { display: none; }
+
+        .wrap { max-width: 720px; margin: 0 auto; padding: 16px; }
+        html.embed .wrap { padding-top: 10px; }
+
+        /* ── 分類頁籤（捲動時固定在上方） ── */
+        .tabs-holder {
+            position: sticky; top: 0; z-index: 40;
+            padding: 8px 0; margin: -8px 0 6px;
+            background: linear-gradient(#eef7e6 70%, rgba(238,247,230,0));
+        }
+        .tabs {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;
+            background: #fff; padding: 5px; border-radius: 16px;
+            border: 1.5px solid var(--line);
+        }
+        .tab {
+            border: 0; background: transparent; border-radius: 12px; padding: 9px 4px;
+            font-size: 0.9rem; font-weight: 700; color: var(--dim); cursor: pointer;
+            position: relative; line-height: 1.25;
+        }
+        .tab:hover { background: var(--green-pale); }
+        .tab small { display: block; font-size: 0.7rem; font-weight: 500; }
+        .tab.active { background: var(--green); color: #fff; }
+        .tab .dot {
+            position: absolute; top: 5px; right: 7px; width: 7px; height: 7px; border-radius: 50%;
+            background: #f2b300; display: none;
+        }
+        .tab.dirty .dot { display: block; }
+
+        .rule {
+            font-size: 0.82rem; color: #5f7151; background: var(--green-pale);
+            border: 1.5px dashed #bfe0a5; border-radius: 12px; padding: 9px 12px; margin-bottom: 12px;
+            line-height: 1.6;
+        }
+        .rule b { color: var(--green); }
+
+        /* ── 項目列表 ── */
+        .item {
+            background: #fff; border-radius: 16px; padding: 12px 12px 12px 14px;
+            margin-bottom: 10px; display: flex; gap: 10px; align-items: flex-start;
+            border: 1.5px solid var(--line);
+        }
+        .item.changed { border-color: #f2c94c; background: #fffdf3; }
+        .item-no {
+            flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%;
+            background: var(--green-soft); color: var(--green); font-size: 0.78rem; font-weight: 700;
+            display: flex; align-items: center; justify-content: center; margin-top: 1px;
+        }
+        .item-body { flex: 1; min-width: 0; cursor: pointer; }
+        .item-main { font-size: 1.05rem; font-weight: 700; word-break: break-all; }
+        .item-note { margin-top: 4px; font-size: 0.8rem; color: var(--dim); line-height: 1.5; word-break: break-all; }
+        .item-note::before { content: '📝 不投影：'; color: #a8b79e; }
+        .item-tags { margin-top: 5px; display: flex; gap: 6px; flex-wrap: wrap; }
+        .item-tags:empty { display: none; }
+        .tag { font-size: 0.68rem; padding: 1px 7px; border-radius: 8px; font-weight: 700; }
+        .tag.over { background: #fde4e1; color: var(--danger); }
+        .tag.changed { background: #fff2c6; color: var(--warn); }
+        .item-actions { display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
+        .item-actions .row { display: flex; gap: 4px; }
+        .mini {
+            width: 32px; height: 30px; border-radius: 9px; border: 1.5px solid var(--line);
+            background: #fff; cursor: pointer; font-size: 0.85rem; color: var(--green-mid);
+            display: flex; align-items: center; justify-content: center; padding: 0;
+        }
+        .mini:hover { background: var(--green-pale); }
+        .mini:disabled { opacity: 0.3; cursor: default; }
+        .mini.del { color: var(--danger); }
+
+        .empty {
+            text-align: center; color: #a8b79e; padding: 34px 0; font-size: 0.95rem;
+            background: #fff; border-radius: 16px; border: 2px dashed var(--line); margin-bottom: 10px;
+        }
+        .add-btn {
+            width: 100%; border: 2px dashed #a9d68a; background: var(--green-pale); color: var(--green);
+            border-radius: 16px; padding: 13px; font-size: 1rem; font-weight: 700; cursor: pointer;
+        }
+        .add-btn:hover { background: var(--green-soft); }
+
+        /* ── 經文 ── */
+        .verse-card { background: #fff; border-radius: 18px; padding: 16px; border: 1.5px solid var(--line); }
+        label.f { display: block; font-size: 0.85rem; font-weight: 700; margin: 4px 0 6px; color: #5f7151; }
+        textarea, input[type=text] {
+            width: 100%; font-family: inherit; font-size: 1rem; color: var(--text);
+            border: 2px solid #dcecce; border-radius: 12px; padding: 10px 12px; outline: none; background: #fff;
+        }
+        textarea:focus, input:focus { border-color: var(--green-mid); }
+        textarea { resize: vertical; min-height: 84px; line-height: 1.6; }
+        .counter { text-align: right; font-size: 0.78rem; color: var(--dim); margin-top: 4px; }
+        .counter.over { color: var(--danger); font-weight: 700; }
+        .field { margin-bottom: 12px; }
+
+        /* ── 狀態訊息 ── */
+        .state { text-align: center; padding: 50px 16px; color: var(--dim); }
+        .state .big { font-size: 2rem; margin-bottom: 8px; }
+        .state p { margin: 0 0 16px; line-height: 1.6; }
+
+        /* ── 底部儲存列 ── */
+        .savebar {
+            position: fixed; left: 0; right: 0; bottom: 0; z-index: 60;
+            background: #fff; border-top: 2px solid var(--line);
+            padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+            display: flex; align-items: center; gap: 10px;
+            transform: translateY(110%); transition: transform 0.25s ease;
+            box-shadow: 0 -6px 20px rgba(34,119,0,0.12);
+        }
+        .savebar.show { transform: translateY(0); }
+        .savebar .msg { flex: 1; font-size: 0.9rem; font-weight: 700; color: var(--warn); }
+        .savebar .msg.bad { color: var(--danger); }
+        .btn {
+            border: 0; border-radius: 22px; padding: 10px 20px; font-size: 0.95rem; font-weight: 700;
+            cursor: pointer; white-space: nowrap;
+        }
+        .btn.primary { background: var(--green); color: #fff; box-shadow: 0 3px 0 var(--green-dark); }
+        .btn.primary:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--green-dark); }
+        .btn.primary:disabled { background: #b7d3a5; box-shadow: none; cursor: default; transform: none; }
+        .btn.ghost { background: #eef3ea; color: #6d7d63; }
+
+        /* ── 編輯彈窗 ── */
+        .overlay {
+            position: fixed; inset: 0; background: rgba(25,45,15,0.45); z-index: 100;
+            display: none; align-items: flex-end; justify-content: center;
+        }
+        .overlay.show { display: flex; }
+        .sheet {
+            width: 100%; max-width: 560px; background: #fff;
+            border-radius: 22px 22px 0 0; padding: 18px 18px calc(18px + env(safe-area-inset-bottom, 0px));
+            border-top: 4px solid var(--green);
+            animation: up 0.22s ease;
+        }
+        @media (min-width: 640px) {
+            .overlay { align-items: center; }
+            .sheet { border-radius: 22px; }
+        }
+        @keyframes up { from { transform: translateY(30px); opacity: 0; } to { transform: none; opacity: 1; } }
+        .sheet h2 { margin: 0 0 14px; font-size: 1.1rem; color: var(--green); }
+        .sheet .actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 6px; }
+
+        /* ── 提示 ── */
+        .toast {
+            position: fixed; left: 50%; bottom: calc(100px + env(safe-area-inset-bottom, 0px));
+            transform: translateX(-50%); background: rgba(26,60,10,0.92); color: #fff;
+            padding: 10px 16px; border-radius: 22px; font-size: 0.9rem; z-index: 200;
+            display: none; align-items: center; gap: 12px; max-width: calc(100% - 32px);
+        }
+        .toast.show { display: flex; }
+        .toast button { background: none; border: 0; color: #c6f0a6; font-weight: 700; cursor: pointer; font-size: 0.9rem; white-space: nowrap; }
+
+        .demo-note {
+            font-size: 0.78rem; text-align: center; color: var(--warn);
+            background: #fff7da; border: 1px solid #f2dd8c; border-radius: 10px; padding: 6px; margin-bottom: 10px;
+        }
+        [hidden] { display: none !important; }
+    </style>
+</head>
+<body>
+
+<header><h1>🙏 代禱事項維護</h1></header>
+
+<div class="wrap">
+    <div class="demo-note" id="demoNote" hidden>示範模式：使用假資料，不會寫入試算表</div>
+    <div class="tabs-holder" id="tabsHolder" hidden><div class="tabs" id="tabs"></div></div>
+    <div id="panel"><div class="state"><div class="big">🌱</div><p>讀取中…</p></div></div>
+</div>
+
+<!-- 底部儲存列 -->
+<div class="savebar" id="savebar">
+    <div class="msg" id="saveMsg"></div>
+    <button class="btn ghost" id="discardBtn">放棄</button>
+    <button class="btn primary" id="saveBtn">儲存</button>
+</div>
+
+<!-- 編輯彈窗 -->
+<div class="overlay" id="editOverlay">
+    <div class="sheet">
+        <h2 id="editTitle">新增</h2>
+        <div class="field">
+            <label class="f" id="mainLabel">內容</label>
+            <input type="text" id="mainInput" enterkeyhint="done">
+            <div class="counter" id="mainCounter"></div>
+        </div>
+        <div class="field">
+            <label class="f">備註說明 <span style="font-weight:400;color:#a8b79e">（不投影，僅列印）</span></label>
+            <textarea id="noteInput" placeholder="可留空"></textarea>
+        </div>
+        <div class="actions">
+            <button class="btn ghost" id="editCancel">取消</button>
+            <button class="btn primary" id="editOk">確定</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"><span id="toastMsg"></span><button id="toastAction" hidden>復原</button></div>
+
+<script>
+(function () {
+    'use strict';
+
+    var API_URL = 'https://script.google.com/macros/s/AKfycbzWzh7mEl9wt7ehw7SWLQpwpJlbRB6AoDhSiFSex7YC2sp92ceICPct4AO64LiyN8lbPg/exec';
+    // ?demo=1：用假資料試玩，不會碰到試算表
+    var DEMO = new URLSearchParams(location.search).get('demo') === '1';
+
+    // sheet 對應試算表分頁名稱（分頁名稱不能改，投影程式會掛掉）
+    var CATS = [
+        { key: 'recent',   label: '近期代禱', short: '近期', limit: 15, mainLabel: '姓名稱謂備註', example: '楊ＯＯ姐妹（住院）' },
+        { key: 'longterm', label: '長期關懷', short: '長期', limit: 5,  mainLabel: '姓名',         example: '陳ＯＯ' },
+        { key: 'ministry', label: '近期事工', short: '事工', limit: 30, mainLabel: '事工項目',     example: '9/15-20 秋季靈恩佈道會' }
+    ];
+    var VERSE = { key: 'verse', label: '經文', short: '經文', textLimit: 60 };
+
+    var server = null;   // 試算表上的版本
+    var draft = null;    // 畫面上正在編輯的版本
+    var current = 'recent';
+    var editing = null;  // { cat, index }，index = -1 代表新增
+
+    var $ = function (id) { return document.getElementById(id); };
+    var clone = function (o) { return JSON.parse(JSON.stringify(o)); };
+    var len = function (s) { return Array.from(s || '').length; };   // 全形字也算 1 個字
+    function esc(s) {
+        return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+        });
+    }
+    function catOf(k) { return CATS.find(function (c) { return c.key === k; }); }
+
+    // ═══════════════ API ═══════════════
+    function api(action, payload) {
+        if (DEMO) return demoApi(action, payload || {});
+        // text/plain 避免 CORS 預檢（GAS 不支援 OPTIONS）
+        return fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify(Object.assign({ action: action }, payload || {}))
+        }).then(function (r) {
+            return r.text().then(function (t) {
+                try { return JSON.parse(t); }
+                catch (e) { throw new Error('伺服器回應格式不對（後端可能尚未部署新版）'); }
+            });
+        });
+    }
+
+    var demoDb = {
+        recent:   { rows: [['王ＯＯ姐妹（住院）', '於 10/8 住院，請為治療代禱'], ['李ＯＯ弟兄（手術）', ''], ['張ＯＯ姐妹（復健）', '']] },
+        longterm: { rows: [['林ＯＯ', ''], ['陳ＯＯ', ''], ['黃ＯＯ', '']] },
+        ministry: { rows: [['10/24 月佈道', ''], ['10/31 敬老會', '請預備交通接送']] },
+        verse:    { text: '應當一無掛慮，只要凡事藉著禱告、祈求和感謝，將你們所要的告訴神。', ref: '腓立比書 4:6', available: true }
+    };
+    var demoVer = 1;
+    function demoApi(action, p) {
+        return new Promise(function (resolve) {
+            setTimeout(function () {
+                if (action === 'prayerGet') {
+                    var out = clone(demoDb);
+                    Object.keys(out).forEach(function (k) { out[k].hash = 'v' + demoVer; });
+                    resolve({ status: 'success', data: out });
+                } else {
+                    Object.keys(p.changes).forEach(function (k) {
+                        var c = p.changes[k];
+                        if (k === 'verse') { demoDb.verse.text = c.text; demoDb.verse.ref = c.ref; }
+                        else demoDb[k] = { rows: c.rows };
+                    });
+                    demoVer++;
+                    resolve({ status: 'success' });
+                }
+            }, 400);
+        });
+    }
+
+    // ═══════════════ 讀取 ═══════════════
+    function load() {
+        return api('prayerGet').then(function (res) {
+            if (res.status !== 'success') throw new Error(res.message || '讀取失敗');
+            server = res.data;
+            draft = clone(server);
+            $('tabsHolder').hidden = false;
+            render();
+        }).catch(function (err) {
+            $('tabsHolder').hidden = true;
+            $('panel').innerHTML = '<div class="state"><div class="big">😢</div><p>讀取不到代禱事項<br><small>' +
+                esc(err.message) + '</small></p><button class="btn primary" id="retryBtn">再試一次</button></div>';
+        });
+    }
+
+    // ═══════════════ 變更偵測 ═══════════════
+    function catDirty(k) {
+        if (!server) return false;
+        if (k === 'verse') return draft.verse.text !== server.verse.text || draft.verse.ref !== server.verse.ref;
+        return JSON.stringify(draft[k].rows) !== JSON.stringify(server[k].rows);
+    }
+    function dirtyKeys() {
+        if (!server) return [];
+        return CATS.map(function (c) { return c.key; }).concat('verse').filter(catDirty);
+    }
+    function problem() {
+        for (var i = 0; i < CATS.length; i++) {
+            var c = CATS[i];
+            var bad = draft[c.key].rows.some(function (r) { return !r[0].trim() || len(r[0]) > c.limit; });
+            if (bad && catDirty(c.key)) return c.label + '有項目空白或超過字數';
+        }
+        if (catDirty('verse') && !draft.verse.text.trim()) return '經文不能空白';
+        return '';
+    }
+
+    // ═══════════════ 畫面 ═══════════════
+    function render() {
+        renderTabs();
+        if (current === 'verse') renderVerse(); else renderList(catOf(current));
+        renderSavebar();
+    }
+
+    function renderTabs() {
+        $('tabs').innerHTML = CATS.concat(VERSE).map(function (c) {
+            var sub = c.key === 'verse' ? '&nbsp;' : draft[c.key].rows.length + ' 筆';
+            return '<button class="tab' + (c.key === current ? ' active' : '') + (catDirty(c.key) ? ' dirty' : '') +
+                '" data-k="' + c.key + '"><span class="dot"></span>' + c.short + '<small>' + sub + '</small></button>';
+        }).join('');
+    }
+
+    function renderList(cat) {
+        var rows = draft[cat.key].rows;
+        var orig = server[cat.key].rows.map(function (r) { return JSON.stringify(r); });
+        var html = '<div class="rule">' + cat.mainLabel + ' <b>不超過 ' + cat.limit + ' 字</b>，例：' + esc(cat.example) +
+            '<br>備註說明不會投影，只會出現在列印版。由上而下就是投影順序。</div>';
+
+        if (!rows.length) html += '<div class="empty">目前沒有' + cat.label + '</div>';
+
+        rows.forEach(function (r, i) {
+            var changed = orig.indexOf(JSON.stringify(r)) === -1;
+            var n = len(r[0]);
+            var tags = '';
+            if (!r[0].trim()) tags += '<span class="tag over">內容空白</span>';
+            else if (n > cat.limit) tags += '<span class="tag over">超過 ' + (n - cat.limit) + ' 字</span>';
+            if (changed) tags += '<span class="tag changed">未儲存</span>';
+            html += '<div class="item' + (changed ? ' changed' : '') + '">' +
+                '<div class="item-no">' + (i + 1) + '</div>' +
+                '<div class="item-body" data-edit="' + i + '">' +
+                    '<div class="item-main">' + (esc(r[0]) || '&nbsp;') + '</div>' +
+                    (r[1] ? '<div class="item-note">' + esc(r[1]) + '</div>' : '') +
+                    '<div class="item-tags">' + tags + '</div>' +
+                '</div>' +
+                '<div class="item-actions">' +
+                    '<div class="row">' +
+                        '<button class="mini" data-up="' + i + '" title="上移"' + (i === 0 ? ' disabled' : '') + '>▲</button>' +
+                        '<button class="mini" data-down="' + i + '" title="下移"' + (i === rows.length - 1 ? ' disabled' : '') + '>▼</button>' +
+                    '</div>' +
+                    '<div class="row">' +
+                        '<button class="mini" data-edit="' + i + '" title="編輯">✏️</button>' +
+                        '<button class="mini del" data-del="' + i + '" title="刪除">✕</button>' +
+                    '</div>' +
+                '</div>' +
+            '</div>';
+        });
+        html += '<button class="add-btn" id="addBtn">＋ 新增' + cat.label + '</button>';
+        $('panel').innerHTML = html;
+    }
+
+    function renderVerse() {
+        if (!draft.verse.available) {
+            $('panel').innerHTML = '<div class="state"><div class="big">📖</div><p>試算表「規範說明」分頁裡找不到類型為「經文」的那一列，<br>所以這裡暫時無法修改經文。</p></div>';
+            return;
+        }
+        $('panel').innerHTML =
+            '<div class="rule">投影畫面上的經文。建議 <b>' + VERSE.textLimit + ' 字以內</b>，太長在布幕上會擠。</div>' +
+            '<div class="verse-card">' +
+                '<div class="field"><label class="f">經文內容</label>' +
+                '<textarea id="verseText">' + esc(draft.verse.text) + '</textarea>' +
+                '<div class="counter" id="verseCounter"></div></div>' +
+                '<div class="field" style="margin-bottom:0"><label class="f">出處</label>' +
+                '<input type="text" id="verseRef" value="' + esc(draft.verse.ref) + '" placeholder="例：腓立比書 4:6"></div>' +
+            '</div>';
+        updateVerseCounter();
+    }
+
+    function updateVerseCounter() {
+        var el = $('verseCounter');
+        if (!el) return;
+        var n = len(draft.verse.text);
+        el.textContent = n + ' / ' + VERSE.textLimit + ' 字（建議）';
+        el.classList.toggle('over', n > VERSE.textLimit);
+    }
+
+    function renderSavebar() {
+        var keys = dirtyKeys();
+        $('savebar').classList.toggle('show', keys.length > 0);
+        if (!keys.length) return;
+        var bad = problem();
+        var names = keys.map(function (k) { return k === 'verse' ? '經文' : catOf(k).label; });
+        $('saveMsg').textContent = bad ? '⚠️ ' + bad : '未儲存：' + names.join('、');
+        $('saveMsg').classList.toggle('bad', !!bad);
+        $('saveBtn').disabled = !!bad;
+    }
+
+    // ═══════════════ 編輯彈窗 ═══════════════
+    function openEdit(index) {
+        var cat = catOf(current);
+        editing = { cat: cat, index: index };
+        var r = index >= 0 ? draft[cat.key].rows[index] : ['', ''];
+        $('editTitle').textContent = (index >= 0 ? '編輯' : '新增') + cat.label;
+        $('mainLabel').textContent = cat.mainLabel + '（不超過 ' + cat.limit + ' 字）';
+        $('mainInput').value = r[0];
+        $('mainInput').placeholder = '例：' + cat.example;
+        $('noteInput').value = r[1];
+        updateMainCounter();
+        $('editOverlay').classList.add('show');
+        setTimeout(function () { $('mainInput').focus(); }, 50);
+    }
+    function closeEdit() { $('editOverlay').classList.remove('show'); editing = null; }
+
+    function updateMainCounter() {
+        if (!editing) return;
+        var n = len($('mainInput').value.trim());
+        var lim = editing.cat.limit;
+        $('mainCounter').textContent = n + ' / ' + lim + ' 字';
+        $('mainCounter').classList.toggle('over', n > lim);
+        $('editOk').disabled = n === 0 || n > lim;
+    }
+
+    function confirmEdit() {
+        if (!editing) return;
+        var main = $('mainInput').value.trim();
+        var note = $('noteInput').value.trim();
+        if (!main || len(main) > editing.cat.limit) return;
+        var rows = draft[editing.cat.key].rows;
+        if (editing.index >= 0) rows[editing.index] = [main, note];
+        else rows.push([main, note]);
+        closeEdit();
+        render();
+    }
+
+    // ═══════════════ 儲存 ═══════════════
+    function save() {
+        var keys = dirtyKeys();
+        if (!keys.length || problem()) return;
+        var changes = {};
+        keys.forEach(function (k) {
+            changes[k] = k === 'verse'
+                ? { text: draft.verse.text.trim(), ref: draft.verse.ref.trim(), baseHash: server.verse.hash }
+                : { rows: draft[k].rows, baseHash: server[k].hash };
+        });
+        $('saveBtn').disabled = true;
+        $('discardBtn').disabled = true;
+        $('saveBtn').textContent = '儲存中…';
+        api('prayerSave', { changes: changes }).then(function (res) {
+            if (res.status === 'success') {
+                toast('✅ 已儲存到試算表');
+                return reload();
+            }
+            if (res.code === 'CONFLICT') {
+                alert('剛剛有其他人修改了「' + res.sheets.join('、') + '」。\n\n為了避免蓋掉對方的內容，這次沒有儲存。\n按確定會載入最新內容，請再修改一次。');
+                return reload();
+            }
+            alert('儲存失敗：' + (res.message || '未知錯誤'));
+        }).catch(function (err) {
+            alert('無法連線，變更還留在畫面上，可以稍後再按儲存。\n' + err.message);
+        }).then(function () {
+            $('saveBtn').textContent = '儲存';
+            $('discardBtn').disabled = false;
+            renderSavebar();
+        });
+    }
+
+    function reload() {
+        return api('prayerGet').then(function (res) {
+            if (res.status !== 'success') return;
+            server = res.data;
+            draft = clone(server);
+            render();
+        });
+    }
+
+    // ═══════════════ 提示 ═══════════════
+    var toastTimer = null, undoFn = null;
+    function toast(msg, onUndo) {
+        $('toastMsg').textContent = msg;
+        undoFn = onUndo || null;
+        $('toastAction').hidden = !onUndo;
+        $('toast').classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () { $('toast').classList.remove('show'); undoFn = null; }, 4000);
+    }
+
+    // ═══════════════ 事件 ═══════════════
+    $('tabs').addEventListener('click', function (e) {
+        var b = e.target.closest('.tab');
+        if (!b) return;
+        current = b.dataset.k;
+        render();
+    });
+
+    $('panel').addEventListener('click', function (e) {
+        if (e.target.id === 'retryBtn') { $('panel').innerHTML = '<div class="state"><p>讀取中…</p></div>'; return load(); }
+        if (e.target.id === 'addBtn') return openEdit(-1);
+        var t = e.target.closest('[data-up],[data-down],[data-edit],[data-del]');
+        if (!t) return;
+        var rows = draft[current].rows;
+        if (t.dataset.up != null) {
+            var i = +t.dataset.up; rows.splice(i - 1, 0, rows.splice(i, 1)[0]); render();
+        } else if (t.dataset.down != null) {
+            var j = +t.dataset.down; rows.splice(j + 1, 0, rows.splice(j, 1)[0]); render();
+        } else if (t.dataset.edit != null) {
+            openEdit(+t.dataset.edit);
+        } else if (t.dataset.del != null) {
+            var k = +t.dataset.del, catKey = current;
+            var removed = rows.splice(k, 1)[0];
+            render();
+            toast('已移除「' + removed[0] + '」', function () {
+                draft[catKey].rows.splice(k, 0, removed);
+                render();
+            });
+        }
+    });
+
+    $('panel').addEventListener('input', function (e) {
+        if (e.target.id === 'verseText') { draft.verse.text = e.target.value; updateVerseCounter(); }
+        else if (e.target.id === 'verseRef') draft.verse.ref = e.target.value;
+        else return;
+        renderTabs();
+        renderSavebar();
+    });
+
+    $('toastAction').addEventListener('click', function () {
+        if (undoFn) undoFn();
+        undoFn = null;
+        $('toast').classList.remove('show');
+    });
+
+    $('mainInput').addEventListener('input', updateMainCounter);
+    $('mainInput').addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.isComposing) confirmEdit(); });
+    $('editOk').addEventListener('click', confirmEdit);
+    $('editCancel').addEventListener('click', closeEdit);
+    $('editOverlay').addEventListener('click', function (e) { if (e.target.id === 'editOverlay') closeEdit(); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeEdit(); });
+
+    $('saveBtn').addEventListener('click', save);
+    $('discardBtn').addEventListener('click', function () {
+        if (!confirm('放棄所有未儲存的變更？')) return;
+        draft = clone(server);
+        render();
+    });
+
+    window.addEventListener('beforeunload', function (e) {
+        if (dirtyKeys().length) { e.preventDefault(); e.returnValue = ''; }
+    });
+
+    if (DEMO) $('demoNote').hidden = false;
+    load();
+})();
+</script>
+</body>
+</html>
