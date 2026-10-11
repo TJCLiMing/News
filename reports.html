@@ -28,13 +28,21 @@
             flex-shrink: 0;
             background: white;
             border-bottom: 2px solid #ffe0e8;
-            padding: 0 14px;
-            height: 54px;
+            padding: 0 14px 8px;
+            box-shadow: 0 2px 10px rgba(255,146,169,0.12);
+            z-index: 2;
+        }
+        header .bar {
+            height: 48px;
             display: flex;
             align-items: center;
             gap: 10px;
-            box-shadow: 0 2px 10px rgba(255,146,169,0.12);
-            z-index: 2;
+        }
+        header .note {
+            margin: 0;
+            font-size: 0.8rem;
+            color: #c0587a;
+            line-height: 1.4;
         }
         header h1 { margin: 0; font-size: 1.15rem; font-weight: 700; white-space: nowrap; }
         .spacer { flex: 1; }
@@ -85,15 +93,19 @@
         html.tech header h1 { color: #fff; }
         html.tech header a { color: #5a6b94; }
         html.tech header a.open { color: #00f0ff; border-color: rgba(0,240,255,0.45); }
+        html.tech header .note { color: #ffb300; }
         html.tech .viewer .wait { color: #5a6b94; }
     </style>
 </head>
 <body>
     <header>
-        <h1>📢 報告事項</h1>
-        <span class="spacer"></span>
-        <a class="open" id="openLink" href="#" target="_blank" rel="noopener" title="用雲端硬碟開啟（可下載）">↗ <span class="long">另開</span></a>
-        <a href="index.html">← 活動快報</a>
+        <div class="bar">
+            <h1>📢 報告事項</h1>
+            <span class="spacer"></span>
+            <a class="open" id="openLink" href="#" target="_blank" rel="noopener" title="用雲端硬碟開啟（可下載）">↗ <span class="long">另開</span></a>
+            <a href="index.html">← 活動快報</a>
+        </div>
+        <p class="note">*請於Line通知負責人修改報告內容</p>
     </header>
 
     <div class="viewer">
