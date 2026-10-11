@@ -102,7 +102,7 @@
         .item-body { flex: 1; min-width: 0; cursor: pointer; }
         .item-main { font-size: 1.05rem; font-weight: 700; word-break: break-all; }
         .item-note { margin-top: 4px; font-size: 0.8rem; color: var(--dim); line-height: 1.5; word-break: break-all; }
-        .item-note::before { content: '📝 不投影：'; color: #a8b79e; }
+        .item-note::before { content: '📝 備註：'; color: #a8b79e; }
         .item-tags { margin-top: 5px; display: flex; gap: 6px; flex-wrap: wrap; }
         .item-tags:empty { display: none; }
         .tag { font-size: 0.68rem; padding: 1px 7px; border-radius: 8px; font-weight: 700; }
@@ -141,6 +141,22 @@
         .counter { text-align: right; font-size: 0.78rem; color: var(--dim); margin-top: 4px; }
         .counter.over { color: var(--danger); font-weight: 700; }
         .field { margin-bottom: 12px; }
+
+        /* ── 近期代禱的「備註」快選 ── */
+        .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+        .chip {
+            border: 1.5px solid var(--line); background: #fff; color: var(--green);
+            border-radius: 18px; padding: 6px 14px; font-size: 0.92rem; font-weight: 700; cursor: pointer;
+        }
+        .chip:hover { background: var(--green-pale); }
+        .chip.active { background: var(--green); border-color: var(--green); color: #fff; }
+        .combo {
+            display: flex; justify-content: space-between; align-items: baseline; gap: 10px;
+            background: var(--green-pale); border: 1.5px solid var(--line); border-radius: 12px;
+            padding: 8px 12px; margin: -2px 0 14px; font-size: 0.85rem; color: #5f7151;
+        }
+        .combo b { color: var(--text); font-size: 1rem; word-break: break-all; }
+        .combo .counter { margin: 0; white-space: nowrap; }
 
         /* ── 狀態訊息 ── */
         .state { text-align: center; padding: 50px 16px; color: var(--dim); }
@@ -231,6 +247,18 @@
             <input type="text" id="mainInput" enterkeyhint="done">
             <div class="counter" id="mainCounter"></div>
         </div>
+        <!-- 只有近期代禱有：備註快選，會接在姓名稱謂後面變成「○○姐妹（住院）」 -->
+        <div id="statusBlock" hidden>
+            <div class="field">
+                <label class="f">備註</label>
+                <div class="chips" id="chips"></div>
+                <input type="text" id="statusInput" enterkeyhint="done" placeholder="或自行輸入，例：復健">
+            </div>
+            <div class="combo">
+                <span>投影顯示：<b id="comboText"></b></span>
+                <span class="counter" id="comboCounter"></span>
+            </div>
+        </div>
         <div class="field">
             <label class="f">備註說明 <span style="font-weight:400;color:#a8b79e">（不投影，僅列印）</span></label>
             <textarea id="noteInput" placeholder="可留空"></textarea>
@@ -253,8 +281,10 @@
     var DEMO = new URLSearchParams(location.search).get('demo') === '1';
 
     // sheet 對應試算表分頁名稱（分頁名稱不能改，投影程式會掛掉）
+    // split：試算表 A 欄是「姓名稱謂（備註）」，畫面上拆成兩格編輯，儲存時再組回去
     var CATS = [
-        { key: 'recent',   label: '近期代禱', short: '近期', limit: 15, mainLabel: '姓名稱謂備註', example: '楊ＯＯ姐妹（住院）' },
+        { key: 'recent',   label: '近期代禱', short: '近期', limit: 15, mainLabel: '姓名稱謂',     example: '楊ＯＯ姐妹（住院）',
+          split: true, exampleName: '楊ＯＯ姐妹', statusOptions: ['住院', '開刀', '身體欠安', '心靈欠安'] },
         { key: 'longterm', label: '長期關懷', short: '長期', limit: 5,  mainLabel: '姓名',         example: '陳ＯＯ' },
         { key: 'ministry', label: '近期事工', short: '事工', limit: 30, mainLabel: '事工項目',     example: '9/15-20 秋季靈恩佈道會' }
     ];
@@ -274,6 +304,16 @@
         });
     }
     function catOf(k) { return CATS.find(function (c) { return c.key === k; }); }
+
+    // 「王ＯＯ姐妹（住院）」⇄ ['王ＯＯ姐妹', '住院']；全形、半形括號都認得
+    function splitMain(s) {
+        var m = String(s || '').match(/^(.*?)\s*[（(]([^（）()]+)[）)]\s*$/);
+        return m ? [m[1].trim(), m[2].trim()] : [String(s || '').trim(), ''];
+    }
+    function joinMain(name, status) {
+        name = name.trim(); status = status.trim();
+        return status ? name + '（' + status + '）' : name;
+    }
 
     // ═══════════════ API ═══════════════
     function api(action, payload) {
@@ -371,7 +411,8 @@
     function renderList(cat) {
         var rows = draft[cat.key].rows;
         var orig = server[cat.key].rows.map(function (r) { return JSON.stringify(r); });
-        var html = '<div class="rule">' + cat.mainLabel + ' <b>不超過 ' + cat.limit + ' 字</b>，例：' + esc(cat.example) +
+        var html = '<div class="rule">' + (cat.split ? '姓名稱謂＋備註合計' : cat.mainLabel) +
+            ' <b>不超過 ' + cat.limit + ' 字</b>，例：' + esc(cat.example) +
             '<br>備註說明不會投影，只會出現在列印版。由上而下就是投影順序。</div>';
 
         if (!rows.length) html += '<div class="empty">目前沒有' + cat.label + '</div>';
@@ -448,30 +489,63 @@
         editing = { cat: cat, index: index };
         var r = index >= 0 ? draft[cat.key].rows[index] : ['', ''];
         $('editTitle').textContent = (index >= 0 ? '編輯' : '新增') + cat.label;
-        $('mainLabel').textContent = cat.mainLabel + '（不超過 ' + cat.limit + ' 字）';
-        $('mainInput').value = r[0];
-        $('mainInput').placeholder = '例：' + cat.example;
         $('noteInput').value = r[1];
+
+        $('statusBlock').hidden = !cat.split;
+        $('mainCounter').hidden = !!cat.split;
+        if (cat.split) {
+            var parts = splitMain(r[0]);
+            $('mainLabel').textContent = cat.mainLabel;
+            $('mainInput').value = parts[0];
+            $('mainInput').placeholder = '例：' + cat.exampleName;
+            $('statusInput').value = parts[1];
+            $('chips').innerHTML = cat.statusOptions.map(function (o) {
+                return '<button type="button" class="chip" data-v="' + esc(o) + '">' + esc(o) + '</button>';
+            }).join('');
+        } else {
+            $('mainLabel').textContent = cat.mainLabel + '（不超過 ' + cat.limit + ' 字）';
+            $('mainInput').value = r[0];
+            $('mainInput').placeholder = '例：' + cat.example;
+        }
         updateMainCounter();
         $('editOverlay').classList.add('show');
         setTimeout(function () { $('mainInput').focus(); }, 50);
     }
     function closeEdit() { $('editOverlay').classList.remove('show'); editing = null; }
 
+    // 畫面上的值組成要寫回試算表 A 欄的字串
+    function editedMain() {
+        if (editing.cat.split) return joinMain($('mainInput').value, $('statusInput').value);
+        return $('mainInput').value.trim();
+    }
+
     function updateMainCounter() {
         if (!editing) return;
-        var n = len($('mainInput').value.trim());
+        var main = editedMain();
+        var n = len(main);
         var lim = editing.cat.limit;
-        $('mainCounter').textContent = n + ' / ' + lim + ' 字';
-        $('mainCounter').classList.toggle('over', n > lim);
-        $('editOk').disabled = n === 0 || n > lim;
+        var over = n > lim;
+        var nameEmpty = !$('mainInput').value.trim();
+        if (editing.cat.split) {
+            var status = $('statusInput').value.trim();
+            Array.prototype.forEach.call($('chips').children, function (c) {
+                c.classList.toggle('active', c.dataset.v === status);
+            });
+            $('comboText').textContent = nameEmpty ? '（請先填姓名稱謂）' : main;
+            $('comboCounter').textContent = '合計 ' + n + ' / ' + lim + ' 字';
+            $('comboCounter').classList.toggle('over', over);
+        } else {
+            $('mainCounter').textContent = n + ' / ' + lim + ' 字';
+            $('mainCounter').classList.toggle('over', over);
+        }
+        $('editOk').disabled = nameEmpty || over;
     }
 
     function confirmEdit() {
         if (!editing) return;
-        var main = $('mainInput').value.trim();
+        var main = editedMain();
         var note = $('noteInput').value.trim();
-        if (!main || len(main) > editing.cat.limit) return;
+        if (!$('mainInput').value.trim() || len(main) > editing.cat.limit) return;
         var rows = draft[editing.cat.key].rows;
         if (editing.index >= 0) rows[editing.index] = [main, note];
         else rows.push([main, note]);
@@ -578,6 +652,15 @@
 
     $('mainInput').addEventListener('input', updateMainCounter);
     $('mainInput').addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.isComposing) confirmEdit(); });
+    $('statusInput').addEventListener('input', updateMainCounter);
+    $('statusInput').addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.isComposing) confirmEdit(); });
+    // 點快選填入備註；再點一次同一個就取消
+    $('chips').addEventListener('click', function (e) {
+        var c = e.target.closest('.chip');
+        if (!c) return;
+        $('statusInput').value = $('statusInput').value.trim() === c.dataset.v ? '' : c.dataset.v;
+        updateMainCounter();
+    });
     $('editOk').addEventListener('click', confirmEdit);
     $('editCancel').addEventListener('click', closeEdit);
     $('editOverlay').addEventListener('click', function (e) { if (e.target.id === 'editOverlay') closeEdit(); });
