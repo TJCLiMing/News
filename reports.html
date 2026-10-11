@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>報告事項</title>
+    <link rel="icon" type="image/png" href="logo_10th.png">
+    <script>
+        // 跟著首頁的風格：科技版使用者看到深色標題列
+        try { if (localStorage.getItem('uiStyle') === 'tech') document.documentElement.classList.add('tech'); } catch (e) {}
+    </script>
+    <script src="frame-nav.js?v=2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; }
+        html, body { margin: 0; height: 100%; }
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background: #f4f4f6;
+            color: #4D4D4D;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            height: 100dvh;
+        }
+
+        header {
+            flex-shrink: 0;
+            background: white;
+            border-bottom: 2px solid #ffe0e8;
+            padding: 0 14px;
+            height: 54px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 2px 10px rgba(255,146,169,0.12);
+            z-index: 2;
+        }
+        header h1 { margin: 0; font-size: 1.15rem; font-weight: 700; white-space: nowrap; }
+        .spacer { flex: 1; }
+        header a {
+            color: #bbb;
+            text-decoration: none;
+            font-size: 0.85rem;
+            white-space: nowrap;
+            transition: color 0.2s;
+        }
+        header a:hover { color: #FF92A9; }
+        header a.open {
+            color: #e56a8c;
+            border: 1.5px solid #ffd6e0;
+            border-radius: 16px;
+            padding: 3px 10px;
+            font-weight: 700;
+        }
+        @media (max-width: 420px) {
+            header a.open .long { display: none; }
+        }
+
+        .viewer {
+            position: relative;
+            flex: 1;
+            min-height: 0;
+        }
+        /* 簡報載入前墊在 iframe 底下的提示，載入後被簡報蓋過 */
+        .viewer .wait {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            font-size: 0.95rem;
+        }
+        .viewer iframe {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+
+        html.tech body { background: #04060d; color: #d7e4ff; }
+        html.tech header { background: #0a0f1e; border-bottom-color: rgba(0,240,255,0.25); box-shadow: none; }
+        html.tech header h1 { color: #fff; }
+        html.tech header a { color: #5a6b94; }
+        html.tech header a.open { color: #00f0ff; border-color: rgba(0,240,255,0.45); }
+        html.tech .viewer .wait { color: #5a6b94; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>📢 報告事項</h1>
+        <span class="spacer"></span>
+        <a class="open" id="openLink" href="#" target="_blank" rel="noopener" title="用雲端硬碟開啟（可下載）">↗ <span class="long">另開</span></a>
+        <a href="index.html">← 活動快報</a>
+    </header>
+
+    <div class="viewer">
+        <div class="wait">簡報載入中…</div>
+        <iframe id="viewer" title="報告事項簡報" allow="fullscreen"></iframe>
+    </div>
+
+    <script>
+        // 雲端硬碟上的「2026代禱及事項宣佈.pptx」。
+        // 用雲端硬碟的 /preview：手機上可往下滑逐頁看、不會跳出「使用應用程式」，而且允許嵌入；
+        // 簡報編輯器的網址（docs.google.com/presentation/...）禁止嵌入，手機上也很難看。
+        // 之後換檔案時只要改這個 ID
+        var FILE_ID = '1RHHQM_Y8hXODKyWx7DdYvuJyKQxwYXJy';
+        document.getElementById('viewer').src = 'https://drive.google.com/file/d/' + FILE_ID + '/preview';
+        document.getElementById('openLink').href = 'https://drive.google.com/file/d/' + FILE_ID + '/view';
+    </script>
+</body>
+</html>

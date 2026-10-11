@@ -29,6 +29,7 @@ li-ming-tjc.org/        → index.html（外殼，全螢幕 iframe）
 | `photos.html` | 相簿頁 | |
 | `schedule.html` | 安排表**單頁版**（獨立呼叫 API 讀安排表圖檔）| 沒有頁面連到它，靠直接輸入網址進入；`home.html` 內也有同樣的安排表區塊 |
 | `app.html` | 轉址頁 | 保留舊 `/app.html` 連結用，**不要刪** |
+| `reports.html` | 報告事項：嵌入雲端硬碟上的「2026代禱及事項宣佈.pptx」| 好友連結「報告事項」連到這裡。換簡報檔時改檔內的 `FILE_ID`。用雲端硬碟的 `/preview`（手機可往下滑逐頁看、允許嵌入）；簡報編輯器網址禁止嵌入、手機上也難看 |
 | `prayer.html` | 代禱事項維護（讀寫「02.代禱事項」試算表）| 首頁沒有連結，直接給網址；可被其他網頁嵌入，見下方「代禱事項維護」 |
 | `frame-nav.js` | iframe 內的連結導向控制 | 新增可嵌入網域時要改（`index.html` 也要同步改）|
 | `sw.js` | Service Worker（離線快取）| 見下方版本規則 |
