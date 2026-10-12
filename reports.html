@@ -66,26 +66,48 @@
         }
 
         .viewer {
-            position: relative;
             flex: 1;
             min-height: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 0;
+        }
+        /* 投影片外框：由程式算出剛好裝下「16:9 投影片＋播放器工具列」的大小，
+           不讓播放器自己在上下補一大片黑邊 */
+        .stage {
+            position: relative;
+            flex: none;
+            width: 100%;
+            background: #000;
         }
         /* 簡報載入前墊在 iframe 底下的提示，載入後被簡報蓋過 */
-        .viewer .wait {
+        .stage .wait {
             position: absolute;
             inset: 0;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #999;
-            font-size: 0.95rem;
+            text-align: center;
+            padding: 0 16px;
+            color: #888;
+            font-size: 0.9rem;
+            line-height: 1.6;
         }
-        .viewer iframe {
+        .stage iframe {
             position: absolute;
             inset: 0;
             width: 100%;
             height: 100%;
             border: 0;
+        }
+        .hint {
+            flex: none;
+            margin: 0;
+            font-size: 0.85rem;
+            color: #999;
+            text-align: center;
         }
 
         html.tech body { background: #04060d; color: #d7e4ff; }
@@ -94,7 +116,8 @@
         html.tech header a { color: #5a6b94; }
         html.tech header a.open { color: #00f0ff; border-color: rgba(0,240,255,0.45); }
         html.tech header .note { color: #ffb300; }
-        html.tech .viewer .wait { color: #5a6b94; }
+        html.tech .stage .wait { color: #5a6b94; }
+        html.tech .hint { color: #5a6b94; }
     </style>
 </head>
 <body>
@@ -109,22 +132,45 @@
     </header>
 
     <div class="viewer">
-        <div class="wait">簡報載入中…</div>
-        <iframe id="viewer" title="報告事項簡報" allow="fullscreen"></iframe>
+        <div class="stage" id="stage">
+            <div class="wait">簡報載入中…<br>第一次開啟可能要等十幾秒</div>
+            <iframe id="viewer" title="報告事項簡報" allow="fullscreen"></iframe>
+        </div>
+        <p class="hint" id="hint">左右滑動，或點下方 ◀ ▶ 翻頁</p>
     </div>
 
     <script>
-        // 頁面裡嵌入的是 Google 雲端硬碟上的「2026代禱及事項宣佈.pptx」。
-        // 用雲端硬碟的 /preview：手機上可往下滑逐頁看、不會跳出「使用應用程式」，而且允許嵌入；
-        // 簡報編輯器的網址（docs.google.com/presentation/...）禁止嵌入，手機上也很難看。
-        // 之後換檔案時只要改這個 ID
-        var FILE_ID = '1RHHQM_Y8hXODKyWx7DdYvuJyKQxwYXJy';
+        // 簡報只有一份：OneDrive 上的「2026代禱及事項宣佈.pptx」。
+        // 頁面顯示和「另開」編輯都是同一份，改完網站上就是最新的，不用靠電腦同步到 Google。
+        //
+        // EMBED_URL：OneDrive 官方「內嵌」產生的網址（只能看）。
+        //   自己用分享連結組出來的嵌入網址會要求登入，一定要用 OneDrive／PowerPoint 網頁版的「內嵌」功能產生。
+        //   播放器一次顯示一張，可以左右滑動或點箭頭翻頁。
+        // OPEN_URL：OneDrive 的分享連結（可編輯），給「另開」按鈕用。
+        var EMBED_URL = 'https://1drv.ms/p/c/69de94ef84c9ee8c/IQS4Kv2bDtgfRIvwXjeLcmZNAURBt9mo7LGuj8eTAIRsFAw?em=2&wdAr=1.7777777777777777';
+        var OPEN_URL  = 'https://1drv.ms/p/c/69de94ef84c9ee8c/IQC4Kv2bDtgfRIvwXjeLcmZNAQqfJk8b4rm7sD2mAm76c5I?e=6GaOmS';
 
-        // 「另開」按鈕開的是 OneDrive 上同名的檔案（OneDrive 的分享連結）。
-        // ⚠️ 兩邊是不同的檔案：改了其中一份，另一份不會跟著變
-        var OPEN_URL = 'https://1drv.ms/p/c/69de94ef84c9ee8c/IQC4Kv2bDtgfRIvwXjeLcmZNAQqfJk8b4rm7sD2mAm76c5I?e=6GaOmS';
+        // 播放器底部工具列約 24px，再加上下邊框
+        var TOOLBAR = 26;
+        var viewerBox = document.querySelector('.viewer');
+        var stage = document.getElementById('stage');
+        var hint = document.getElementById('hint');
 
-        document.getElementById('viewer').src = 'https://drive.google.com/file/d/' + FILE_ID + '/preview';
+        // 算出剛好裝下 16:9 投影片＋工具列的外框：手機直立時寬度撐滿，電腦上則以高度為準
+        function fitStage() {
+            var cs = getComputedStyle(viewerBox);
+            var W = viewerBox.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+            var H = viewerBox.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom)
+                    - hint.offsetHeight - parseFloat(cs.rowGap || cs.gap || 0);
+            var w = W, h = W * 9 / 16 + TOOLBAR;
+            if (h > H && H > TOOLBAR + 60) { h = H; w = (H - TOOLBAR) * 16 / 9; }
+            stage.style.width = Math.floor(w) + 'px';
+            stage.style.height = Math.floor(h) + 'px';
+        }
+        fitStage();
+        window.addEventListener('resize', fitStage);
+
+        document.getElementById('viewer').src = EMBED_URL;
         document.getElementById('openLink').href = OPEN_URL;
     </script>
 </body>
