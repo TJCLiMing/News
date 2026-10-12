@@ -102,7 +102,7 @@
         <div class="bar">
             <h1>📢 報告事項</h1>
             <span class="spacer"></span>
-            <a class="open" id="openLink" href="#" target="_blank" rel="noopener" title="用雲端硬碟開啟（可下載）">↗ <span class="long">另開</span></a>
+            <a class="open" id="openLink" href="#" target="_blank" rel="noopener" title="用 OneDrive 開啟簡報">↗ <span class="long">另開</span></a>
             <a href="index.html">← 活動快報</a>
         </div>
         <p class="note">*請於Line通知負責人修改報告內容</p>
@@ -114,13 +114,18 @@
     </div>
 
     <script>
-        // 雲端硬碟上的「2026代禱及事項宣佈.pptx」。
+        // 頁面裡嵌入的是 Google 雲端硬碟上的「2026代禱及事項宣佈.pptx」。
         // 用雲端硬碟的 /preview：手機上可往下滑逐頁看、不會跳出「使用應用程式」，而且允許嵌入；
         // 簡報編輯器的網址（docs.google.com/presentation/...）禁止嵌入，手機上也很難看。
         // 之後換檔案時只要改這個 ID
         var FILE_ID = '1RHHQM_Y8hXODKyWx7DdYvuJyKQxwYXJy';
+
+        // 「另開」按鈕開的是 OneDrive 上同名的檔案（OneDrive 的分享連結）。
+        // ⚠️ 兩邊是不同的檔案：改了其中一份，另一份不會跟著變
+        var OPEN_URL = 'https://1drv.ms/p/c/69de94ef84c9ee8c/IQC4Kv2bDtgfRIvwXjeLcmZNAQqfJk8b4rm7sD2mAm76c5I?e=6GaOmS';
+
         document.getElementById('viewer').src = 'https://drive.google.com/file/d/' + FILE_ID + '/preview';
-        document.getElementById('openLink').href = 'https://drive.google.com/file/d/' + FILE_ID + '/view';
+        document.getElementById('openLink').href = OPEN_URL;
     </script>
 </body>
 </html>
