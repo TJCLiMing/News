@@ -29,7 +29,7 @@ li-ming-tjc.org/        → index.html（外殼，全螢幕 iframe）
 | `photos.html` | 相簿頁 | |
 | `schedule.html` | 安排表**單頁版**（獨立呼叫 API 讀安排表圖檔）| 沒有頁面連到它，靠直接輸入網址進入；`home.html` 內也有同樣的安排表區塊 |
 | `app.html` | 轉址頁 | 保留舊 `/app.html` 連結用，**不要刪** |
-| `reports.html` | 報告事項：嵌入雲端硬碟上的「2026代禱及事項宣佈.pptx」| 好友連結「報告事項」連到這裡。換簡報檔時改檔內的 `FILE_ID`。用雲端硬碟的 `/preview`（手機可往下滑逐頁看、允許嵌入）；簡報編輯器網址禁止嵌入、手機上也難看 |
+| `reports.html` | 報告事項：嵌入 OneDrive 上的「2026代禱及事項宣佈.pptx」| 換簡報檔時改檔內的 `EMBED_URL`、`OPEN_URL`，見下方「報告事項」 |
 | `prayer.html` | 代禱事項維護（讀寫「02.代禱事項」試算表）| 首頁沒有連結，直接給網址；可被其他網頁嵌入，見下方「代禱事項維護」 |
 | `frame-nav.js` | iframe 內的連結導向控制 | 新增可嵌入網域時要改（`index.html` 也要同步改）|
 | `sw.js` | Service Worker（離線快取）| 見下方版本規則 |
@@ -77,7 +77,7 @@ li-ming-tjc.org/#photos     → photos.html（相簿）
 | HTML / JSON / JS | 網路優先（不會卡舊版）|
 | 圖片 | 快取優先 → **所以改了要升版本** |
 
-> **改 `frame-nav.js` 時，同時把頁面引用的 `frame-nav.js?v=N` 版本號加一**（`home.html`、`index-tech.html`、`photos.html`、`posters.html`、`schedule.html` 共 5 處）。
+> **改 `frame-nav.js` 時，同時把頁面引用的 `frame-nav.js?v=N` 版本號加一**（`home.html`、`index-tech.html`、`photos.html`、`posters.html`、`reports.html`、`schedule.html` 共 6 處）。
 > 還在用舊版 Service Worker 的使用者會先拿快取裡的舊 JS，換網址才能讓他們第一次開啟就拿到新版。
 > 曾經發生過：外殼已經是新版，但 `frame-nav.js` 還是舊的，結果外部網站重新整理會跳回首頁。
 | 跨網域（GAS API、Google Fonts、tjc-km）| 完全不攔截 |
@@ -260,6 +260,58 @@ AKfycbzWzh7mEl9wt7ehw7SWLQpwpJlbRB6AoDhSiFSex7YC2sp92ceICPct4AO64LiyN8lbPg
 - 被 iframe 嵌入時**自動隱藏綠色標題列**（宿主網頁通常有自己的標題）；`?header=1` 強制顯示、`?header=0` 強制隱藏
 - **請給固定高度**（建議 600～800px），讓頁面在框內自己捲動。
   底部的「儲存」列和編輯彈窗都是貼齊框的可視範圍，若把 iframe 撐成跟內容一樣高，這兩個會跑到宿主畫面外面看不到
+
+---
+
+## 報告事項（`reports.html`）
+
+入口：`home.html` 的快捷功能區與「報告事項」卡片、`index-tech.html` 的報告事項模組。
+
+簡報**只有一份**：OneDrive 上的「2026代禱及事項宣佈.pptx」。
+頁面顯示的和「↗ 另開」編輯的是同一份，改完網站上就是最新版。
+
+| 檔內常數 | 內容 |
+|---------|------|
+| `EMBED_URL` | OneDrive 官方「內嵌」產生的網址：只能看、不用登入 |
+| `OPEN_URL` | OneDrive 分享連結（可編輯），給「↗ 另開」按鈕 |
+
+### 換簡報檔
+
+1. OneDrive 網頁版對新檔案選「內嵌」→ 產生 → 複製 iframe 程式碼裡的 `src`，貼到 `EMBED_URL`
+2. 「共用」→ 複製連結，貼到 `OPEN_URL`
+3. `sw.js` 版本加一，推上 GitHub
+
+> ⚠️ `EMBED_URL` **一定要用「內嵌」功能產生**。試過不能用的做法：
+> - 分享連結頁面本身禁止嵌入（`X-Frame-Options: SAMEORIGIN`）
+> - 用分享連結自己組 `action=embedview` → 出現「請登入以檢視此檔案」
+> - Office Online viewer（`view.officeapps.live.com`）→ 找不到檔案（下載要登入 Cookie）
+
+### 版面
+
+- 播放器一次只顯示一張，可**左右滑動**或點下方 ◀ ▶ 翻頁（iPhone 實測可用）
+- 外框由 `fitStage()` 算成剛好裝下「16:9 投影片＋播放器工具列（`TOOLBAR` 26px）」，播放器才不會自己在上下補黑邊。
+  手機直立時寬度撐滿，電腦上以高度為準
+- 投影片下方三行提示：翻頁方法、怎麼拿 PDF、要總覽請開 PDF
+
+### 下載 PDF／總覽
+
+播放器右下 ▤ 功能表 →「列印為 PDF」→「開啟 PDF」：不用登入，轉出來的是當下最新版（iPhone 實測可用）。
+功能表裡也有「下載複本」（原始 pptx）。
+
+網站**無法自己做一鍵下載 PDF 按鈕**：
+- OneDrive API（`api.onedrive.com`、Graph 的 `?format=pdf`）不登入一律 401
+- 播放器是跨網域 iframe，網頁不能替使用者點裡面的選項
+- 硬要做得註冊微軟應用程式、讓 GAS 定時轉 PDF 存到 Google 雲端，多一組會過期的登入權限要維護，不划算
+
+### 載入速度
+
+第一次開啟約十幾秒，**跟 GAS 無關**（這頁沒有呼叫 GAS）。時間花在微軟那邊：
+`1drv.ms` → `onedrive.live.com`（確認分享權限）→ `powerpoint.officeapps.live.com`（下載播放器程式、開檔、繪製投影片）。
+之後瀏覽器有快取會快一些；iPhone Safari 擋第三方 Cookie，模擬測試時明顯更慢。
+
+> 2026-10-12 以前用 Google 雲端硬碟的 `/preview` 嵌入（載入較快，可往下滑逐頁看），
+> 但雲端那份靠電腦資料夾同步，常和 OneDrive 那份不一致。使用者決定「永遠是最新版比較重要」，改成直接嵌 OneDrive。
+> 雲端硬碟上的那份 pptx 網站已經不再使用。
 
 ---
 
