@@ -86,31 +86,6 @@
             margin: 0 auto;
         }
 
-        header {
-            text-align: center;
-            margin: 30px 0 50px;
-        }
-
-        header h1 {
-            font-size: 2.5rem;
-            color: var(--text);
-            position: relative;
-            display: inline-block;
-        }
-
-        header h1::after {
-            content: '';
-            position: absolute;
-            bottom: -5px;
-            left: 0;
-            width: 100%;
-            height: 12px;
-            background: var(--secondary);
-            z-index: -1;
-            opacity: 0.5;
-            border-radius: 10px;
-        }
-
         /* 區塊標題裝飾 */
         .section-divider {
             margin: 60px 0 30px;
@@ -122,7 +97,9 @@
             align-items: center;
             width: 100%;
         }
-        
+        /* 頁面一開始就是第一個區塊，不需要上方那麼大的間距 */
+        .container > .section-divider:first-child { margin-top: 24px; }
+
         .section-divider::before {
             content: '';
             display: inline-block;
@@ -464,10 +441,6 @@
 <body>
 
     <div class="container">
-        <header>
-            <h1>精彩活動快報</h1>
-        </header>
-
         <div class="section-divider">功能快捷鍵</div>
 
         <!-- 手機版 2x3 圖示列 -->
@@ -496,17 +469,23 @@
                 </div>
                 <span class="ms-label">禱告記錄板<small>一起訂目標禱告</small></span>
             </a>
-            <a href="https://tjc-km.github.io/hymns/#/" target="hymns" class="ms-item">
-                <div class="ms-icon" style="background:#e0f2f1;">
-                    <svg viewBox="0 0 24 24" fill="#26a69a"><path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z"/></svg>
+            <a href="reports.html" class="ms-item">
+                <div class="ms-icon" style="background:#fbe9e7;">
+                    <svg viewBox="0 0 24 24" fill="#e65100"><path d="M18 11v2h4v-2h-4zm-2 6.61c.96.71 2.21 1.65 3.2 2.39.4-.53.8-1.07 1.2-1.6-.99-.74-2.24-1.68-3.2-2.4-.4.54-.8 1.08-1.2 1.61zM20.4 5.6c-.4-.53-.8-1.07-1.2-1.6-.99.74-2.24 1.68-3.2 2.4.4.53.8 1.07 1.2 1.6.96-.72 2.21-1.65 3.2-2.4zM4 9c-1.1 0-2 .9-2 2v2c0 1.1.9 2 2 2h1v4h2v-4h1l5 3V6L8 9H4zm11.5 3c0-1.33-.58-2.53-1.5-3.35v6.69c.92-.81 1.5-2.01 1.5-3.34z"/></svg>
                 </div>
-                <span class="ms-label">讚美詩<small>線上詩歌本</small></span>
+                <span class="ms-label">報告事項<small>*請於Line通知負責人<br>修改報告內容</small></span>
             </a>
             <a href="https://invite.liming-tjc.org/admin" target="liming-invite" class="ms-item">
                 <div class="ms-icon" style="background:#e8eaf6;">
                     <svg viewBox="0 0 24 24" fill="#5c6bc0"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
                 </div>
                 <span class="ms-label">客製化邀請卡<small>一起來邀請朋友</small></span>
+            </a>
+            <a href="https://tjc-km.github.io/hymns/#/" target="hymns" class="ms-item">
+                <div class="ms-icon" style="background:#e0f2f1;">
+                    <svg viewBox="0 0 24 24" fill="#26a69a"><path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z"/></svg>
+                </div>
+                <span class="ms-label">讚美詩<small>線上詩歌本</small></span>
             </a>
             <a href="https://docs.google.com/forms/d/e/1FAIpQLSefHtRz-OdeewdtKzQ1_I8UPKAqdrEyTNuC0zo1WTQdwv98fA/viewform?pli=1" target="google-forms" class="ms-item">
                 <div class="ms-icon" style="background:#fff3e0;">
@@ -574,15 +553,15 @@
                 <a href="https://tjc-km.github.io/prayer-roster/" target="prayer-roster" class="btn" style="background: #9c27b0; box-shadow: 0 4px 0px #7b1fa2;">進入</a>
             </div>
 
-            <div class="card is-visible work-card" style="background: #f0faf9; border-color: #ccebe8;">
+            <div class="card is-visible work-card" style="background: #fff4ef; border-color: #ffd8c7;">
                 <div>
                     <h3>
-                        <svg class="icon" viewBox="0 0 24 24" style="color: #26a69a;"><path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z"/></svg>
-                        讚美詩
+                        <svg class="icon" viewBox="0 0 24 24" style="color: #e65100;"><path d="M18 11v2h4v-2h-4zm-2 6.61c.96.71 2.21 1.65 3.2 2.39.4-.53.8-1.07 1.2-1.6-.99-.74-2.24-1.68-3.2-2.4-.4.54-.8 1.08-1.2 1.61zM20.4 5.6c-.4-.53-.8-1.07-1.2-1.6-.99.74-2.24 1.68-3.2 2.4.4.53.8 1.07 1.2 1.6.96-.72 2.21-1.65 3.2-2.4zM4 9c-1.1 0-2 .9-2 2v2c0 1.1.9 2 2 2h1v4h2v-4h1l5 3V6L8 9H4zm11.5 3c0-1.33-.58-2.53-1.5-3.35v6.69c.92-.81 1.5-2.01 1.5-3.34z"/></svg>
+                        報告事項
                     </h3>
-                    <div class="desc-text">線上詩歌本，隨時查找詩歌<br><br><em style="color:#aaa; font-size:0.9rem;">「你們要向耶和華唱新歌！<br>全地都要向耶和華歌唱！」<br>— 詩篇 96:1</em></div>
+                    <div class="desc-text">教會最新的報告事項<br><br><em style="color:#aaa; font-size:0.9rem;">*請於Line通知負責人修改報告內容</em></div>
                 </div>
-                <a href="https://tjc-km.github.io/hymns/#/" target="hymns" class="btn" style="background: #26a69a; box-shadow: 0 4px 0px #1e8e82;">開啟詩歌本</a>
+                <a href="reports.html" class="btn" style="background: #e65100; box-shadow: 0 4px 0px #bf360c;">查看報告</a>
             </div>
 
             <div class="card is-visible work-card" style="background: #f4f5fd; border-color: #d5d9f2;">
@@ -594,6 +573,17 @@
                     <div class="desc-text">為每一位朋友做一張專屬邀請卡<br>一起來邀請朋友<br><br><em style="color:#aaa; font-size:0.9rem;">「腓力對他說：<br>你來看！」<br>— 約翰福音 1:46</em></div>
                 </div>
                 <a href="https://invite.liming-tjc.org/admin" target="liming-invite" class="btn" style="background: #5c6bc0; box-shadow: 0 4px 0px #3f51b5;">製作邀請卡</a>
+            </div>
+
+            <div class="card is-visible work-card" style="background: #f0faf9; border-color: #ccebe8;">
+                <div>
+                    <h3>
+                        <svg class="icon" viewBox="0 0 24 24" style="color: #26a69a;"><path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z"/></svg>
+                        讚美詩
+                    </h3>
+                    <div class="desc-text">線上詩歌本，隨時查找詩歌<br><br><em style="color:#aaa; font-size:0.9rem;">「你們要向耶和華唱新歌！<br>全地都要向耶和華歌唱！」<br>— 詩篇 96:1</em></div>
+                </div>
+                <a href="https://tjc-km.github.io/hymns/#/" target="hymns" class="btn" style="background: #26a69a; box-shadow: 0 4px 0px #1e8e82;">開啟詩歌本</a>
             </div>
 
             <div class="card is-visible work-card" style="background: #fff8f0; border-color: #ffe0cc;">
@@ -642,14 +632,6 @@
 
         <div class="section-divider">好友連結</div>
         <div class="qr-container">
-            <div class="qr-section" style="opacity:1; transform:translateY(0);">
-                <a href="reports.html" style="text-decoration:none;">
-                    <div class="qr-card">
-                        <svg viewBox="0 0 24 24" style="fill:#e65100;"><path d="M18 11v2h4v-2h-4zm-2 6.61c.96.71 2.21 1.65 3.2 2.39.4-.53.8-1.07 1.2-1.6-.99-.74-2.24-1.68-3.2-2.4-.4.54-.8 1.08-1.2 1.61zM20.4 5.6c-.4-.53-.8-1.07-1.2-1.6-.99.74-2.24 1.68-3.2 2.4.4.53.8 1.07 1.2 1.6.96-.72 2.21-1.65 3.2-2.4zM4 9c-1.1 0-2 .9-2 2v2c0 1.1.9 2 2 2h1v4h2v-4h1l5 3V6L8 9H4zm11.5 3c0-1.33-.58-2.53-1.5-3.35v6.69c.92-.81 1.5-2.01 1.5-3.34z"/></svg>
-                        <div class="qr-text" style="color:#e65100;">報告事項</div>
-                    </div>
-                </a>
-            </div>
             <div class="qr-section" style="opacity:1; transform:translateY(0);">
                 <a href="https://lin.ee/RInugzP" target="_blank" style="text-decoration:none;">
                     <div class="qr-card">
