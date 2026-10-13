@@ -54,8 +54,8 @@ liming-tjc.org/        → index.html（外殼，全螢幕 iframe）
 | `home.html` | **活動快報內容頁** | 改快捷功能區、好友連結、海報區 → **改這個** |
 | `index.html` | 外殼 | 只在調整回首頁鈕、hash 路由時才動 |
 | `index-tech.html` | 科技版內容頁 | 對應 `home.html` 的另一種風格 |
-| `photos.html` | 相簿頁 | |
-| `schedule.html` | 安排表**單頁版**（獨立呼叫 API 讀安排表圖檔）| 沒有頁面連到它，靠直接輸入網址進入；`home.html` 內也有同樣的安排表區塊 |
+| `photos.html` | 相簿頁 | **LINE 官方帳號圖文選單 F 直接連到它**，不要改檔名或刪除 |
+| `schedule.html` | 安排表**單頁版**（獨立呼叫 API 讀安排表圖檔）| 網站內沒有頁面連到它，但 **LINE 官方帳號圖文選單 E 直接連到它**，不要改檔名或刪除；`home.html` 內也有同樣的安排表區塊 |
 | `app.html` | 轉址頁 | 保留舊 `/app.html` 連結用，**不要刪** |
 | `reports.html` | 報告事項：嵌入 OneDrive 上的「2026代禱及事項宣佈.pptx」| 換簡報檔時改檔內的 `EMBED_URL`、`OPEN_URL`，見下方「報告事項」 |
 | `prayer.html` | 代禱事項維護（讀寫「02.代禱事項」試算表）| 首頁沒有連結，直接給網址；可被其他網頁嵌入，見下方「代禱事項維護」 |
