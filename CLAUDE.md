@@ -13,7 +13,9 @@
 ### 舊網域 `li-ming-tjc.org`（2026-10-13 起停用）
 
 - DNS 仍在 **wix.com**，指向 GitHub Pages，由另一個 repo **`TJCLiMing/li-ming-redirect`** 接手
-  （`CNAME` = `li-ming-tjc.org`，`index.html` 與 `404.html` 都是轉址頁）
+  （`CNAME` = `li-ming-tjc.org`，`index.html` 與 `404.html` 都是轉址頁，顯示新網址並倒數 12 秒後跳轉）
+- Wix 已關閉自動續約，**2027-07-09 到期停用**（見 `05.Invite` 規格第 7 節）。
+  到期後舊連結、舊 QR Code 全部失效，之前要把外部連結都換掉
 - 帶著原本的路徑、參數、`#` 轉到新網域：`li-ming-tjc.org/reports.html` → `liming-tjc.org/reports.html`
 - `frame-nav.js`、`index.html` 的 `EMBEDDABLE_HOSTS` 暫時保留舊網域，等外部連結都換完再移除
 - 舊網域上已安裝的 Service Worker 會繼續留在使用者手機上，但 HTML 走網路優先，會拿到轉址頁，不會卡在舊畫面
