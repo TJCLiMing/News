@@ -10,17 +10,26 @@
 網址：https://liming-tjc.org
 （`CNAME` 檔在 News repo 內，DNS 在 **Cloudflare** 管理；`www.liming-tjc.org` 會 301 轉到不帶 www 的網址）
 
+> ⚠️ **News repo 不能改名、`CNAME` 不能拿掉、GitHub Pages 不能關。**
+> 有人把 `tjcliming.github.io/News/` 存在書籤或記事本裡，這個網址是 GitHub 依照 `CNAME` 自動 301 轉到 `liming-tjc.org`，
+> 它沒有到期日，但只要 repo 改名或拿掉 `CNAME`，這些舊連結就全部失效。
+
 ### 舊網域 `li-ming-tjc.org`（2026-10-13 起停用）
 
-- DNS 仍在 **wix.com**，指向 GitHub Pages，由另一個 repo **`TJCLiMing/li-ming-redirect`** 接手
-  （`CNAME` = `li-ming-tjc.org`，`index.html` 與 `404.html` 都是轉址頁，顯示新網址並倒數 12 秒後跳轉）
+- DNS 仍在 **wix.com**，指向 GitHub Pages，由另一個 repo **`TJCLiMing/li-ming-redirect`** 接手：
+  - `index.html` 與 `404.html` 內容相同，都是轉址頁：顯示新網址、提醒更新書籤／主畫面／記事本／LINE，倒數 **8 秒**後跳轉
+  - `sw.js`：把舊網域以前裝在手機上的 Service Worker 與快取清掉並自我移除
+  - 本機有一份在桌面 `C:\Users\c3012\Desktop\li-ming-redirect`（不是 git repo，使用者手動上傳到 GitHub）
+  - 頁面裡留了貼 **Cloudflare Web Analytics** 的位置，用來看還有多少人從舊網址進來
 - Wix 已關閉自動續約，**2027-07-09 到期停用**（見 `05.Invite` 規格第 7 節）。
-  到期後舊連結、舊 QR Code 全部失效，之前要把外部連結都換掉
+  到期後舊連結、舊 QR Code 全部失效，之前要把外部連結都換掉；到期前看流量統計，人多就多續一年
 - 帶著原本的路徑、參數、`#` 轉到新網域：`li-ming-tjc.org/reports.html` → `liming-tjc.org/reports.html`
 - `frame-nav.js`、`index.html` 的 `EMBEDDABLE_HOSTS` 暫時保留舊網域，等外部連結都換完再移除
-- 舊網域上已安裝的 Service Worker 會繼續留在使用者手機上，但 HTML 走網路優先，會拿到轉址頁，不會卡在舊畫面
 - 新網域是不同的「網站來源」：舊網域加到主畫面的 APP 圖示要刪掉重加；
   `localStorage` 裡的設定（科技版風格 `uiStyle` 等）不會帶過來，使用者要重新選一次
+- **瀏覽器會記住舊的 301 轉址**：換網域前開過 `tjcliming.github.io/News/` 的瀏覽器，
+  會一直被帶到舊網域（多看一次轉址頁），不會自己過期；清掉瀏覽器的「快取圖片和檔案」就好。
+  舊網域到期後這些人會打不開，所以轉址頁要提醒大家改書籤
 
 ---
 
