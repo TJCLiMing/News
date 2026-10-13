@@ -20,7 +20,10 @@
   - `index.html` 與 `404.html` 內容相同，都是轉址頁：顯示新網址、提醒更新書籤／主畫面／記事本／LINE，倒數 **8 秒**後跳轉
   - `sw.js`：把舊網域以前裝在手機上的 Service Worker 與快取清掉並自我移除
   - 本機有一份在桌面 `C:\Users\c3012\Desktop\li-ming-redirect`（不是 git repo，使用者手動上傳到 GitHub）
-  - 頁面裡留了貼 **Cloudflare Web Analytics** 的位置，用來看還有多少人從舊網址進來
+  - 已裝 **Cloudflare Web Analytics**（JS 程式碼，2026-10-13），後台看 `li-ming-tjc.org` 就知道還有多少人從舊網址進來。
+    擋廣告外掛會擋掉統計，數字只會偏少
+  - 新網域 `liming-tjc.org` 在後台雖然是「Automatic setup」，但網域是「只做 DNS」（灰色雲朵、直連 GitHub），
+    流量不經過 Cloudflare，**實際上沒在統計**；要統計得在 News 頁面加 JS 程式碼（使用者目前決定不加）
 - Wix 已關閉自動續約，**2027-07-09 到期停用**（見 `05.Invite` 規格第 7 節）。
   到期後舊連結、舊 QR Code 全部失效，之前要把外部連結都換掉；到期前看流量統計，人多就多續一年
 - 帶著原本的路徑、參數、`#` 轉到新網域：`li-ming-tjc.org/reports.html` → `liming-tjc.org/reports.html`
