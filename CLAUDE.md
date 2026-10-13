@@ -7,6 +7,10 @@
 | **後端 API** | Google Apps Script | 讀取 Google Drive 圖片、回傳資料 |
 | **前端頁面** | GitHub Pages | 外殼 + 內容頁 + 靜態資源 |
 
+網站名稱：**黎明教會整合平台**（2026-10-13 前叫「黎明教會活動快報」，已不只是活動快報）。
+主畫面圖示名稱「黎明教會」（`manifest.json` 的 `short_name`、`apple-mobile-web-app-title`）；
+`manifest.json` 的 `id` 維持 `liming-news`，**不要改**（改了已安裝的 APP 會被當成另一個）。
+
 網址：https://liming-tjc.org
 （`CNAME` 檔在 News repo 內，DNS 在 **Cloudflare** 管理；`www.liming-tjc.org` 會 301 轉到不帶 www 的網址）
 

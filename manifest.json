@@ -1,8 +1,8 @@
 {
   "id": "liming-news",
-  "name": "黎明教會活動快報",
-  "short_name": "黎明快報",
-  "description": "黎明教會最新活動海報、月份安排表與相簿",
+  "name": "黎明教會整合平台",
+  "short_name": "黎明教會",
+  "description": "黎明教會常用功能入口：活動海報、月份安排表、相簿與各項服務",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
