@@ -8,7 +8,17 @@
 | **前端頁面** | GitHub Pages | 外殼 + 內容頁 + 靜態資源 |
 
 網址：https://liming-tjc.org
-（`CNAME` 檔在 News repo 內，DNS 在 **wix.com** 管理）
+（`CNAME` 檔在 News repo 內，DNS 在 **Cloudflare** 管理；`www.liming-tjc.org` 會 301 轉到不帶 www 的網址）
+
+### 舊網域 `li-ming-tjc.org`（2026-10-13 起停用）
+
+- DNS 仍在 **wix.com**，指向 GitHub Pages，由另一個 repo **`TJCLiMing/li-ming-redirect`** 接手
+  （`CNAME` = `li-ming-tjc.org`，`index.html` 與 `404.html` 都是轉址頁）
+- 帶著原本的路徑、參數、`#` 轉到新網域：`li-ming-tjc.org/reports.html` → `liming-tjc.org/reports.html`
+- `frame-nav.js`、`index.html` 的 `EMBEDDABLE_HOSTS` 暫時保留舊網域，等外部連結都換完再移除
+- 舊網域上已安裝的 Service Worker 會繼續留在使用者手機上，但 HTML 走網路優先，會拿到轉址頁，不會卡在舊畫面
+- 新網域是不同的「網站來源」：舊網域加到主畫面的 APP 圖示要刪掉重加；
+  `localStorage` 裡的設定（科技版風格 `uiStyle` 等）不會帶過來，使用者要重新選一次
 
 ---
 
