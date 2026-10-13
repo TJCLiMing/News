@@ -19,6 +19,9 @@
 
     // 可以嵌在 iframe 內的網域（實測無 X-Frame-Options 限制）
     var EMBEDDABLE_HOSTS = [
+        'liming-tjc.org',
+        'www.liming-tjc.org',
+        // 舊網域：轉址期間仍可能有人從舊連結進來，等完全淘汰後再移除
         'li-ming-tjc.org',
         'www.li-ming-tjc.org',
         'tjcliming.github.io',

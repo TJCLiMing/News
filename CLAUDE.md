@@ -1,4 +1,4 @@
-# 黎明教會 活動快報 專案說明
+﻿# 黎明教會 活動快報 專案說明
 
 ## 專案架構
 
@@ -7,7 +7,7 @@
 | **後端 API** | Google Apps Script | 讀取 Google Drive 圖片、回傳資料 |
 | **前端頁面** | GitHub Pages | 外殼 + 內容頁 + 靜態資源 |
 
-網址：https://li-ming-tjc.org
+網址：https://liming-tjc.org
 （`CNAME` 檔在 News repo 內，DNS 在 **wix.com** 管理）
 
 ---
@@ -17,7 +17,7 @@
 > ⚠️ **要改活動快報的內容，是改 `home.html`，不是 `index.html`**
 
 ```
-li-ming-tjc.org/        → index.html（外殼，全螢幕 iframe）
+liming-tjc.org/        → index.html（外殼，全螢幕 iframe）
       └── iframe        → home.html（活動快報內容）
 ```
 
@@ -39,7 +39,7 @@ li-ming-tjc.org/        → index.html（外殼，全螢幕 iframe）
 
 使用者瀏覽器會開一大堆分頁。外殼讓：
 
-- **可嵌入**的連結（`li-ming-tjc.org`、`tjc-km.github.io`）→ 留在 iframe 內，不開新分頁
+- **可嵌入**的連結（`liming-tjc.org`、`tjc-km.github.io`）→ 留在 iframe 內，不開新分頁
 - **不可嵌入**的（Google Meet / Forms / Sites、LINE、Canva，都有 `X-Frame-Options`）
   → 共用同一個 `liming-ext` 分頁，不管點幾個最多只佔 1 個
 
@@ -50,7 +50,7 @@ li-ming-tjc.org/        → index.html（外殼，全螢幕 iframe）
 
 ### 重新整理與位置記憶
 
-網址列一直停在 `li-ming-tjc.org/`，所以外殼自己記住 iframe 目前在哪一頁：
+網址列一直停在 `liming-tjc.org/`，所以外殼自己記住 iframe 目前在哪一頁：
 
 - **記在 `sessionStorage` 的 `shellFrameUrl`**：同一個分頁重新整理會回到原本那頁；關掉分頁或 APP 重開則從首頁開始
 - **自家頁面**（相簿、海報…）：精確回到原本位置，包括相簿的 `#相簿ID`
@@ -64,8 +64,8 @@ li-ming-tjc.org/        → index.html（外殼，全螢幕 iframe）
 ### 深層連結
 
 ```
-li-ming-tjc.org/#schedule   → home.html#schedule（月份安排表）
-li-ming-tjc.org/#photos     → photos.html（相簿）
+liming-tjc.org/#schedule   → home.html#schedule（月份安排表）
+liming-tjc.org/#photos     → photos.html（相簿）
 ```
 
 ### 改 sw.js 的規則
@@ -239,7 +239,7 @@ AKfycbzWzh7mEl9wt7ehw7SWLQpwpJlbRB6AoDhSiFSex7YC2sp92ceICPct4AO64LiyN8lbPg
 
 ## 代禱事項維護（`prayer.html`）
 
-網址：<https://li-ming-tjc.org/prayer.html>，試玩假資料：`prayer.html?demo=1`（不會寫入試算表）
+網址：<https://liming-tjc.org/prayer.html>，試玩假資料：`prayer.html?demo=1`（不會寫入試算表）
 
 - 讀寫試算表「02.代禱事項」，後端是 `程式碼.js` 的 `doPost`（`action: prayerGet / prayerSave`）
 - **不需要登入，任何人都能改**，也**不記錄修改者**（使用者決定）
@@ -254,7 +254,7 @@ AKfycbzWzh7mEl9wt7ehw7SWLQpwpJlbRB6AoDhSiFSex7YC2sp92ceICPct4AO64LiyN8lbPg
 ### 嵌入其他網頁
 
 ```html
-<iframe src="https://li-ming-tjc.org/prayer.html" style="width:100%;height:720px;border:0"></iframe>
+<iframe src="https://liming-tjc.org/prayer.html" style="width:100%;height:720px;border:0"></iframe>
 ```
 
 - 被 iframe 嵌入時**自動隱藏綠色標題列**（宿主網頁通常有自己的標題）；`?header=1` 強制顯示、`?header=0` 強制隱藏
