@@ -109,8 +109,9 @@
             line-height: 1.4;
         }
         .pdf-btn small { display: block; font-weight: 400; font-size: 0.75rem; color: #bbb; }
-        /* 外框式大按鈕：代禱事項「開啟編輯」 */
+        /* 外框式大按鈕：代禱事項「開啟編輯」「列印」 */
         .btn-outline {
+            flex: 1;
             display: block;
             color: #e56a8c;
             background: white;
@@ -167,8 +168,11 @@
 
         <section class="card">
             <h2>🙏 代禱事項</h2>
-            <a class="btn-outline" href="prayer.html">✏️ 開啟編輯</a>
-            <p>近期代禱、長期關懷代禱、近期事工<br>都在這裡更新</p>
+            <div class="pdf-row">
+                <a class="btn-outline" href="prayer.html">✏️ 開啟編輯</a>
+                <a class="btn-outline" id="prayerPrint" href="prayer.html?print=1" target="_blank">🖨️ 列印</a>
+            </div>
+            <p>近期代禱、長期關懷代禱、近期事工<br>都在這裡更新；列印會開新分頁</p>
         </section>
     </main>
 
@@ -191,6 +195,13 @@
         document.getElementById('viewLink').href = VIEW_URL;
         document.getElementById('pdf4').href = PDF_WORKER + '/print?n=4';
         document.getElementById('pdf2').href = PDF_WORKER + '/print?n=2';
+
+        // 代禱事項「列印」要開新分頁（prayer.html?print=1 載入後自動跳出列印視窗）。
+        // 外殼的 frame-nav.js 會把自家網頁的連結改成留在框內開，target="_blank" 會被蓋掉，所以這裡自己開新分頁
+        document.getElementById('prayerPrint').addEventListener('click', function (e) {
+            e.preventDefault();
+            window.open(this.href, '_blank');
+        });
     </script>
 </body>
 </html>
