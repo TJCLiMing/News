@@ -273,6 +273,14 @@ python -m http.server 8765
 
 `git push` 後 GitHub Pages 大約要 **30 秒～1 分鐘**才會生效，不是即時的。
 
+確認已經上線：首頁頁尾「最後部署時間」變成剛才推送後的時間（台灣時間），或用指令看 `Last-Modified`：
+
+```bash
+curl -sI https://liming-tjc.org/home.html | grep -i last-modified   # 這是 UTC，台灣時間要加 8 小時
+```
+
+已安裝 APP 或開過網站的人，HTML 走網路優先，重新整理就會拿到新版；圖片要靠 `sw.js` 升版本才會換新。
+
 ---
 
 ## 主要部署 ID
