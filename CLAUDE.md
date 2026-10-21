@@ -94,6 +94,12 @@ liming-tjc.org/        → index.html（外殼，全螢幕 iframe）
 外殼有**防疊套保護**：被自己的 iframe 載入時會 `location.replace('home.html')`，
 所以任何頁面連到 `index.html` 都不會變成外殼裡再包一層外殼。
 
+> ⚠️ **寫自家頁面時的兩個坑**（都踩過）
+> - **自家連結在外殼裡一律在框內開**：`frame-nav.js` 點擊時會把 `target` 改成 `_self`，寫 `target="_blank"` 沒用。
+>   真的要開新分頁（例如列印頁），要自己 `e.preventDefault()` 再 `window.open(href, '_blank')`——見 `reports.html` 的代禱事項「列印」
+> - **在外殼裡 `window.self !== window.top` 也會成立**：用它判斷「被別人嵌入」時要排除同網域的外殼
+>   （`try { window.top.location.origin === location.origin } catch {}`，跨網域會丟錯）——見 `prayer.html` 的標題列
+
 ### 重新整理與位置記憶
 
 網址列一直停在 `liming-tjc.org/`，所以外殼自己記住 iframe 目前在哪一頁：
@@ -306,7 +312,8 @@ AKfycbzWzh7mEl9wt7ehw7SWLQpwpJlbRB6AoDhSiFSex7YC2sp92ceICPct4AO64LiyN8lbPg
 - **列印版 `?print=1`**：畫面上只顯示列印版面＋「列印／關閉」工具列（不顯示編輯畫面），讀完資料自動跳出列印；
   印的是試算表上已儲存的內容。報告事項頁的「🖨️ 列印」就是開新分頁到這裡。
   要開**獨立分頁**列印：手機列印的是整個頁面，在平台外殼的框裡列印，iPhone 可能把整個平台畫面印出來
-- 編輯畫面下方的「列印代禱事項（含備註說明）」印的是畫面上目前的內容（含還沒儲存的修改）
+- 編輯畫面下方的「列印代禱事項（含備註說明）」印的是畫面上目前的內容（含還沒儲存的修改）。
+  在平台外殼的框裡按時，iPhone 會不會把整個平台畫面一起印出來，**尚未實機確認**
 
 ### 嵌入其他網頁
 
@@ -332,7 +339,9 @@ AKfycbzWzh7mEl9wt7ehw7SWLQpwpJlbRB6AoDhSiFSex7YC2sp92ceICPct4AO64LiyN8lbPg
 - 「📖 打開簡報」→ `VIEW_URL`，開新分頁（外殼裡開到共用的 `liming-ext` 分頁）。
   OneDrive 分享頁禁止被嵌入（`X-Frame-Options: SAMEORIGIN`），只能開新分頁，所以說明文字和列印按鈕留在這頁
 - 「🖨️ 列印用 PDF：4 張一頁／2 張一頁」→ Cloudflare Worker，見下方
-- 「🙏 代禱事項」：「✏️ 開啟編輯」→ `prayer.html`（自家頁面，在外殼裡留在框內開；見上方「代禱事項維護」）；「🖨️ 列印」→ `prayer.html?print=1`（載入後自動跳出列印），**要開新分頁**：外殼的 `frame-nav.js` 會把自家連結改成框內開、蓋掉 `target="_blank"`，所以 `reports.html` 用 `window.open` 自己開
+- 「🙏 代禱事項」（見上方「代禱事項維護」）：
+  - 「✏️ 開啟編輯」→ `prayer.html`，自家頁面，在外殼裡留在框內開
+  - 「🖨️ 列印」→ `prayer.html?print=1` 列印版，**用 `window.open` 開新分頁**（外殼會蓋掉 `target="_blank"`，見上方「寫自家頁面時的兩個坑」）
 - **不另設編輯按鈕**：「打開簡報」在平板、電腦上本來就是編輯模式，頁面註明「📱 手機僅供瀏覽、列印／✏️ 編輯請用平板或電腦」（使用者決定，2026-10-21）
 
 | 檔內常數 | 內容 |
