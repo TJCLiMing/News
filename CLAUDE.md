@@ -303,6 +303,10 @@ AKfycbzWzh7mEl9wt7ehw7SWLQpwpJlbRB6AoDhSiFSex7YC2sp92ceICPct4AO64LiyN8lbPg
   儲存時用全形括號組回去，**試算表格式不變**。快選項目在 `prayer.html` 的 `statusOptions`
 - 兩人同時改：儲存時比對讀取當下的版本，被別人改過就**拒絕儲存**並請使用者重新載入，不會互相覆蓋
 - 後端以部署者 `lmf@tjcedu.org` 身分寫入，所以這個帳號必須對試算表有編輯權
+- **列印版 `?print=1`**：畫面上只顯示列印版面＋「列印／關閉」工具列（不顯示編輯畫面），讀完資料自動跳出列印；
+  印的是試算表上已儲存的內容。報告事項頁的「🖨️ 列印」就是開新分頁到這裡。
+  要開**獨立分頁**列印：手機列印的是整個頁面，在平台外殼的框裡列印，iPhone 可能把整個平台畫面印出來
+- 編輯畫面下方的「列印代禱事項（含備註說明）」印的是畫面上目前的內容（含還沒儲存的修改）
 
 ### 嵌入其他網頁
 
@@ -310,7 +314,8 @@ AKfycbzWzh7mEl9wt7ehw7SWLQpwpJlbRB6AoDhSiFSex7YC2sp92ceICPct4AO64LiyN8lbPg
 <iframe src="https://liming-tjc.org/prayer.html" style="width:100%;height:720px;border:0"></iframe>
 ```
 
-- 被 iframe 嵌入時**自動隱藏綠色標題列**（宿主網頁通常有自己的標題）；`?header=1` 強制顯示、`?header=0` 強制隱藏
+- 被**其他網站**用 iframe 嵌入時**自動隱藏綠色標題列**（宿主網頁通常有自己的標題）；
+  被自家平台外殼（同網域）包住時照樣顯示。`?header=1` 強制顯示、`?header=0` 強制隱藏
 - **請給固定高度**（建議 600～800px），讓頁面在框內自己捲動。
   底部的「儲存」列和編輯彈窗都是貼齊框的可視範圍，若把 iframe 撐成跟內容一樣高，這兩個會跑到宿主畫面外面看不到
 

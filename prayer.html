@@ -8,12 +8,18 @@
     <title>代禱事項維護</title>
     <link rel="icon" type="image/png" href="logo_10th.png">
     <script>
-        // 嵌入模式：被其他網頁用 iframe 嵌入時隱藏標題列（宿主網頁通常已有自己的標題）
+        // 嵌入模式：被其他網站用 iframe 嵌入時隱藏標題列（宿主網頁通常已有自己的標題）
+        // 被自家平台外殼（同網域的 index.html）包住不算，照樣顯示標題列
         // 網址參數可強制指定：?header=0 隱藏、?header=1 顯示
+        // ?print=1：列印版——畫面上只顯示列印版面（不顯示編輯畫面），讀完資料自動跳出列印
         (function () {
-            var p = new URLSearchParams(location.search).get('header');
+            var q = new URLSearchParams(location.search);
+            var p = q.get('header');
             var embedded = window.self !== window.top;
-            if (p === '0' || (p !== '1' && embedded)) document.documentElement.classList.add('embed');
+            var ownShell = false;
+            try { ownShell = embedded && window.top.location.origin === location.origin; } catch (e) { /* 跨網域宿主讀不到，當成別人的網站 */ }
+            if (p === '0' || (p !== '1' && embedded && !ownShell)) document.documentElement.classList.add('embed');
+            if (q.get('print') === '1') document.documentElement.classList.add('printmode');
         })();
     </script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
@@ -233,10 +239,33 @@
         #printArea .p-item { font-size: 11.5pt; padding: 3pt 0; border-bottom: .5pt dashed #bbb; }
         #printArea .p-note { font-size: 9.5pt; color: #444; margin-left: 1em; }
         #printArea .p-grid2 { display: grid; grid-template-columns: 1fr 1fr; column-gap: 24pt; }
+        /* 列印版（?print=1）：畫面上只顯示工具列＋列印版面，看起來就是要印的那張紙 */
+        .ptools { display: none; }
+        html.printmode header, html.printmode .wrap, html.printmode .savebar { display: none !important; }
+        html.printmode body { padding-bottom: 0; background: #e9ece6; }
+        html.printmode .ptools {
+            display: flex; align-items: center; gap: 8px;
+            position: sticky; top: 0; z-index: 10;
+            background: var(--green); color: #fff;
+            padding: 10px 14px; padding-top: calc(10px + env(safe-area-inset-top, 0px));
+        }
+        .ptools .ptitle { flex: 1; font-weight: 700; letter-spacing: 1px; }
+        .ptools button {
+            border: 0; border-radius: 12px; padding: 7px 14px; font-size: 0.95rem; font-weight: 700; cursor: pointer;
+            background: #fff; color: var(--green);
+        }
+        .ptools button.ghost { background: transparent; color: #fff; border: 1.5px solid rgba(255,255,255,.6); }
+        html.printmode #printArea {
+            display: block; background: #fff;
+            max-width: 210mm; margin: 14px auto; padding: 14mm 12mm;
+            box-shadow: 0 2px 12px rgba(0,0,0,.12);
+        }
+        #printArea .p-loading { text-align: center; color: #888; font-family: 'Noto Sans TC', sans-serif; }
         @media print {
             html, body { background: #fff !important; padding: 0; }
-            header, .wrap, .savebar, .overlay, .toast { display: none !important; }
+            header, .wrap, .savebar, .overlay, .toast, .ptools { display: none !important; }
             #printArea { display: block; }
+            html.printmode #printArea { margin: 0; padding: 0; max-width: none; box-shadow: none; }
         }
 
         [hidden] { display: none !important; }
@@ -253,7 +282,14 @@
     <button class="print-btn" id="printBtn" hidden>🖨 列印代禱事項（含備註說明）</button>
 </div>
 
-<!-- 列印專用版面（螢幕上隱藏，列印時只印這塊） -->
+<!-- 列印版（?print=1）的工具列：列印時不會印出來 -->
+<div class="ptools">
+    <span class="ptitle">🖨️ 代禱事項列印</span>
+    <button id="pPrint">列印</button>
+    <button class="ghost" id="pClose">關閉</button>
+</div>
+
+<!-- 列印專用版面（螢幕上隱藏，列印時只印這塊；列印版時畫面上也顯示） -->
 <div id="printArea"></div>
 
 <!-- 底部儲存列 -->
@@ -306,6 +342,7 @@
     var DEMO = new URLSearchParams(location.search).get('demo') === '1';
     // ?print=1：載入完成後自動開列印對話框（給別的網頁放「列印」連結用）
     var AUTO_PRINT = new URLSearchParams(location.search).get('print') === '1';
+    var PRINT_MODE = AUTO_PRINT;
 
     // sheet 對應試算表分頁名稱（分頁名稱不能改，投影程式會掛掉）
     // split：試算表 A 欄是「姓名稱謂（備註）」，畫面上拆成兩格編輯，儲存時再組回去
@@ -400,6 +437,7 @@
                 setTimeout(function () { window.print(); }, 200);
             }
         }).catch(function (err) {
+            if (PRINT_MODE) $('printArea').innerHTML = '<p class="p-loading">讀取不到代禱事項：' + esc(err.message) + '<br>請重新整理再試一次</p>';
             $('tabsHolder').hidden = true;
             $('panel').innerHTML = '<div class="state"><div class="big">😢</div><p>讀取不到代禱事項<br><small>' +
                 esc(err.message) + '</small></p><button class="btn primary" id="retryBtn">再試一次</button></div>';
@@ -734,6 +772,14 @@
     window.addEventListener('beforeunload', function (e) {
         if (dirtyKeys().length) { e.preventDefault(); e.returnValue = ''; }
     });
+
+    // 列印版：工具列的「列印」「關閉」；「關閉」關不掉（不是程式開的分頁）就回報告事項
+    $('pPrint').addEventListener('click', function () { if (draft) window.print(); });
+    $('pClose').addEventListener('click', function () {
+        window.close();
+        setTimeout(function () { location.href = 'reports.html'; }, 300);
+    });
+    if (PRINT_MODE) $('printArea').innerHTML = '<p class="p-loading">正在讀取代禱事項，讀完會自動跳出列印…</p>';
 
     if (DEMO) $('demoNote').hidden = false;
     load();
