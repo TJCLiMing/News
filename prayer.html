@@ -218,6 +218,27 @@
             font-size: 0.78rem; text-align: center; color: var(--warn);
             background: #fff7da; border: 1px solid #f2dd8c; border-radius: 10px; padding: 6px; margin-bottom: 10px;
         }
+
+        /* ── 列印（版型同禱告版） ── */
+        .print-btn {
+            width: 100%; border: 1.5px solid var(--line); background: #fff; color: var(--green);
+            border-radius: 16px; padding: 12px; font-size: 1rem; font-weight: 700; cursor: pointer; margin-top: 4px;
+        }
+        .print-btn:hover { background: var(--green-pale); }
+        #printArea { display: none; color: #000; font-family: 'Noto Serif TC', 'Microsoft JhengHei', serif; }
+        #printArea .p-title { text-align: center; font-size: 18pt; letter-spacing: 4px; font-weight: 600; margin: 0 0 2pt; }
+        #printArea .p-date { text-align: center; font-size: 10pt; color: #555; margin-bottom: 14pt; font-family: 'Noto Sans TC', sans-serif; }
+        #printArea .p-sec { margin-bottom: 12pt; break-inside: avoid; }
+        #printArea .p-sec-title { font-size: 13pt; font-weight: 600; letter-spacing: 3px; border-bottom: 1.5pt solid #000; padding-bottom: 2pt; margin-bottom: 6pt; }
+        #printArea .p-item { font-size: 11.5pt; padding: 3pt 0; border-bottom: .5pt dashed #bbb; }
+        #printArea .p-note { font-size: 9.5pt; color: #444; margin-left: 1em; }
+        #printArea .p-grid2 { display: grid; grid-template-columns: 1fr 1fr; column-gap: 24pt; }
+        @media print {
+            html, body { background: #fff !important; padding: 0; }
+            header, .wrap, .savebar, .overlay, .toast { display: none !important; }
+            #printArea { display: block; }
+        }
+
         [hidden] { display: none !important; }
     </style>
 </head>
@@ -229,7 +250,11 @@
     <div class="demo-note" id="demoNote" hidden>示範模式：使用假資料，不會寫入試算表</div>
     <div class="tabs-holder" id="tabsHolder" hidden><div class="tabs" id="tabs"></div></div>
     <div id="panel"><div class="state"><div class="big">🌱</div><p>讀取中…</p></div></div>
+    <button class="print-btn" id="printBtn" hidden>🖨 列印代禱事項（含備註說明）</button>
 </div>
+
+<!-- 列印專用版面（螢幕上隱藏，列印時只印這塊） -->
+<div id="printArea"></div>
 
 <!-- 底部儲存列 -->
 <div class="savebar" id="savebar">
@@ -365,6 +390,7 @@
             server = res.data;
             draft = clone(server);
             $('tabsHolder').hidden = false;
+            $('printBtn').hidden = false;
             render();
         }).catch(function (err) {
             $('tabsHolder').hidden = true;
@@ -665,6 +691,31 @@
     $('editCancel').addEventListener('click', closeEdit);
     $('editOverlay').addEventListener('click', function (e) { if (e.target.id === 'editOverlay') closeEdit(); });
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeEdit(); });
+
+    // ═══════════════ 列印（版型同禱告版，印畫面上目前的內容） ═══════════════
+    function buildPrintArea() {
+        var now = new Date();
+        var html = '<div class="p-title">黎明教會 — 代禱事項</div>' +
+            '<div class="p-date">列印日期 ' + now.getFullYear() + '/' + (now.getMonth() + 1) + '/' + now.getDate() + '</div>';
+        CATS.forEach(function (c) {
+            var rows = draft[c.key].rows.filter(function (r) { return r[0].trim(); });
+            if (!rows.length) return;
+            var items = rows.map(function (r) {
+                return '<div class="p-item">' + esc(r[0]) +
+                    (r[1] ? '<span class="p-note">— ' + esc(r[1]).replace(/\n/g, '<br>') + '</span>' : '') +
+                    '</div>';
+            }).join('');
+            html += '<div class="p-sec"><div class="p-sec-title">' + c.label + '</div>' +
+                (c.key === 'longterm' ? '<div class="p-grid2">' + items + '</div>' : items) +
+                '</div>';
+        });
+        $('printArea').innerHTML = html;
+    }
+    $('printBtn').addEventListener('click', function () {
+        if (!draft) return;
+        buildPrintArea();
+        window.print();
+    });
 
     $('saveBtn').addEventListener('click', save);
     $('discardBtn').addEventListener('click', function () {
