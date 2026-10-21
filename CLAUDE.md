@@ -72,13 +72,13 @@ liming-tjc.org/        → index.html（外殼，全螢幕 iframe）
 | 圖文選單 B | Google 雲端資料夾 |
 | 圖文選單 C | `https://liming-tjc.org/?openExternalBrowser=1`（首頁，強制用 Safari／Chrome 開） |
 | 圖文選單 D | 中區網站 `central.tjc.org.tw` |
-| 圖文選單 E | `schedule.html`（安排表單頁版） |
-| 圖文選單 F | `photos.html`（相簿） |
+| 圖文選單 E | `https://liming-tjc.org/schedule.html`（安排表單頁版） |
+| 圖文選單 F | `https://liming-tjc.org/photos.html`（相簿） |
 | 禱告記錄板「維護 ↗」（`TJC-KM/prayer-roster`） | `https://liming-tjc.org/prayer` |
 | 舊網址 | `tjcliming.github.io/News/…`（GitHub 自動轉址）、`li-ming-tjc.org/…`（轉址頁，見上方） |
 
-> 圖文選單是使用者 2026-10-14 貼的設定；當時 E、F 還是 `tjcliming.github.io/News/...`，建議改成 `https://liming-tjc.org/schedule.html`、
-> `https://liming-tjc.org/photos.html`（D 建議改 `https://`）。實際網址以 LINE Official Account Manager 後台為準
+> 圖文選單：使用者 2026-10-14 貼的設定，E、F 原本是 `tjcliming.github.io/News/...`，2026-10-21 使用者確認已改成新網域。
+> 實際網址以 LINE Official Account Manager 後台為準
 
 ### 外殼在解決什麼問題
 
@@ -361,7 +361,7 @@ AKfycbzWzh7mEl9wt7ehw7SWLQpwpJlbRB6AoDhSiFSex7YC2sp92ceICPct4AO64LiyN8lbPg
 ### 列印用 PDF（Cloudflare Worker `liming-reports-pdf`）
 
 報告事項頁的「4 張一頁」「2 張一頁」按鈕 → `https://liming-reports-pdf.c3012312.workers.dev/print?n=4|2`
-（`reports.html` 的 `PDF_WORKER`）。**按下當下才產生，一定是 OneDrive 上的最新版**，約 10～15 秒。
+（`reports.html` 的 `PDF_WORKER`）。**按下當下才產生，一定是 OneDrive 上的最新版**，約 10～15 秒；要等雲端瀏覽器時會到 30 秒左右（頁面寫「約 15～30 秒」）。
 
 - 流程：Cloudflare 雲端無頭瀏覽器（Browser Run）打開唯讀內嵌播放器 → 用**鍵盤**操作「功能表 → 列印為 PDF」
   → 微軟產生向量 PDF → 讀出「開啟 PDF」那個 form（欄位 `Pid`）和 Cookie，**由 Worker 自己 POST** `pdfhandler.ashx` 拿 PDF

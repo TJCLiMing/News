@@ -204,7 +204,7 @@ function waitingPage(n, cors) {
 </style>
 <body><div class="spin"></div>
 <h2>正在產生最新的報告事項 PDF</h2>
-<p>${n} 張投影片一頁，大約需要 15 秒</p>
+<p>${n} 張投影片一頁，大約需要 15～30 秒</p>
 <p class="muted">請不要關閉這一頁；PDF 出來後，用「分享 → 列印」</p>
 <script>setTimeout(function(){ location.replace('/pdf?n=${n}'); }, 50);</script>
 <noscript><p><a href="/pdf?n=${n}">開啟 PDF</a></p></noscript></body></html>`;
