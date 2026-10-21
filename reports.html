@@ -77,6 +77,15 @@
             line-height: 1.7;
         }
         .card p.tip { margin-top: 12px; color: #c0587a; font-weight: 700; }
+        /* 同一區裡的第二段小標，上面一條虛線隔開 */
+        .card .sub {
+            margin: 18px 0 10px;
+            padding-top: 14px;
+            border-top: 1.5px dashed #ffd6e0;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #c0587a;
+        }
         /* 主要按鈕：打開簡報 */
         .btn-main {
             display: block;
@@ -134,6 +143,7 @@
         html.tech .card h2 { color: #ffb300; }
         html.tech .card p { color: #5a6b94; }
         html.tech .card p.tip { color: #ffb300; }
+        html.tech .card .sub { color: #ffb300; border-top-color: rgba(0,240,255,0.25); }
         html.tech .btn-main { background: #00b8c4; box-shadow: 0 4px 0 #007a82; }
         html.tech .pdf-btn { color: #00f0ff; background: transparent; border-color: rgba(0,240,255,0.45); }
         html.tech .pdf-btn small { color: #5a6b94; }
@@ -151,28 +161,29 @@
     </header>
 
     <main>
+        <!-- 第一區：報告簡報（OneDrive 上的 pptx） -->
         <section class="card">
-            <a class="btn-main" id="viewLink" href="#" target="liming-ext" rel="noopener">📖 打開簡報</a>
+            <h2>📖 報告簡報</h2>
+            <a class="btn-main" id="viewLink" href="#" target="liming-ext" rel="noopener">打開簡報</a>
             <p class="tip">📱 手機僅供瀏覽、列印<br>✏️ 編輯請用平板或電腦</p>
-            <p>手機可以上下捲動，一次看完全部投影片<br>會開在新分頁，看完關掉就回到這裡</p>
-        </section>
+            <p>開在新分頁，手機可以上下捲動看完全部投影片</p>
 
-        <section class="card">
-            <h2>🖨️ 列印用 PDF</h2>
+            <div class="sub">🖨️ 列印用 PDF</div>
             <div class="pdf-row">
                 <a class="pdf-btn" id="pdf4" href="#" target="liming-ext" rel="noopener">4 張一頁<small>A4 橫式</small></a>
                 <a class="pdf-btn" id="pdf2" href="#" target="liming-ext" rel="noopener">2 張一頁<small>A4 直式</small></a>
             </div>
-            <p>按下後約 15～30 秒產生當下最新版<br>列印請用 PDF 畫面的「分享 → 列印」</p>
+            <p>按下後約 15～30 秒產生最新版<br>PDF 出來後用「分享 → 列印」</p>
         </section>
 
+        <!-- 第二區：代禱事項（prayer.html） -->
         <section class="card">
             <h2>🙏 代禱事項</h2>
             <div class="pdf-row">
-                <a class="btn-outline" href="prayer.html">✏️ 開啟編輯</a>
+                <a class="btn-outline" href="prayer.html">✏️ 編輯</a>
                 <a class="btn-outline" id="prayerPrint" href="prayer.html?print=1" target="_blank">🖨️ 列印</a>
             </div>
-            <p>近期代禱、長期關懷代禱、近期事工<br>都在這裡更新；列印會開新分頁</p>
+            <p>近期代禱、長期關懷代禱、近期事工<br>列印會開新分頁，自動跳出列印</p>
         </section>
     </main>
 
