@@ -102,15 +102,43 @@
             height: 100%;
             border: 0;
         }
-        .hint {
+        /* 投影片下方：翻頁說明＋列印用 PDF 按鈕（高度會從投影片外框扣掉） */
+        .below {
             flex: none;
-            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
             padding: 0 16px;
+        }
+        .hint {
+            margin: 0;
             font-size: 0.85rem;
             color: #999;
             text-align: center;
             line-height: 1.7;
         }
+        .hint.small { font-size: 0.8rem; line-height: 1.6; }
+        .pdf-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .pdf-label { font-size: 0.9rem; font-weight: 700; color: #c0587a; }
+        .pdf-btn {
+            color: #e56a8c;
+            background: white;
+            border: 1.5px solid #ffd6e0;
+            border-radius: 18px;
+            padding: 5px 14px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+        .pdf-btn:hover { background: #fff5f8; }
 
         html.tech body { background: #04060d; color: #d7e4ff; }
         html.tech header { background: #0a0f1e; border-bottom-color: rgba(0,240,255,0.25); box-shadow: none; }
@@ -120,6 +148,8 @@
         html.tech header .note { color: #ffb300; }
         html.tech .stage .wait { color: #5a6b94; }
         html.tech .hint { color: #5a6b94; }
+        html.tech .pdf-label { color: #ffb300; }
+        html.tech .pdf-btn { color: #00f0ff; background: transparent; border-color: rgba(0,240,255,0.45); }
     </style>
 </head>
 <body>
@@ -138,7 +168,15 @@
             <div class="wait">簡報載入中，大約要等 10～20 秒<br>請稍候…</div>
             <iframe id="viewer" title="報告事項簡報" allow="fullscreen"></iframe>
         </div>
-        <p class="hint" id="hint">左右滑動，或點下方 ◀ ▶ 翻頁<br>要 PDF：點右下 ▤ 功能表 →「列印為 PDF」<br>微軟播放器一次只能顯示一張，要總覽請開 PDF</p>
+        <div class="below" id="below">
+            <p class="hint">左右滑動，或點下方 ◀ ▶ 翻頁</p>
+            <div class="pdf-row">
+                <span class="pdf-label">🖨️ 列印用 PDF</span>
+                <a class="pdf-btn" id="pdf4" href="#" target="liming-ext" rel="noopener">4 張一頁</a>
+                <a class="pdf-btn" id="pdf2" href="#" target="liming-ext" rel="noopener">2 張一頁</a>
+            </div>
+            <p class="hint small">按下後約 15 秒產生當下最新版，也能一次看完全部<br>列印請用 PDF 畫面的「分享 → 列印」</p>
+        </div>
     </div>
 
     <script>
@@ -151,19 +189,23 @@
         // OPEN_URL：OneDrive 的分享連結（可編輯），給「另開」按鈕用。
         var EMBED_URL = 'https://1drv.ms/p/c/69de94ef84c9ee8c/IQS4Kv2bDtgfRIvwXjeLcmZNAURBt9mo7LGuj8eTAIRsFAw?em=2&wdAr=1.7777777777777777';
         var OPEN_URL  = 'https://1drv.ms/p/c/69de94ef84c9ee8c/IQC4Kv2bDtgfRIvwXjeLcmZNAQqfJk8b4rm7sD2mAm76c5I?e=6GaOmS';
+        // PDF_WORKER：Cloudflare Worker「liming-reports-pdf」。按下去才用雲端瀏覽器打開上面的播放器，
+        //   點「列印為 PDF」拿到微軟產生的最新 PDF，再排成一張 A4 放 4 張（橫式）或 2 張（直式）。
+        //   /print 先顯示「產生中」再換成 PDF；不是可嵌入網域，所以在外殼裡會開到共用的 liming-ext 分頁
+        var PDF_WORKER = 'https://liming-reports-pdf.c3012312.workers.dev';
 
         // 播放器底部工具列約 24px，再加上下邊框
         var TOOLBAR = 26;
         var viewerBox = document.querySelector('.viewer');
         var stage = document.getElementById('stage');
-        var hint = document.getElementById('hint');
+        var below = document.getElementById('below');
 
         // 算出剛好裝下 16:9 投影片＋工具列的外框：手機直立時寬度撐滿，電腦上則以高度為準
         function fitStage() {
             var cs = getComputedStyle(viewerBox);
             var W = viewerBox.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
             var H = viewerBox.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom)
-                    - hint.offsetHeight - parseFloat(cs.rowGap || cs.gap || 0);
+                    - below.offsetHeight - parseFloat(cs.rowGap || cs.gap || 0);
             var w = W, h = W * 9 / 16 + TOOLBAR;
             if (h > H && H > TOOLBAR + 60) { h = H; w = (H - TOOLBAR) * 16 / 9; }
             stage.style.width = Math.floor(w) + 'px';
@@ -174,6 +216,8 @@
 
         document.getElementById('viewer').src = EMBED_URL;
         document.getElementById('openLink').href = OPEN_URL;
+        document.getElementById('pdf4').href = PDF_WORKER + '/print?n=4';
+        document.getElementById('pdf2').href = PDF_WORKER + '/print?n=2';
     </script>
 </body>
 </html>

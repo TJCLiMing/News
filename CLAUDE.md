@@ -319,17 +319,26 @@ AKfycbzWzh7mEl9wt7ehw7SWLQpwpJlbRB6AoDhSiFSex7YC2sp92ceICPct4AO64LiyN8lbPg
 - 播放器一次只顯示一張，可**左右滑動**或點下方 ◀ ▶ 翻頁（iPhone 實測可用）
 - 外框由 `fitStage()` 算成剛好裝下「16:9 投影片＋播放器工具列（`TOOLBAR` 26px）」，播放器才不會自己在上下補黑邊。
   手機直立時寬度撐滿，電腦上以高度為準
-- 投影片下方三行提示：翻頁方法、怎麼拿 PDF、要總覽請開 PDF
+- 投影片下方：翻頁說明、「🖨️ 列印用 PDF：4 張一頁／2 張一頁」按鈕、一行使用說明（外框高度會扣掉這一區，見 `fitStage()`）
 
-### 下載 PDF／總覽
+### 列印用 PDF（Cloudflare Worker `liming-reports-pdf`）
 
-播放器右下 ▤ 功能表 →「列印為 PDF」→「開啟 PDF」：不用登入，轉出來的是當下最新版（iPhone 實測可用）。
-功能表裡也有「下載複本」（原始 pptx）。
+報告事項頁的「4 張一頁」「2 張一頁」按鈕 → `https://liming-reports-pdf.c3012312.workers.dev/print?n=4|2`
+（`reports.html` 的 `PDF_WORKER`）。**按下當下才產生，一定是 OneDrive 上的最新版**，約 10～15 秒。
 
-網站**無法自己做一鍵下載 PDF 按鈕**：
-- OneDrive API（`api.onedrive.com`、Graph 的 `?format=pdf`）不登入一律 401
-- 播放器是跨網域 iframe，網頁不能替使用者點裡面的選項
-- 硬要做得註冊微軟應用程式、讓 GAS 定時轉 PDF 存到 Google 雲端，多一組會過期的登入權限要維護，不划算
+- 流程：Cloudflare 雲端無頭瀏覽器（Browser Run）打開唯讀內嵌播放器 → 用**鍵盤**操作「功能表 → 列印為 PDF」
+  → 微軟產生向量 PDF → 讀出「開啟 PDF」那個 form（欄位 `Pid`）和 Cookie，**由 Worker 自己 POST** `pdfhandler.ashx` 拿 PDF
+  → 用 pdf-lib 排版：4＝A4 橫式 2×2、2＝A4 直式上下兩張（向量，文字清晰）
+- `/print` 先顯示「正在產生…」再換成 `/pdf`，等待期間不會一片空白；`/pdf?n=4&debug=1` 回各階段耗時（除錯用）
+- 試過不行的：無頭瀏覽器裡**滑鼠點擊、觸控都送不進播放器**（鍵盤可以，但要先讓播放器取得焦點）；
+  在瀏覽器裡 fetch `pdfhandler.ashx` 雲端會失敗（本機可以）；Graph API `?format=pdf` 檔案上限 2 MB 且要擁有者登入
+- 雲端瀏覽器預設英文介面，程式同時比對中英文（「第 1 張投影片」/ "Slide 1 of 38"、「列印為 PDF」/ "Print to PDF"）
+- 額度：Cloudflare 免費方案每天 10 分鐘瀏覽器時間（每次約 12 秒，約 45 次）、**每 20 秒才能開一個新瀏覽器**，
+  被拒絕時 Worker 會自動等一下重試；LINE／Facebook 連結預覽機器人不啟動瀏覽器
+- 剛產生的 PDF 2 分鐘內會重用，但 workers.dev 網址上只在同一個執行個體內有效（不保證）
+- **微軟改了播放器畫面（按鈕 id、選單文字、`pdfhandler` 表單）就會壞**：使用者會看到「PDF 暫時產生不出來」的中文說明頁，
+  可以先改用播放器右下 ▤ 功能表 →「列印為 PDF」（不用登入，一樣是最新版；一張一頁）
+- 部署帳號：wrangler 登入的 `c3012312@gmail.com`（Cloudflare 帳號「C3012312@gmail.com's Account」）
 
 ### 載入速度
 
