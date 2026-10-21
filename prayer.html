@@ -304,6 +304,8 @@
     var API_URL = 'https://script.google.com/macros/s/AKfycbzWzh7mEl9wt7ehw7SWLQpwpJlbRB6AoDhSiFSex7YC2sp92ceICPct4AO64LiyN8lbPg/exec';
     // ?demo=1：用假資料試玩，不會碰到試算表
     var DEMO = new URLSearchParams(location.search).get('demo') === '1';
+    // ?print=1：載入完成後自動開列印對話框（給別的網頁放「列印」連結用）
+    var AUTO_PRINT = new URLSearchParams(location.search).get('print') === '1';
 
     // sheet 對應試算表分頁名稱（分頁名稱不能改，投影程式會掛掉）
     // split：試算表 A 欄是「姓名稱謂（備註）」，畫面上拆成兩格編輯，儲存時再組回去
@@ -392,6 +394,11 @@
             $('tabsHolder').hidden = false;
             $('printBtn').hidden = false;
             render();
+            if (AUTO_PRINT) {
+                AUTO_PRINT = false; // 只在第一次載入觸發
+                buildPrintArea();
+                setTimeout(function () { window.print(); }, 200);
+            }
         }).catch(function (err) {
             $('tabsHolder').hidden = true;
             $('panel').innerHTML = '<div class="state"><div class="big">😢</div><p>讀取不到代禱事項<br><small>' +
