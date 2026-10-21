@@ -109,6 +109,19 @@
             line-height: 1.4;
         }
         .pdf-btn small { display: block; font-weight: 400; font-size: 0.75rem; color: #bbb; }
+        /* 外框式大按鈕：代禱事項「開啟編輯」 */
+        .btn-outline {
+            display: block;
+            color: #e56a8c;
+            background: white;
+            border: 2px solid #ffd6e0;
+            border-radius: 14px;
+            padding: 12px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+        .btn-outline:hover { background: #fff5f8; }
         .pdf-btn:hover { background: #fff5f8; }
 
         html.tech body { background: #04060d; color: #d7e4ff; }
@@ -123,6 +136,7 @@
         html.tech .btn-main { background: #00b8c4; box-shadow: 0 4px 0 #007a82; }
         html.tech .pdf-btn { color: #00f0ff; background: transparent; border-color: rgba(0,240,255,0.45); }
         html.tech .pdf-btn small { color: #5a6b94; }
+        html.tech .btn-outline { color: #00f0ff; background: transparent; border-color: rgba(0,240,255,0.45); }
     </style>
 </head>
 <body>
@@ -149,6 +163,12 @@
                 <a class="pdf-btn" id="pdf2" href="#" target="liming-ext" rel="noopener">2 張一頁<small>A4 直式</small></a>
             </div>
             <p>按下後約 15～30 秒產生當下最新版<br>列印請用 PDF 畫面的「分享 → 列印」</p>
+        </section>
+
+        <section class="card">
+            <h2>🙏 代禱事項</h2>
+            <a class="btn-outline" href="prayer.html">✏️ 開啟編輯</a>
+            <p>近期代禱、長期關懷代禱、近期事工<br>都在這裡更新</p>
         </section>
     </main>
 
