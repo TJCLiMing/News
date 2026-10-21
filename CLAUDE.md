@@ -303,7 +303,7 @@ AKfycbzWzh7mEl9wt7ehw7SWLQpwpJlbRB6AoDhSiFSex7YC2sp92ceICPct4AO64LiyN8lbPg
 - 「📖 打開簡報」→ `VIEW_URL`，開新分頁（外殼裡開到共用的 `liming-ext` 分頁）。
   OneDrive 分享頁禁止被嵌入（`X-Frame-Options: SAMEORIGIN`），只能開新分頁，所以說明文字和列印按鈕留在這頁
 - 「🖨️ 列印用 PDF：4 張一頁／2 張一頁」→ Cloudflare Worker，見下方
-- 右上「✏️ 編輯」→ `EDIT_URL`（給負責人）
+- **不另設編輯按鈕**：「打開簡報」在平板、電腦上本來就是編輯模式，頁面註明「📱 手機僅供瀏覽、列印／✏️ 編輯請用平板或電腦」（使用者決定，2026-10-21）
 
 | 檔內常數 | 內容 |
 |---------|------|

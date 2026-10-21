@@ -49,13 +49,6 @@
             transition: color 0.2s;
         }
         header a:hover { color: #FF92A9; }
-        header a.edit {
-            color: #e56a8c;
-            border: 1.5px solid #ffd6e0;
-            border-radius: 16px;
-            padding: 3px 10px;
-            font-weight: 700;
-        }
 
         main {
             max-width: 480px;
@@ -83,6 +76,7 @@
             color: #999;
             line-height: 1.7;
         }
+        .card p.tip { margin-top: 12px; color: #c0587a; font-weight: 700; }
         /* 主要按鈕：打開簡報 */
         .btn-main {
             display: block;
@@ -121,11 +115,11 @@
         html.tech header { background: #0a0f1e; border-bottom-color: rgba(0,240,255,0.25); box-shadow: none; }
         html.tech header h1 { color: #fff; }
         html.tech header a { color: #5a6b94; }
-        html.tech header a.edit { color: #00f0ff; border-color: rgba(0,240,255,0.45); }
         html.tech header .note { color: #ffb300; }
         html.tech .card { background: #0a0f1e; border-color: rgba(0,240,255,0.25); }
         html.tech .card h2 { color: #ffb300; }
         html.tech .card p { color: #5a6b94; }
+        html.tech .card p.tip { color: #ffb300; }
         html.tech .btn-main { background: #00b8c4; box-shadow: 0 4px 0 #007a82; }
         html.tech .pdf-btn { color: #00f0ff; background: transparent; border-color: rgba(0,240,255,0.45); }
         html.tech .pdf-btn small { color: #5a6b94; }
@@ -136,7 +130,6 @@
         <div class="bar">
             <h1>📢 報告事項</h1>
             <span class="spacer"></span>
-            <a class="edit" id="editLink" href="#" target="liming-ext" rel="noopener" title="負責人編輯用（OneDrive 可編輯連結）">✏️ 編輯</a>
             <a href="index.html">← 首頁</a>
         </div>
         <p class="note">*請於Line通知負責人修改報告內容</p>
@@ -145,6 +138,7 @@
     <main>
         <section class="card">
             <a class="btn-main" id="viewLink" href="#" target="liming-ext" rel="noopener">📖 打開簡報</a>
+            <p class="tip">📱 手機僅供瀏覽、列印<br>✏️ 編輯請用平板或電腦</p>
             <p>手機可以上下捲動，一次看完全部投影片<br>會開在新分頁，看完關掉就回到這裡</p>
         </section>
 
@@ -166,8 +160,8 @@
         // EDIT_URL：OneDrive「可以編輯」的分享連結。手機打開是檢視（投影片上下排開、可捲動看完，
         //   要編輯會被導去 PowerPoint APP）；電腦和 iPad 打開就是編輯模式。
         // VIEW_URL：「打開簡報」用的連結。目前和 EDIT_URL 同一個——使用者決定（2026-10-21）：
-        //   大部分人用手機，手機瀏覽器本來就不能編輯。要避免電腦／iPad 誤改，就在 OneDrive 另外產生
-        //   「可以檢視」的分享連結填在這裡
+        //   大部分人用手機，手機瀏覽器本來就不能編輯；頁面上註明「手機僅供瀏覽、列印；編輯請用平板或電腦」，
+        //   所以不另設編輯按鈕。要避免電腦／iPad 誤改，就在 OneDrive 另外產生「可以檢視」的分享連結填在這裡
         // PDF_WORKER：Cloudflare Worker「liming-reports-pdf」（原始碼在 worker/reports-pdf/），
         //   按下當下才從 OneDrive 產生最新 PDF，再排成一張 A4 放 4 張（橫式）或 2 張（直式）
         var EDIT_URL   = 'https://1drv.ms/p/c/69de94ef84c9ee8c/IQC4Kv2bDtgfRIvwXjeLcmZNAQqfJk8b4rm7sD2mAm76c5I?e=6GaOmS';
@@ -175,7 +169,6 @@
         var PDF_WORKER = 'https://liming-reports-pdf.c3012312.workers.dev';
 
         document.getElementById('viewLink').href = VIEW_URL;
-        document.getElementById('editLink').href = EDIT_URL;
         document.getElementById('pdf4').href = PDF_WORKER + '/print?n=4';
         document.getElementById('pdf2').href = PDF_WORKER + '/print?n=2';
     </script>
