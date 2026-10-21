@@ -1,4 +1,4 @@
-﻿# 黎明教會 活動快報 專案說明
+﻿# 黎明教會整合平台 專案說明（News repo）
 
 ## 專案架構
 
@@ -42,34 +42,51 @@
 
 ## 前端檔案結構（外殼架構）
 
-> ⚠️ **要改活動快報的內容，是改 `home.html`，不是 `index.html`**
+> ⚠️ **要改首頁內容，是改 `home.html`，不是 `index.html`**
 
 ```
 liming-tjc.org/        → index.html（外殼，全螢幕 iframe）
-      └── iframe        → home.html（活動快報內容）
+      └── iframe        → home.html（首頁內容）
 ```
 
 | 檔案 | 角色 | 什麼時候要動 |
 |------|------|-------------|
-| `home.html` | **活動快報內容頁** | 改快捷功能區、好友連結、海報區 → **改這個** |
+| `home.html` | **首頁內容頁** | 改快捷功能區、好友連結、海報區 → **改這個** |
 | `index.html` | 外殼 | 只在調整回首頁鈕、hash 路由時才動 |
 | `index-tech.html` | 科技版內容頁 | 對應 `home.html` 的另一種風格 |
 | `photos.html` | 相簿頁 | **LINE 官方帳號圖文選單 F 直接連到它**，不要改檔名或刪除 |
 | `schedule.html` | 安排表**單頁版**（獨立呼叫 API 讀安排表圖檔）| 網站內沒有頁面連到它，但 **LINE 官方帳號圖文選單 E 直接連到它**，不要改檔名或刪除；`home.html` 內也有同樣的安排表區塊 |
 | `app.html` | 轉址頁 | 保留舊 `/app.html` 連結用，**不要刪** |
 | `reports.html` | 報告事項入口頁：打開簡報（OneDrive）、列印用 PDF | 換簡報檔見下方「報告事項」 |
-| `prayer.html` | 代禱事項維護（讀寫「02.代禱事項」試算表）| 首頁沒有連結，直接給網址；可被其他網頁嵌入，見下方「代禱事項維護」 |
+| `prayer.html` | 代禱事項維護（讀寫「02.代禱事項」試算表）| 首頁沒有直接連結，但**禱告記錄板的「維護 ↗」連到 `/prayer`**，不要改檔名；可被其他網頁嵌入，見下方「代禱事項維護」 |
 | `frame-nav.js` | iframe 內的連結導向控制 | 新增可嵌入網域時要改（`index.html` 也要同步改）|
 | `sw.js` | Service Worker（離線快取）| 見下方版本規則 |
 | `manifest.json` | PWA 設定 | |
 | `worker/reports-pdf/` | 報告事項「列印用 PDF」的 **Cloudflare Worker 原始碼**（不是網頁）| 改完要另外部署，見下方「列印用 PDF」；`node_modules` 不進 git |
+
+### 外部從哪裡連進網站（改檔名、換網址前先看這裡）
+
+| 來源 | 連到 |
+|------|------|
+| LINE 官方帳號圖文選單 A | `https://tjc-km.github.io/prayer-roster/`（禱告記錄板） |
+| 圖文選單 B | Google 雲端資料夾 |
+| 圖文選單 C | `https://liming-tjc.org/?openExternalBrowser=1`（首頁，強制用 Safari／Chrome 開） |
+| 圖文選單 D | 中區網站 `central.tjc.org.tw` |
+| 圖文選單 E | `schedule.html`（安排表單頁版） |
+| 圖文選單 F | `photos.html`（相簿） |
+| 禱告記錄板「維護 ↗」（`TJC-KM/prayer-roster`） | `https://liming-tjc.org/prayer` |
+| 舊網址 | `tjcliming.github.io/News/…`（GitHub 自動轉址）、`li-ming-tjc.org/…`（轉址頁，見上方） |
+
+> 圖文選單是使用者 2026-10-14 貼的設定；當時 E、F 還是 `tjcliming.github.io/News/...`，建議改成 `https://liming-tjc.org/schedule.html`、
+> `https://liming-tjc.org/photos.html`（D 建議改 `https://`）。實際網址以 LINE Official Account Manager 後台為準
 
 ### 外殼在解決什麼問題
 
 使用者瀏覽器會開一大堆分頁。外殼讓：
 
 - **可嵌入**的連結（`liming-tjc.org`、`tjc-km.github.io`）→ 留在 iframe 內，不開新分頁
-- **不可嵌入**的（Google Meet / Forms / Sites、LINE、Canva，都有 `X-Frame-Options`）
+- **不可嵌入**的（Google Meet / Forms / Sites、LINE、Canva、OneDrive（報告事項「打開簡報」），都有 `X-Frame-Options`；
+  以及不在白名單的網域，例如列印用 PDF 的 `*.workers.dev`）
   → 共用同一個 `liming-ext` 分頁，不管點幾個最多只佔 1 個
 
 分頁數從 8+ 降到最多 2 個。
@@ -105,11 +122,11 @@ liming-tjc.org/#photos     → photos.html（相簿）
 |------|------|
 | HTML / JSON / JS | 網路優先（不會卡舊版）|
 | 圖片 | 快取優先 → **所以改了要升版本** |
+| 跨網域（GAS API、Google Fonts、tjc-km、OneDrive、Worker）| 完全不攔截 |
 
 > **改 `frame-nav.js` 時，同時把頁面引用的 `frame-nav.js?v=N` 版本號加一**（`home.html`、`index-tech.html`、`photos.html`、`posters.html`、`reports.html`、`schedule.html` 共 6 處）。
 > 還在用舊版 Service Worker 的使用者會先拿快取裡的舊 JS，換網址才能讓他們第一次開啟就拿到新版。
 > 曾經發生過：外殼已經是新版，但 `frame-nav.js` 還是舊的，結果外部網站重新整理會跳回首頁。
-| 跨網域（GAS API、Google Fonts、tjc-km）| 完全不攔截 |
 
 ### PWA icon
 
@@ -141,7 +158,7 @@ liming-tjc.org/#photos     → photos.html（相簿）
 > ⚠️ **部署前務必確認帳號！不同專案對應不同帳號，搞錯會沒有部署權限**
 > 切換指令：`clasp logout` → `clasp login`
 
-#### LimingNews2026（活動快報）
+#### LimingNews2026（整合平台的 GAS 後端）
 | 帳號 | 權限 | 可執行操作 |
 |------|------|-----------|
 | `lmf@tjcedu.org` | **擁有者** | push、建立版本、**部署** |
@@ -171,6 +188,13 @@ git config credential.https://github.com.username TJC-KM
 
 > 這是本機的 `.git/config`，**不會跟著 git 同步**——另一台電腦要再設一次。
 > 推送帳號與 commit 作者是分開的，改推送帳號不會改變 commit 上顯示的作者。
+
+### Cloudflare（wrangler）
+| 項目 | 內容 |
+|------|------|
+| 帳號 | `c3012312@gmail.com`（Cloudflare 帳號「C3012312@gmail.com's Account」）|
+| 管的東西 | `liming-tjc.org` 的 DNS、列印用 PDF 的 Worker `liming-reports-pdf`、邀請卡（`05.Invite`）的 Worker、舊網域的流量統計 |
+| 確認登入 | `npx wrangler whoami`（在 `worker/reports-pdf` 裡執行）|
 
 ---
 
