@@ -62,6 +62,7 @@ liming-tjc.org/        → index.html（外殼，全螢幕 iframe）
 | `frame-nav.js` | iframe 內的連結導向控制 | 新增可嵌入網域時要改（`index.html` 也要同步改）|
 | `sw.js` | Service Worker（離線快取）| 見下方版本規則 |
 | `manifest.json` | PWA 設定 | |
+| `worker/reports-pdf/` | 報告事項「列印用 PDF」的 **Cloudflare Worker 原始碼**（不是網頁）| 改完要另外部署，見下方「列印用 PDF」；`node_modules` 不進 git |
 
 ### 外殼在解決什麼問題
 
@@ -339,6 +340,14 @@ AKfycbzWzh7mEl9wt7ehw7SWLQpwpJlbRB6AoDhSiFSex7YC2sp92ceICPct4AO64LiyN8lbPg
 - **微軟改了播放器畫面（按鈕 id、選單文字、`pdfhandler` 表單）就會壞**：使用者會看到「PDF 暫時產生不出來」的中文說明頁，
   可以先改用播放器右下 ▤ 功能表 →「列印為 PDF」（不用登入，一樣是最新版；一張一頁）
 - 部署帳號：wrangler 登入的 `c3012312@gmail.com`（Cloudflare 帳號「C3012312@gmail.com's Account」）
+- **原始碼在 `worker/reports-pdf/`**（`src/index.js`、`wrangler.jsonc`）。改完不會跟著 GitHub Pages 上線，要另外部署：
+  ```bash
+  cd worker/reports-pdf
+  npm install        # 第一次或換電腦時
+  npm run check      # 只打包檢查，不部署
+  npm run deploy     # 部署到 Cloudflare（wrangler 要登入上面那個帳號）
+  ```
+  部署後用 `/pdf?n=4&debug=1` 看各步驟耗時確認正常。GitHub Pages 也會公開這個資料夾的檔案（裡面沒有密碼或金鑰）
 
 ### 載入速度
 

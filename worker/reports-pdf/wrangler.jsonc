@@ -1,0 +1,11 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  // 報告事項即時 PDF（測試版）：按下去才用雲端瀏覽器打開 OneDrive 播放器，點「列印為 PDF」拿到最新 PDF
+  "name": "liming-reports-pdf",
+  "main": "src/index.js",
+  "compatibility_date": "2026-10-21",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": true,
+  "browser": { "binding": "MYBROWSER" },
+  "observability": { "enabled": true }
+}
