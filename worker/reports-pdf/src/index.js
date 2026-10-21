@@ -148,13 +148,13 @@ async function generate(env, mark) {
   }
 }
 
-// 免費方案每 20 秒才能開一個新瀏覽器、最多同時 3 個：被拒絕就等一下再試
+// 免費方案每 20 秒才能開一個新瀏覽器、最多同時 3 個；Cloudflare 偶爾也會暫時沒有瀏覽器（503 No browser available）：都等一下再試
 async function launchWithRetry(env, mark) {
   for (let i = 0; ; i++) {
     try {
       return await puppeteer.launch(env.MYBROWSER);
     } catch (e) {
-      if (!/429|rate|limit|too many/i.test(e.message) || i >= 4) throw new Error('雲端瀏覽器忙碌中（' + e.message.slice(0, 80) + '）');
+      if (!/429|503|rate|limit|too many|no browser available/i.test(e.message) || i >= 4) throw new Error('雲端瀏覽器忙碌中（' + e.message.slice(0, 80) + '）');
       let wait = 5000;
       try { const l = await puppeteer.limits(env.MYBROWSER); if (l && l.timeUntilNextAllowedBrowserAcquisition > 0) wait = l.timeUntilNextAllowedBrowserAcquisition + 500; } catch {}
       wait = Math.min(wait, 21000);
@@ -218,7 +218,7 @@ function errorPage(detail, cors) {
 <body style="font-family:system-ui,sans-serif;max-width:480px;margin:40px auto;padding:0 16px;line-height:1.7;color:#333">
 <h2 style="margin:0 0 12px">PDF 暫時產生不出來</h2>
 <p>請等 30 秒後<b>重新整理</b>這一頁再試一次。</p>
-<p>如果一直失敗，可以先用報告事項頁的播放器：右下角 ▤ 功能表 →「列印為 PDF」。</p>
+<p>如果一直失敗，可以先打開<a href="${esc(EMBED_URL)}">微軟的簡報播放器</a>，點右下角 ▤ 功能表 →「列印為 PDF」（一張一頁）。</p>
 <p style="color:#999;font-size:.85em">原因：${esc(detail)}</p></body></html>`;
   return new Response(html, { status: 503, headers: { ...cors, 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' } });
 }

@@ -57,7 +57,7 @@ liming-tjc.org/        → index.html（外殼，全螢幕 iframe）
 | `photos.html` | 相簿頁 | **LINE 官方帳號圖文選單 F 直接連到它**，不要改檔名或刪除 |
 | `schedule.html` | 安排表**單頁版**（獨立呼叫 API 讀安排表圖檔）| 網站內沒有頁面連到它，但 **LINE 官方帳號圖文選單 E 直接連到它**，不要改檔名或刪除；`home.html` 內也有同樣的安排表區塊 |
 | `app.html` | 轉址頁 | 保留舊 `/app.html` 連結用，**不要刪** |
-| `reports.html` | 報告事項：嵌入 OneDrive 上的「2026代禱及事項宣佈.pptx」| 換簡報檔時改檔內的 `EMBED_URL`、`OPEN_URL`，見下方「報告事項」 |
+| `reports.html` | 報告事項入口頁：打開簡報（OneDrive）、列印用 PDF | 換簡報檔見下方「報告事項」 |
 | `prayer.html` | 代禱事項維護（讀寫「02.代禱事項」試算表）| 首頁沒有連結，直接給網址；可被其他網頁嵌入，見下方「代禱事項維護」 |
 | `frame-nav.js` | iframe 內的連結導向控制 | 新增可嵌入網域時要改（`index.html` 也要同步改）|
 | `sw.js` | Service Worker（離線快取）| 見下方版本規則 |
@@ -296,31 +296,43 @@ AKfycbzWzh7mEl9wt7ehw7SWLQpwpJlbRB6AoDhSiFSex7YC2sp92ceICPct4AO64LiyN8lbPg
 
 入口：`home.html` 的快捷功能區與「報告事項」卡片、`index-tech.html` 的報告事項模組。
 
-簡報**只有一份**：OneDrive 上的「2026代禱及事項宣佈.pptx」。
-頁面顯示的和「↗ 另開」編輯的是同一份，改完網站上就是最新版。
+簡報**只有一份**：OneDrive 上的「2026代禱及事項宣佈.pptx」，改完按鈕打開的就是最新版。
+
+**2026-10-21 起這頁不再內嵌播放器**（每次要等 10～20 秒、一次只能看一張），改成入口頁：
+
+- 「📖 打開簡報」→ `VIEW_URL`，開新分頁（外殼裡開到共用的 `liming-ext` 分頁）。
+  OneDrive 分享頁禁止被嵌入（`X-Frame-Options: SAMEORIGIN`），只能開新分頁，所以說明文字和列印按鈕留在這頁
+- 「🖨️ 列印用 PDF：4 張一頁／2 張一頁」→ Cloudflare Worker，見下方
+- 右上「✏️ 編輯」→ `EDIT_URL`（給負責人）
 
 | 檔內常數 | 內容 |
 |---------|------|
-| `EMBED_URL` | OneDrive 官方「內嵌」產生的網址：只能看、不用登入 |
-| `OPEN_URL` | OneDrive 分享連結（可編輯），給「↗ 另開」按鈕 |
+| `EDIT_URL` | OneDrive 分享連結（可以編輯） |
+| `VIEW_URL` | 「打開簡報」用。**目前就是 `EDIT_URL`**：使用者決定（2026-10-21）大部分人用手機，手機瀏覽器本來就不能編輯 |
+| `PDF_WORKER` | 列印用 PDF 的 Worker 網址 |
+
+### 各裝置打開分享連結的樣子（2026-10-21 用模擬裝置身分實測）
+
+| 裝置 | 結果 |
+|------|------|
+| 手機（含 LINE 內建瀏覽器） | 檢視：投影片上下排開，可以捲動看完。點 ✏️ 會要求改用 PowerPoint APP；切「桌面版網站」才能在瀏覽器裡編輯 |
+| iPad（Safari 預設自稱 Mac） | 完整 PowerPoint 網頁版，**一打開就是編輯模式** |
+| Android 平板、電腦 | 同上，一打開就是編輯模式 |
+
+都不用登入（連結是「知道連結的人都能編輯」）。微軟依瀏覽器回報的裝置身分決定給哪種畫面，手機不能在瀏覽器編輯是微軟的政策。
+> ⚠️ 電腦／iPad 上有人誤改，會直接存進正式簡報。要避免的話，在 OneDrive「共用」產生「可以檢視」的分享連結，填進 `VIEW_URL`
 
 ### 換簡報檔
 
-1. OneDrive 網頁版對新檔案選「內嵌」→ 產生 → 複製 iframe 程式碼裡的 `src`，貼到 `EMBED_URL`
-2. 「共用」→ 複製連結，貼到 `OPEN_URL`
+1. OneDrive「共用」→ 複製連結 → 貼到 `reports.html` 的 `EDIT_URL`（有「可以檢視」連結的話也換 `VIEW_URL`）
+2. 列印用 PDF 的 Worker 用的是**唯讀內嵌網址**：OneDrive 網頁版對新檔案選「內嵌」→ 產生 → 複製 iframe 程式碼裡的 `src`，
+   貼到 `worker/reports-pdf/src/index.js` 的 `EMBED_URL`，再 `npm run deploy`
 3. `sw.js` 版本加一，推上 GitHub
 
-> ⚠️ `EMBED_URL` **一定要用「內嵌」功能產生**。試過不能用的做法：
+> ⚠️ 內嵌網址**一定要用「內嵌」功能產生**。試過不能用的做法：
 > - 分享連結頁面本身禁止嵌入（`X-Frame-Options: SAMEORIGIN`）
 > - 用分享連結自己組 `action=embedview` → 出現「請登入以檢視此檔案」
 > - Office Online viewer（`view.officeapps.live.com`）→ 找不到檔案（下載要登入 Cookie）
-
-### 版面
-
-- 播放器一次只顯示一張，可**左右滑動**或點下方 ◀ ▶ 翻頁（iPhone 實測可用）
-- 外框由 `fitStage()` 算成剛好裝下「16:9 投影片＋播放器工具列（`TOOLBAR` 26px）」，播放器才不會自己在上下補黑邊。
-  手機直立時寬度撐滿，電腦上以高度為準
-- 投影片下方：翻頁說明、「🖨️ 列印用 PDF：4 張一頁／2 張一頁」按鈕、一行使用說明（外框高度會扣掉這一區，見 `fitStage()`）
 
 ### 列印用 PDF（Cloudflare Worker `liming-reports-pdf`）
 
@@ -338,7 +350,7 @@ AKfycbzWzh7mEl9wt7ehw7SWLQpwpJlbRB6AoDhSiFSex7YC2sp92ceICPct4AO64LiyN8lbPg
   被拒絕時 Worker 會自動等一下重試；LINE／Facebook 連結預覽機器人不啟動瀏覽器
 - 剛產生的 PDF 2 分鐘內會重用，但 workers.dev 網址上只在同一個執行個體內有效（不保證）
 - **微軟改了播放器畫面（按鈕 id、選單文字、`pdfhandler` 表單）就會壞**：使用者會看到「PDF 暫時產生不出來」的中文說明頁，
-  可以先改用播放器右下 ▤ 功能表 →「列印為 PDF」（不用登入，一樣是最新版；一張一頁）
+  說明頁附有微軟播放器的連結，可以改用播放器右下 ▤ 功能表 →「列印為 PDF」（不用登入，一樣是最新版；一張一頁）
 - 部署帳號：wrangler 登入的 `c3012312@gmail.com`（Cloudflare 帳號「C3012312@gmail.com's Account」）
 - **原始碼在 `worker/reports-pdf/`**（`src/index.js`、`wrangler.jsonc`）。改完不會跟著 GitHub Pages 上線，要另外部署：
   ```bash
@@ -349,15 +361,13 @@ AKfycbzWzh7mEl9wt7ehw7SWLQpwpJlbRB6AoDhSiFSex7YC2sp92ceICPct4AO64LiyN8lbPg
   ```
   部署後用 `/pdf?n=4&debug=1` 看各步驟耗時確認正常。GitHub Pages 也會公開這個資料夾的檔案（裡面沒有密碼或金鑰）
 
-### 載入速度
+### 過去的做法
 
-第一次開啟約十幾秒，**跟 GAS 無關**（這頁沒有呼叫 GAS）。時間花在微軟那邊：
-`1drv.ms` → `onedrive.live.com`（確認分享權限）→ `powerpoint.officeapps.live.com`（下載播放器程式、開檔、繪製投影片）。
-之後瀏覽器有快取會快一些；iPhone Safari 擋第三方 Cookie，模擬測試時明顯更慢。
-
-> 2026-10-12 以前用 Google 雲端硬碟的 `/preview` 嵌入（載入較快，可往下滑逐頁看），
-> 但雲端那份靠電腦資料夾同步，常和 OneDrive 那份不一致。使用者決定「永遠是最新版比較重要」，改成直接嵌 OneDrive。
-> 雲端硬碟上的那份 pptx 網站已經不再使用。
+- **2026-10-12 以前**：嵌入 Google 雲端硬碟的 `/preview`（載入快、可往下滑逐頁看）。
+  但雲端那份靠一台電腦同時跑 OneDrive 與 Google 雲端硬碟程式同步，**那台電腦不會一直開著**，常和 OneDrive 那份不一致。
+  使用者決定「永遠是最新版比較重要」。雲端硬碟上的那份 pptx 網站已經不再使用
+- **2026-10-12～10-21**：嵌入 OneDrive 官方內嵌播放器。每次要等 10～20 秒（時間花在微軟那邊：`1drv.ms` → `onedrive.live.com`
+  → `powerpoint.officeapps.live.com` 開檔繪製，跟 GAS 無關），一次只能看一張 → 拿掉，改成現在的入口頁
 
 ---
 

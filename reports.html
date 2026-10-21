@@ -13,24 +13,19 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; }
-        html, body { margin: 0; height: 100%; }
+        html, body { margin: 0; }
         body {
             font-family: 'Noto Sans TC', sans-serif;
             background: #f4f4f6;
             color: #4D4D4D;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            height: 100dvh;
+            min-height: 100vh;
         }
 
         header {
-            flex-shrink: 0;
             background: white;
             border-bottom: 2px solid #ffe0e8;
             padding: 0 14px 8px;
             box-shadow: 0 2px 10px rgba(255,146,169,0.12);
-            z-index: 2;
         }
         header .bar {
             height: 48px;
@@ -54,102 +49,86 @@
             transition: color 0.2s;
         }
         header a:hover { color: #FF92A9; }
-        header a.open {
+        header a.edit {
             color: #e56a8c;
             border: 1.5px solid #ffd6e0;
             border-radius: 16px;
             padding: 3px 10px;
             font-weight: 700;
         }
-        @media (max-width: 420px) {
-            header a.open .long { display: none; }
-        }
 
-        .viewer {
-            flex: 1;
-            min-height: 0;
+        main {
+            max-width: 480px;
+            margin: 0 auto;
+            padding: 20px 16px 32px;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            gap: 10px;
-            padding: 12px 0;
+            gap: 16px;
         }
-        /* 投影片外框：由程式算出剛好裝下「16:9 投影片＋播放器工具列」的大小，
-           不讓播放器自己在上下補一大片黑邊 */
-        .stage {
-            position: relative;
-            flex: none;
-            width: 100%;
-            background: #000;
-        }
-        /* 簡報載入前墊在 iframe 底下的提示，載入後被簡報蓋過 */
-        .stage .wait {
-            position: absolute;
-            inset: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        .card {
+            background: white;
+            border: 2px solid #ffe0e8;
+            border-radius: 18px;
+            padding: 18px 16px;
             text-align: center;
-            padding: 0 16px;
-            color: #888;
-            font-size: 0.9rem;
-            line-height: 1.6;
         }
-        .stage iframe {
-            position: absolute;
-            inset: 0;
-            width: 100%;
-            height: 100%;
-            border: 0;
+        .card h2 {
+            margin: 0 0 12px;
+            font-size: 1.05rem;
+            color: #c0587a;
         }
-        /* 投影片下方：翻頁說明＋列印用 PDF 按鈕（高度會從投影片外框扣掉） */
-        .below {
-            flex: none;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-            padding: 0 16px;
-        }
-        .hint {
-            margin: 0;
+        .card p {
+            margin: 10px 0 0;
             font-size: 0.85rem;
             color: #999;
-            text-align: center;
             line-height: 1.7;
         }
-        .hint.small { font-size: 0.8rem; line-height: 1.6; }
+        /* 主要按鈕：打開簡報 */
+        .btn-main {
+            display: block;
+            background: #e56a8c;
+            color: white;
+            text-decoration: none;
+            font-size: 1.2rem;
+            font-weight: 700;
+            border-radius: 14px;
+            padding: 14px 12px;
+            box-shadow: 0 4px 0 #c0587a;
+        }
+        .btn-main:active { transform: translateY(2px); box-shadow: 0 2px 0 #c0587a; }
+        /* 列印用 PDF 的兩個按鈕 */
         .pdf-row {
             display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
+            gap: 10px;
         }
-        .pdf-label { font-size: 0.9rem; font-weight: 700; color: #c0587a; }
         .pdf-btn {
+            flex: 1;
+            display: block;
             color: #e56a8c;
             background: white;
-            border: 1.5px solid #ffd6e0;
-            border-radius: 18px;
-            padding: 5px 14px;
-            font-size: 0.9rem;
-            font-weight: 700;
+            border: 2px solid #ffd6e0;
+            border-radius: 14px;
+            padding: 10px 6px;
             text-decoration: none;
-            white-space: nowrap;
+            font-weight: 700;
+            font-size: 1rem;
+            line-height: 1.4;
         }
+        .pdf-btn small { display: block; font-weight: 400; font-size: 0.75rem; color: #bbb; }
         .pdf-btn:hover { background: #fff5f8; }
 
         html.tech body { background: #04060d; color: #d7e4ff; }
         html.tech header { background: #0a0f1e; border-bottom-color: rgba(0,240,255,0.25); box-shadow: none; }
         html.tech header h1 { color: #fff; }
         html.tech header a { color: #5a6b94; }
-        html.tech header a.open { color: #00f0ff; border-color: rgba(0,240,255,0.45); }
+        html.tech header a.edit { color: #00f0ff; border-color: rgba(0,240,255,0.45); }
         html.tech header .note { color: #ffb300; }
-        html.tech .stage .wait { color: #5a6b94; }
-        html.tech .hint { color: #5a6b94; }
-        html.tech .pdf-label { color: #ffb300; }
+        html.tech .card { background: #0a0f1e; border-color: rgba(0,240,255,0.25); }
+        html.tech .card h2 { color: #ffb300; }
+        html.tech .card p { color: #5a6b94; }
+        html.tech .btn-main { background: #00b8c4; box-shadow: 0 4px 0 #007a82; }
         html.tech .pdf-btn { color: #00f0ff; background: transparent; border-color: rgba(0,240,255,0.45); }
+        html.tech .pdf-btn small { color: #5a6b94; }
     </style>
 </head>
 <body>
@@ -157,65 +136,46 @@
         <div class="bar">
             <h1>📢 報告事項</h1>
             <span class="spacer"></span>
-            <a class="open" id="openLink" href="#" target="_blank" rel="noopener" title="用 OneDrive 開啟簡報">↗ <span class="long">另開</span></a>
+            <a class="edit" id="editLink" href="#" target="liming-ext" rel="noopener" title="負責人編輯用（OneDrive 可編輯連結）">✏️ 編輯</a>
             <a href="index.html">← 首頁</a>
         </div>
         <p class="note">*請於Line通知負責人修改報告內容</p>
     </header>
 
-    <div class="viewer">
-        <div class="stage" id="stage">
-            <div class="wait">簡報載入中，大約要等 10～20 秒<br>請稍候…</div>
-            <iframe id="viewer" title="報告事項簡報" allow="fullscreen"></iframe>
-        </div>
-        <div class="below" id="below">
-            <p class="hint">左右滑動，或點下方 ◀ ▶ 翻頁</p>
+    <main>
+        <section class="card">
+            <a class="btn-main" id="viewLink" href="#" target="liming-ext" rel="noopener">📖 打開簡報</a>
+            <p>手機可以上下捲動，一次看完全部投影片<br>會開在新分頁，看完關掉就回到這裡</p>
+        </section>
+
+        <section class="card">
+            <h2>🖨️ 列印用 PDF</h2>
             <div class="pdf-row">
-                <span class="pdf-label">🖨️ 列印用 PDF</span>
-                <a class="pdf-btn" id="pdf4" href="#" target="liming-ext" rel="noopener">4 張一頁</a>
-                <a class="pdf-btn" id="pdf2" href="#" target="liming-ext" rel="noopener">2 張一頁</a>
+                <a class="pdf-btn" id="pdf4" href="#" target="liming-ext" rel="noopener">4 張一頁<small>A4 橫式</small></a>
+                <a class="pdf-btn" id="pdf2" href="#" target="liming-ext" rel="noopener">2 張一頁<small>A4 直式</small></a>
             </div>
-            <p class="hint small">按下後約 15 秒產生當下最新版，也能一次看完全部<br>列印請用 PDF 畫面的「分享 → 列印」</p>
-        </div>
-    </div>
+            <p>按下後約 15 秒產生當下最新版<br>列印請用 PDF 畫面的「分享 → 列印」</p>
+        </section>
+    </main>
 
     <script>
-        // 簡報只有一份：OneDrive 上的「2026代禱及事項宣佈.pptx」。
-        // 頁面顯示和「另開」編輯都是同一份，改完網站上就是最新的，不用靠電腦同步到 Google。
+        // 簡報只有一份：OneDrive 上的「2026代禱及事項宣佈.pptx」，改完這裡打開的就是最新版。
+        // OneDrive 的分享頁禁止被嵌入，所以不在這頁顯示簡報，改用按鈕開新分頁
+        // （在外殼裡不是可嵌入網域，會開到共用的 liming-ext 分頁）。
         //
-        // EMBED_URL：OneDrive 官方「內嵌」產生的網址（只能看）。
-        //   自己用分享連結組出來的嵌入網址會要求登入，一定要用 OneDrive／PowerPoint 網頁版的「內嵌」功能產生。
-        //   播放器一次顯示一張，可以左右滑動或點箭頭翻頁。
-        // OPEN_URL：OneDrive 的分享連結（可編輯），給「另開」按鈕用。
-        var EMBED_URL = 'https://1drv.ms/p/c/69de94ef84c9ee8c/IQS4Kv2bDtgfRIvwXjeLcmZNAURBt9mo7LGuj8eTAIRsFAw?em=2&wdAr=1.7777777777777777';
-        var OPEN_URL  = 'https://1drv.ms/p/c/69de94ef84c9ee8c/IQC4Kv2bDtgfRIvwXjeLcmZNAQqfJk8b4rm7sD2mAm76c5I?e=6GaOmS';
-        // PDF_WORKER：Cloudflare Worker「liming-reports-pdf」。按下去才用雲端瀏覽器打開上面的播放器，
-        //   點「列印為 PDF」拿到微軟產生的最新 PDF，再排成一張 A4 放 4 張（橫式）或 2 張（直式）。
-        //   /print 先顯示「產生中」再換成 PDF；不是可嵌入網域，所以在外殼裡會開到共用的 liming-ext 分頁
+        // EDIT_URL：OneDrive「可以編輯」的分享連結。手機打開是檢視（投影片上下排開、可捲動看完，
+        //   要編輯會被導去 PowerPoint APP）；電腦和 iPad 打開就是編輯模式。
+        // VIEW_URL：「打開簡報」用的連結。目前和 EDIT_URL 同一個——使用者決定（2026-10-21）：
+        //   大部分人用手機，手機瀏覽器本來就不能編輯。要避免電腦／iPad 誤改，就在 OneDrive 另外產生
+        //   「可以檢視」的分享連結填在這裡
+        // PDF_WORKER：Cloudflare Worker「liming-reports-pdf」（原始碼在 worker/reports-pdf/），
+        //   按下當下才從 OneDrive 產生最新 PDF，再排成一張 A4 放 4 張（橫式）或 2 張（直式）
+        var EDIT_URL   = 'https://1drv.ms/p/c/69de94ef84c9ee8c/IQC4Kv2bDtgfRIvwXjeLcmZNAQqfJk8b4rm7sD2mAm76c5I?e=6GaOmS';
+        var VIEW_URL   = EDIT_URL;
         var PDF_WORKER = 'https://liming-reports-pdf.c3012312.workers.dev';
 
-        // 播放器底部工具列約 24px，再加上下邊框
-        var TOOLBAR = 26;
-        var viewerBox = document.querySelector('.viewer');
-        var stage = document.getElementById('stage');
-        var below = document.getElementById('below');
-
-        // 算出剛好裝下 16:9 投影片＋工具列的外框：手機直立時寬度撐滿，電腦上則以高度為準
-        function fitStage() {
-            var cs = getComputedStyle(viewerBox);
-            var W = viewerBox.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
-            var H = viewerBox.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom)
-                    - below.offsetHeight - parseFloat(cs.rowGap || cs.gap || 0);
-            var w = W, h = W * 9 / 16 + TOOLBAR;
-            if (h > H && H > TOOLBAR + 60) { h = H; w = (H - TOOLBAR) * 16 / 9; }
-            stage.style.width = Math.floor(w) + 'px';
-            stage.style.height = Math.floor(h) + 'px';
-        }
-        fitStage();
-        window.addEventListener('resize', fitStage);
-
-        document.getElementById('viewer').src = EMBED_URL;
-        document.getElementById('openLink').href = OPEN_URL;
+        document.getElementById('viewLink').href = VIEW_URL;
+        document.getElementById('editLink').href = EDIT_URL;
         document.getElementById('pdf4').href = PDF_WORKER + '/print?n=4';
         document.getElementById('pdf2').href = PDF_WORKER + '/print?n=2';
     </script>
