@@ -787,7 +787,8 @@
             renderedJson = json;
 
             document.getElementById('loading').style.display = 'none';
-            document.getElementById('update-time').innerText = data.updateTime;
+            gasDeployTime = data.updateTime;
+            showDeployTime();
 
             renderSection('posterGrid', data.posters, true, isRerender);
             renderSection('scheduleGrid', data.schedules, false, isRerender);
@@ -800,6 +801,29 @@
                 }, 100);
             }
         }
+
+        // 頁尾「最後部署時間」：後端 GAS 的部署時間（DEPLOY_TIME，要在 GAS 手動執行 setDeployTime 才會變）
+        // 和網頁在 GitHub Pages 的發布時間，顯示比較晚的那個——只改前端、沒部署 GAS 時也會更新。
+        // GitHub Pages 每次發布，所有檔案的 Last-Modified 都是那次的發布時間；HEAD 請求不經過 Service Worker
+        let gasDeployTime = null, pagesDeployTime = null;
+        function fmtTaipei(d) {
+            const p = {};
+            new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Taipei', year: 'numeric', month: '2-digit', day: '2-digit',
+                hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(d).forEach(x => { p[x.type] = x.value; });
+            return `${p.year}-${p.month}-${p.day} ${p.hour}:${p.minute}`;
+        }
+        function showDeployTime() {
+            let best = null;
+            if (gasDeployTime) {
+                const g = new Date(String(gasDeployTime).trim().replace(' ', 'T') + '+08:00');   // DEPLOY_TIME 是台灣時間
+                if (!isNaN(g)) best = g;
+            }
+            if (pagesDeployTime && !isNaN(pagesDeployTime) && (!best || pagesDeployTime > best)) best = pagesDeployTime;
+            document.getElementById('update-time').innerText = best ? fmtTaipei(best) : (gasDeployTime || '讀取中...');
+        }
+        fetch('home.html', { method: 'HEAD', cache: 'no-store' })
+            .then(r => { const lm = r.headers.get('Last-Modified'); if (lm) { pagesDeployTime = new Date(lm); showDeployTime(); } })
+            .catch(() => { /* 離線就只顯示 GAS 的時間 */ });
 
         // 步驟一：先用上次的快取秒開
         try {

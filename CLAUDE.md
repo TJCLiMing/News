@@ -289,7 +289,7 @@ AKfycbzWzh7mEl9wt7ehw7SWLQpwpJlbRB6AoDhSiFSex7YC2sp92ceICPct4AO64LiyN8lbPg
 | `SCHEDULE_FOLDER_ID` | 月份安排表 Google Drive 資料夾 ID |
 | `QRCODE_FILE_ID` | 黎明官方帳號 QRCode 圖片 Drive ID |
 | `HELPER_QRCODE_FILE_ID` | 小幫手 QRCode 圖片 Drive ID |
-| `DEPLOY_TIME` | 最後部署時間（執行 `setDeployTime()` 更新） |
+| `DEPLOY_TIME` | GAS 後端的部署時間（執行 `setDeployTime()` 更新）。頁尾「最後部署時間」會跟網頁發布時間比，顯示較晚的那個 |
 | `CACHED_DATA` | 海報與安排表的快取（JSON），程式自動寫入，**不要手動改** |
 | `CACHED_AT` | 快取建立時間（毫秒），程式自動寫入，用來判斷重新整理的冷卻時間 |
 | `PRAYER_SHEET_ID` | （選填）代禱事項試算表 ID；沒設定時用程式內預設的「02.代禱事項」 |
@@ -445,6 +445,8 @@ AKfycbzWzh7mEl9wt7ehw7SWLQpwpJlbRB6AoDhSiFSex7YC2sp92ceICPct4AO64LiyN8lbPg
    - 部署 → 管理部署作業 → 主要部署（ID 開頭 `AKfycbzWzh7m`）→ 鉛筆 → 版本選「新版本」→ 填說明 → 部署
 3. **更新部署時間**：同一個編輯器，函式選 `setDeployTime` → 執行
    — 約 5 分鐘後 `keepWarm` 重建快取才會反映在網站頁尾
+   — 頁尾「最後部署時間」= `DEPLOY_TIME` 和**網頁在 GitHub Pages 的發布時間**較晚的那個（`home.html` 用 HEAD 讀 `Last-Modified`；
+     GitHub Pages 每次發布，所有檔案的 `Last-Modified` 都是發布時間）。所以**只改前端、推上 GitHub 也會更新**，不用執行 `setDeployTime`
 4. **GitHub 推送**：`git add . && git commit -m "說明" && git push`
 5. **驗證**：`?mode=api` 回傳 `status: success` 且有海報資料，代表新版本讀得到雲端硬碟
 
