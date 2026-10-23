@@ -263,6 +263,22 @@
             box-sizing: border-box;
         }
 
+        /* 電腦版卡片的新功能角標（手機版圖示方格見 .ms-item.is-new） */
+        .work-card.is-new::after {
+            content: 'NEW';
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: #ff4d6d;
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            padding: 3px 9px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(255,77,109,0.35);
+        }
+
         .work-card h3 {
             margin: 5px 0 15px 0;
             color: #333;
@@ -554,6 +570,17 @@
                 <a data-track="卡片：禱告團契" href="https://meet.google.com/wfw-arii-kxw" target="google-meet" class="btn btn-prayer">加入禱告室</a>
             </div>
 
+            <div class="card is-visible work-card" data-new-until="2026-12-24" style="background: #f7f3f1; border-color: #e6dcd7;">
+                <div>
+                    <h3>
+                        <svg class="icon" viewBox="0 0 24 24" style="color: #8d6e63;"><path d="M21 5c-1.11-.35-2.33-.5-3.5-.5-1.95 0-4.05.4-5.5 1.5-1.45-1.1-3.55-1.5-5.5-1.5S2.45 4.9 1 6v14.65c0 .25.25.5.5.5.1 0 .15-.05.25-.05C3.1 20.45 5.05 20 6.5 20c1.95 0 4.05.4 5.5 1.5 1.35-.85 3.8-1.5 5.5-1.5 1.65 0 3.35.3 4.75 1.05.1.05.15.05.25.05.25 0 .5-.25.5-.5V6c-.6-.45-1.25-.75-2-1zm0 13.5c-1.1-.35-2.3-.5-3.5-.5-1.7 0-4.15.65-5.5 1.5V8c1.35-.85 3.8-1.5 5.5-1.5 1.2 0 2.4.15 3.5.5v11.5z"/></svg>
+                        查經團契
+                    </h3>
+                    <div class="desc-text">線上查經聚會<br>預查討論題目、複習上次內容<br><br><em style="color:#aaa; font-size:0.9rem;">「你們查考聖經，<br>因你們以為內中有永生；<br>給我作見證的就是這經。」<br>— 約翰福音 5:39</em></div>
+                </div>
+                <a data-track="卡片：查經團契" href="https://study.liming-tjc.org/" target="liming-study" class="btn" style="background: #8d6e63; box-shadow: 0 4px 0px #6d4c41;">進入查經</a>
+            </div>
+
             <div class="card is-visible work-card" style="background: #f0fff4; border-color: #d7f5dd;">
                 <div>
                     <h3>
@@ -587,7 +614,7 @@
                 <a data-track="卡片：報告事項" href="reports.html" class="btn" style="background: #e65100; box-shadow: 0 4px 0px #bf360c;">查看報告</a>
             </div>
 
-            <div class="card is-visible work-card" style="background: #f4f5fd; border-color: #d5d9f2;">
+            <div class="card is-visible work-card" data-new-until="2026-11-28" style="background: #f4f5fd; border-color: #d5d9f2;">
                 <div>
                     <h3>
                         <svg class="icon" viewBox="0 0 24 24" style="color: #5c6bc0;"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
