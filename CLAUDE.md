@@ -318,6 +318,9 @@ AKfycbzWzh7mEl9wt7ehw7SWLQpwpJlbRB6AoDhSiFSex7YC2sp92ceICPct4AO64LiyN8lbPg
   - 「點擊紀錄」分頁：每點一次一列（時間、月份、按鈕、頁面 home／tech／reports）
   - 「每月統計」分頁：`QUERY` 自動彙整成「按鈕 × 月份」次數表
   - 兩個分頁第一次有人點擊時自動建立；也可以在 GAS 編輯器執行 `setupTrackSheet()` 先建好
+  - **試算表時區要設成台北**（檔案 → 設定 → 時區 →（GMT+08:00）台北），否則「時間」欄會顯示成美國時間；
+    「月份」欄是程式用台灣時間算好的文字，不受時區影響
+  - 2026-10-24 上線，部署後實測：GAS 直接送與網頁 `sendBeacon` 都會寫入，每月統計自動彙整
 - 前端 `track.js`：點到有 `data-track` 的元素，用 `navigator.sendBeacon` 背景送 `{ action: 'track', key, page }` 給 GAS `doPost`
   （`程式碼.js` 的 `trackClick_`）。不等回應，不影響開啟速度；只送按鈕名稱和頁面，不送個人資料
 - **只在正式網域 `liming-tjc.org` 送出**，本機測試只印在主控台，不會混進統計
