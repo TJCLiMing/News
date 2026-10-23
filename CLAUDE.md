@@ -44,7 +44,8 @@
 
 > ⚠️ **要改首頁內容，是改 `home.html`，不是 `index.html`**
 >
-> ⚠️ **`home.html` 的功能區有兩份，新增／修改功能時兩份都要改**（科技版 `index-tech.html` 只有一份）
+> ⚠️ **新增／修改功能時，三處要完全同步**（使用者規定）：`home.html` 手機圖示、`home.html` 電腦卡片、`index-tech.html` 科技版模組。
+> 連 NEW 角標、統計名稱 `data-track` 也要三處一致。`home.html` 的功能區有兩份，科技版只有一份：
 > - 手機（寬度 ≤ 768px）：`.mobile-shortcuts` 小圖示方格（`.ms-item`）
 > - 平板橫放、電腦（> 768px）：`.action-grid` 功能卡片（`.work-card`，有說明文字、經文、按鈕）
 >
@@ -344,8 +345,9 @@ AKfycbzWzh7mEl9wt7ehw7SWLQpwpJlbRB6AoDhSiFSex7YC2sp92ceICPct4AO64LiyN8lbPg
 到期自動消失，不用回來拿掉。**一般版要在手機圖示和電腦卡片兩處都加 `data-new-until`**，科技版加在模組上
 
 - **新功能掛兩個月**（使用者決定）：到期日＝上線日加兩個月
-- 目前（一般版手機圖示、電腦卡片，科技版模組都有）：
+- 目前（一般版手機圖示、電腦卡片，科技版模組三處都有）：
   - 客製化邀請卡（2026-09-28 上線）→ `data-new-until="2026-11-28"`
+  - 報告事項（2026-10-20 上線）→ `data-new-until="2026-12-20"`
   - 查經團契（2026-10-24 上線）→ `data-new-until="2026-12-24"`
 
 ---
