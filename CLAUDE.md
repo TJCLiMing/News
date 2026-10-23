@@ -89,6 +89,9 @@ liming-tjc.org/        → index.html（外殼，全螢幕 iframe）
   以及不在白名單的網域，例如列印用 PDF 的 `*.workers.dev`）
   → 共用同一個 `liming-ext` 分頁，不管點幾個最多只佔 1 個
 
+> 查經團契 `study.liming-tjc.org` 雖然是自家子網域，但**刻意不加進白名單**：頁面裡有加入 Google Meet 的連結，
+> Meet 禁止被嵌入，放在框內會開不起來
+
 分頁數從 8+ 降到最多 2 個。
 
 外殼有**防疊套保護**：被自己的 iframe 載入時會 `location.replace('home.html')`，
