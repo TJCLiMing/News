@@ -556,7 +556,74 @@ function doPost(e) {
   }
   if (req.action === 'prayerGet')  return prayerJson_(prayerGet_());
   if (req.action === 'prayerSave') return prayerJson_(prayerSave_(req.changes || {}));
+  if (req.action === 'track')      return prayerJson_(trackClick_(req));
   return prayerJson_({ status: 'error', message: '未知的 action' });
+}
+
+/* ════════════════════════════════════════════════════════════
+ * 按鈕點擊統計（前端 track.js 使用，網站上不顯示）
+ *
+ * POST（navigator.sendBeacon，text/plain），body 為 JSON：
+ *   { action: 'track', key: '快捷：查經團契', page: 'home' }
+ * 每次點擊在「點擊紀錄」分頁加一列（時間、月份、按鈕、頁面）；
+ * 「每月統計」分頁用 QUERY 彙整成「按鈕 × 月份」次數表。
+ * 只記按鈕名稱、頁面、時間，不記任何個人資料。
+ * 兩個分頁第一次用到時自動建立；也可以在編輯器執行 setupTrackSheet() 先建好。
+ * ════════════════════════════════════════════════════════════ */
+
+const TRACK_SHEET_ID_DEFAULT = '1Ls5YtF1jdBqR1ltbUOyZAL7G81reQs2kgKbYafFp10Q';  // 各功能點擊次頻率
+const TRACK_LOG_SHEET = '點擊紀錄';
+const TRACK_SUM_SHEET = '每月統計';
+const TRACK_PAGES = ['home', 'tech', 'reports'];
+
+function trackClick_(req) {
+  // 名稱限長，開頭的 = + - @ 去掉，避免被試算表當成公式
+  const key = String(req.key || '').trim().slice(0, 40).replace(/^[=+\-@]+/, '');
+  if (!key) return { status: 'error', message: '缺少按鈕名稱' };
+  const page = TRACK_PAGES.indexOf(req.page) >= 0 ? req.page : 'other';
+  const now = new Date();
+  try {
+    // 月份前面加 ' 讓試算表當成文字，不要自動轉成日期
+    trackSetup_().appendRow([now, "'" + Utilities.formatDate(now, 'GMT+8', 'yyyy-MM'), key, page]);
+  } catch (err) {
+    return { status: 'error', message: err.message };
+  }
+  return { status: 'success' };
+}
+
+function trackSetup_() {
+  const id = PropertiesService.getScriptProperties().getProperty('TRACK_SHEET_ID') || TRACK_SHEET_ID_DEFAULT;
+  const book = SpreadsheetApp.openById(id);
+  let log = book.getSheetByName(TRACK_LOG_SHEET);
+  if (log && book.getSheetByName(TRACK_SUM_SHEET)) return log;
+
+  // 第一次：建立分頁。上鎖避免兩個點擊同時建立
+  const lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    log = book.getSheetByName(TRACK_LOG_SHEET);
+    if (!log) {
+      log = book.insertSheet(TRACK_LOG_SHEET, 0);
+      log.getRange(1, 1, 1, 4).setValues([['時間', '月份', '按鈕', '頁面']]).setFontWeight('bold');
+      log.setFrozenRows(1);
+    }
+    if (!book.getSheetByName(TRACK_SUM_SHEET)) {
+      const sum = book.insertSheet(TRACK_SUM_SHEET, 0);
+      sum.getRange('A1').setFormula(
+        "=QUERY('" + TRACK_LOG_SHEET + "'!A:D,\"select C, count(C) where C is not null group by C pivot B order by C\",1)");
+      sum.setFrozenRows(1);
+      sum.setFrozenColumns(1);
+    }
+  } finally {
+    lock.releaseLock();
+  }
+  return log;
+}
+
+// 在 GAS 編輯器手動執行一次：先建好兩個分頁，也順便確認部署帳號對試算表有編輯權
+function setupTrackSheet() {
+  trackSetup_();
+  Logger.log('點擊統計分頁已建立／已存在');
 }
 
 function prayerBook_() {

@@ -59,6 +59,7 @@ liming-tjc.org/        → index.html（外殼，全螢幕 iframe）
 | `app.html` | 轉址頁 | 保留舊 `/app.html` 連結用，**不要刪** |
 | `reports.html` | 報告事項入口頁，兩區：**報告簡報**（打開簡報、列印用 PDF）、**代禱事項**（編輯、列印）| 換簡報檔見下方「報告事項」 |
 | `prayer.html` | 代禱事項維護（讀寫「02.代禱事項」試算表）| 首頁沒有直接連結；**報告事項頁的「🙏 代禱事項 → 開啟編輯」、禱告記錄板的「維護 ↗」（連 `/prayer`）都連到這裡**，不要改檔名；可被其他網頁嵌入，見下方「代禱事項維護」 |
+| `track.js` | 按鈕點擊統計（網站上不顯示），見下方「按鈕點擊統計」 | 新增按鈕時加 `data-track` |
 | `frame-nav.js` | iframe 內的連結導向控制 | 新增可嵌入網域時要改（`index.html` 也要同步改）|
 | `sw.js` | Service Worker（離線快取）| 見下方版本規則 |
 | `manifest.json` | PWA 設定 | |
@@ -304,6 +305,34 @@ AKfycbzWzh7mEl9wt7ehw7SWLQpwpJlbRB6AoDhSiFSex7YC2sp92ceICPct4AO64LiyN8lbPg
 | `CACHED_DATA` | 海報與安排表的快取（JSON），程式自動寫入，**不要手動改** |
 | `CACHED_AT` | 快取建立時間（毫秒），程式自動寫入，用來判斷重新整理的冷卻時間 |
 | `PRAYER_SHEET_ID` | （選填）代禱事項試算表 ID；沒設定時用程式內預設的「02.代禱事項」 |
+| `TRACK_SHEET_ID` | （選填）點擊統計試算表 ID；沒設定時用程式內預設的「各功能點擊次頻率」 |
+
+---
+
+## 按鈕點擊統計與新功能角標
+
+### 按鈕點擊統計（2026-10-24 起，網站上不顯示）
+
+- 試算表「**各功能點擊次頻率**」<https://docs.google.com/spreadsheets/d/1Ls5YtF1jdBqR1ltbUOyZAL7G81reQs2kgKbYafFp10Q>
+  （共用雲端硬碟，`lmf@tjcedu.org` 有權限；目前設成「知道連結的人都能檢視」，內容只有按鈕名稱與次數）
+  - 「點擊紀錄」分頁：每點一次一列（時間、月份、按鈕、頁面 home／tech／reports）
+  - 「每月統計」分頁：`QUERY` 自動彙整成「按鈕 × 月份」次數表
+  - 兩個分頁第一次有人點擊時自動建立；也可以在 GAS 編輯器執行 `setupTrackSheet()` 先建好
+- 前端 `track.js`：點到有 `data-track` 的元素，用 `navigator.sendBeacon` 背景送 `{ action: 'track', key, page }` 給 GAS `doPost`
+  （`程式碼.js` 的 `trackClick_`）。不等回應，不影響開啟速度；只送按鈕名稱和頁面，不送個人資料
+- **只在正式網域 `liming-tjc.org` 送出**，本機測試只印在主控台，不會混進統計
+- 統計的按鈕：`home.html`、`index-tech.html`、`reports.html` 上所有按鈕。名稱前綴：
+  `快捷：`（功能快捷鍵）、`卡片：`（首頁功能卡片的按鈕）、`友站：`（好友連結）、`報告：`（報告事項頁）、`年度總覽`。
+  一般版和科技版用同一個名稱，所以每月統計會合在一起算；要分開看就篩「頁面」欄
+- **新增按鈕時記得加 `data-track="前綴：名稱"`**，沒加就不會被統計；三個頁面都已載入 `track.js?v=1`
+- 後端只做最基本的檢查（名稱限 40 字、去掉開頭的 `= + - @` 避免變成公式）；有人亂送也只會多幾筆奇怪的名稱
+
+### 新功能角標
+
+按鈕加 `data-new-until="YYYY-MM-DD"`（台灣日期，**當天結束前**顯示），頁面載入時自動加上 `is-new`：
+一般版是卡片右上角紅色「NEW」、科技版是標題後的霓虹「NEW」框。到期自動消失，不用回來拿掉。
+
+- 目前：查經團契（2026-10-24 加入）→ `data-new-until="2026-11-24"`，一般版、科技版都有
 
 ---
 

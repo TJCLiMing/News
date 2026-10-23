@@ -10,6 +10,7 @@
         try { if (localStorage.getItem('uiStyle') === 'tech') document.documentElement.classList.add('tech'); } catch (e) {}
     </script>
     <script src="frame-nav.js?v=3"></script>
+    <script src="track.js?v=1" data-page="reports" defer></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; }
@@ -164,14 +165,14 @@
         <!-- 第一區：報告簡報（OneDrive 上的 pptx） -->
         <section class="card">
             <h2>📖 報告簡報</h2>
-            <a class="btn-main" id="viewLink" href="#" target="liming-ext" rel="noopener">打開簡報</a>
+            <a data-track="報告：打開簡報" class="btn-main" id="viewLink" href="#" target="liming-ext" rel="noopener">打開簡報</a>
             <p class="tip">📱 手機僅供瀏覽、列印<br>✏️ 編輯請用平板或電腦</p>
             <p>開在新分頁，手機可以上下捲動看完全部投影片</p>
 
             <div class="sub">🖨️ 列印用 PDF</div>
             <div class="pdf-row">
-                <a class="pdf-btn" id="pdf4" href="#" target="liming-ext" rel="noopener">4 張一頁<small>A4 橫式</small></a>
-                <a class="pdf-btn" id="pdf2" href="#" target="liming-ext" rel="noopener">2 張一頁<small>A4 直式</small></a>
+                <a data-track="報告：PDF 4張一頁" class="pdf-btn" id="pdf4" href="#" target="liming-ext" rel="noopener">4 張一頁<small>A4 橫式</small></a>
+                <a data-track="報告：PDF 2張一頁" class="pdf-btn" id="pdf2" href="#" target="liming-ext" rel="noopener">2 張一頁<small>A4 直式</small></a>
             </div>
             <p>按下後約 15～30 秒產生最新版<br>PDF 出來後用「分享 → 列印」</p>
         </section>
@@ -180,8 +181,8 @@
         <section class="card">
             <h2>🙏 代禱事項</h2>
             <div class="pdf-row">
-                <a class="btn-outline" href="prayer.html">✏️ 編輯</a>
-                <a class="btn-outline" id="prayerPrint" href="prayer.html?print=1" target="_blank">🖨️ 列印</a>
+                <a data-track="報告：代禱編輯" class="btn-outline" href="prayer.html">✏️ 編輯</a>
+                <a data-track="報告：代禱列印" class="btn-outline" id="prayerPrint" href="prayer.html?print=1" target="_blank">🖨️ 列印</a>
             </div>
             <p>近期代禱、長期關懷代禱、近期事工<br>列印會開新分頁，自動跳出列印</p>
         </section>
