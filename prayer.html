@@ -86,6 +86,25 @@
         }
         .tab.dirty .dot { display: block; }
 
+        /* ── 平板、電腦（≥768px，html.wide）：不用頁籤，四類一次排成兩欄 ──
+           兩種排法用同一套程式畫出來（sectionHtml），手機與平板電腦的功能永遠一致 */
+        .cat-title { display: none; }
+        html.wide .tabs-holder { display: none !important; }
+        html.wide .wrap { max-width: 1100px; }
+        html.wide #panel { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 20px; align-items: start; }
+        html.wide #panel > .state { grid-column: 1 / -1; }
+        html.wide .cat-sec {
+            background: rgba(255,255,255,0.55); border: 1.5px solid var(--line);
+            border-radius: 20px; padding: 14px; min-width: 0;
+        }
+        html.wide .cat-title {
+            display: flex; align-items: baseline; gap: 8px;
+            margin: 0 0 10px; font-size: 1.1rem; color: var(--green);
+        }
+        .cat-title small { font-size: 0.8rem; font-weight: 500; color: var(--dim); }
+        .cat-title .dot { display: none; width: 8px; height: 8px; border-radius: 50%; background: #f2b300; align-self: center; }
+        .cat-sec.dirty .cat-title .dot { display: inline-block; }
+
         .rule {
             font-size: 0.82rem; color: #5f7151; background: var(--green-pale);
             border: 1.5px dashed #bfe0a5; border-radius: 12px; padding: 9px 12px; margin-bottom: 12px;
@@ -356,7 +375,15 @@
 
     var server = null;   // 試算表上的版本
     var draft = null;    // 畫面上正在編輯的版本
-    var current = 'recent';
+    var current = 'recent';   // 手機版目前的頁籤；平板電腦版四類一起顯示，用不到
+    // 768px 以上（平板、電腦）不用頁籤，一頁全部呈現；跟首頁切換手機／電腦版的寬度一致
+    var WIDE = window.matchMedia('(min-width: 768px)');
+    document.documentElement.classList.toggle('wide', WIDE.matches);
+    function onWideChange() {
+        document.documentElement.classList.toggle('wide', WIDE.matches);
+        if (draft) render();
+    }
+    if (WIDE.addEventListener) WIDE.addEventListener('change', onWideChange); else WIDE.addListener(onWideChange);
     var editing = null;  // { cat, index }，index = -1 代表新增
 
     var $ = function (id) { return document.getElementById(id); };
@@ -465,10 +492,23 @@
     }
 
     // ═══════════════ 畫面 ═══════════════
+    // 手機：只畫目前頁籤那一類；平板電腦：四類全畫（近期、長期、事工、經文，排成兩欄）
     function render() {
+        var keys = WIDE.matches ? CATS.map(function (c) { return c.key; }).concat(VERSE.key) : [current];
         renderTabs();
-        if (current === 'verse') renderVerse(); else renderList(catOf(current));
+        $('panel').innerHTML = keys.map(sectionHtml).join('');
+        updateVerseCounter();
         renderSavebar();
+    }
+
+    // 一個分類的區塊。按鈕靠外層的 data-cat 判斷是哪一類；標題列只在平板電腦版顯示（手機用頁籤）
+    function sectionHtml(k) {
+        var c = k === VERSE.key ? VERSE : catOf(k);
+        var count = k === VERSE.key ? '' : '<small>' + draft[k].rows.length + ' 筆</small>';
+        return '<section class="cat-sec' + (catDirty(k) ? ' dirty' : '') + '" data-cat="' + k + '">' +
+            '<h2 class="cat-title">' + c.label + count + '<span class="dot" title="有未儲存的修改"></span></h2>' +
+            (k === VERSE.key ? verseHtml() : listHtml(c)) +
+            '</section>';
     }
 
     function renderTabs() {
@@ -479,7 +519,7 @@
         }).join('');
     }
 
-    function renderList(cat) {
+    function listHtml(cat) {
         var rows = draft[cat.key].rows;
         var orig = server[cat.key].rows.map(function (r) { return JSON.stringify(r); });
         var html = '<div class="rule">' + (cat.split ? '姓名稱謂＋備註合計' : cat.mainLabel) +
@@ -514,17 +554,15 @@
                 '</div>' +
             '</div>';
         });
-        html += '<button class="add-btn" id="addBtn">＋ 新增' + cat.label + '</button>';
-        $('panel').innerHTML = html;
+        html += '<button class="add-btn" data-add>＋ 新增' + cat.label + '</button>';
+        return html;
     }
 
-    function renderVerse() {
+    function verseHtml() {
         if (!draft.verse.available) {
-            $('panel').innerHTML = '<div class="state"><div class="big">📖</div><p>試算表「規範說明」分頁裡找不到類型為「經文」的那一列，<br>所以這裡暫時無法修改經文。</p></div>';
-            return;
+            return '<div class="state"><div class="big">📖</div><p>試算表「規範說明」分頁裡找不到類型為「經文」的那一列，<br>所以這裡暫時無法修改經文。</p></div>';
         }
-        $('panel').innerHTML =
-            '<div class="rule">投影畫面上的經文。建議 <b>' + VERSE.textLimit + ' 字以內</b>，太長在布幕上會擠。</div>' +
+        return '<div class="rule">投影畫面上的經文。建議 <b>' + VERSE.textLimit + ' 字以內</b>，太長在布幕上會擠。</div>' +
             '<div class="verse-card">' +
                 '<div class="field"><label class="f">經文內容</label>' +
                 '<textarea id="verseText">' + esc(draft.verse.text) + '</textarea>' +
@@ -532,7 +570,6 @@
                 '<div class="field" style="margin-bottom:0"><label class="f">出處</label>' +
                 '<input type="text" id="verseRef" value="' + esc(draft.verse.ref) + '" placeholder="例：腓立比書 4:6"></div>' +
             '</div>';
-        updateVerseCounter();
     }
 
     function updateVerseCounter() {
@@ -555,8 +592,8 @@
     }
 
     // ═══════════════ 編輯彈窗 ═══════════════
-    function openEdit(index) {
-        var cat = catOf(current);
+    function openEdit(catKey, index) {
+        var cat = catOf(catKey);
         editing = { cat: cat, index: index };
         var r = index >= 0 ? draft[cat.key].rows[index] : ['', ''];
         $('editTitle').textContent = (index >= 0 ? '編輯' : '新增') + cat.label;
@@ -686,18 +723,21 @@
 
     $('panel').addEventListener('click', function (e) {
         if (e.target.id === 'retryBtn') { $('panel').innerHTML = '<div class="state"><p>讀取中…</p></div>'; return load(); }
-        if (e.target.id === 'addBtn') return openEdit(-1);
+        var sec = e.target.closest('[data-cat]');
+        if (!sec) return;
+        var catKey = sec.dataset.cat;
+        if (e.target.closest('[data-add]')) return openEdit(catKey, -1);
         var t = e.target.closest('[data-up],[data-down],[data-edit],[data-del]');
         if (!t) return;
-        var rows = draft[current].rows;
+        var rows = draft[catKey].rows;
         if (t.dataset.up != null) {
             var i = +t.dataset.up; rows.splice(i - 1, 0, rows.splice(i, 1)[0]); render();
         } else if (t.dataset.down != null) {
             var j = +t.dataset.down; rows.splice(j + 1, 0, rows.splice(j, 1)[0]); render();
         } else if (t.dataset.edit != null) {
-            openEdit(+t.dataset.edit);
+            openEdit(catKey, +t.dataset.edit);
         } else if (t.dataset.del != null) {
-            var k = +t.dataset.del, catKey = current;
+            var k = +t.dataset.del;
             var removed = rows.splice(k, 1)[0];
             render();
             toast('已移除「' + removed[0] + '」', function () {
@@ -712,6 +752,8 @@
         else if (e.target.id === 'verseRef') draft.verse.ref = e.target.value;
         else return;
         renderTabs();
+        var vs = document.querySelector('[data-cat="verse"]');
+        if (vs) vs.classList.toggle('dirty', catDirty('verse'));
         renderSavebar();
     });
 
