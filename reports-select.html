@@ -167,8 +167,8 @@
         <div class="in">
             <span class="count" id="count">已選 0 張</span>
             <div class="seg" id="seg">
-                <button data-n="4" class="on">4 張一頁</button>
-                <button data-n="2">2 張一頁</button>
+                <button data-n="4">4 張一頁</button>
+                <button data-n="2" class="on">2 張一頁</button>
             </div>
             <a class="go off" id="go" href="#" target="liming-ext" rel="noopener" data-track="報告：選頁列印（送出）">🖨️ 列印</a>
         </div>
@@ -184,7 +184,7 @@
         const PDFJS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/';
         const $ = id => document.getElementById(id);
 
-        let snapId = '', total = 0, layout = 4;
+        let snapId = '', total = 0, layout = 2;   // 預設 2 張一頁（使用者決定，2026-11-09）
         const picked = new Set();
 
         // ── 進度：前三步依經過時間推進（Worker 做完才一起回應，中間沒有進度可讀），後兩步依實際完成 ──
@@ -252,14 +252,13 @@
                 const doc = await pdfjs.getDocument({ data: buf }).promise;
                 total = doc.numPages;
 
-                // 先把所有格子排好（預設全選），再一張一張畫縮圖。
+                // 先把所有格子排好（預設全不選，使用者決定 2026-11-09），再一張一張畫縮圖。
                 // 勾選區先排版但不顯示：格子要有寬度，縮圖才能依手機螢幕畫清楚（藏起來量不到寬度）
                 const grid = $('grid');
                 $('pick').style.visibility = 'hidden'; $('pick').hidden = false;
                 for (let i = 1; i <= total; i++) {
-                    picked.add(i);
                     const t = document.createElement('div');
-                    t.className = 'tile on'; t.dataset.p = i;
+                    t.className = 'tile'; t.dataset.p = i;
                     t.innerHTML = '<canvas width="320" height="180"></canvas><div class="no"><span class="box"></span>第 ' + i + ' 張</div>';
                     grid.appendChild(t);
                 }

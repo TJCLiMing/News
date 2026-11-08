@@ -65,7 +65,7 @@ liming-tjc.org/        → index.html（外殼，全螢幕 iframe）
 | `photos.html` | 相簿頁 | **LINE 官方帳號圖文選單 F 直接連到它**，不要改檔名或刪除 |
 | `schedule.html` | 安排表**單頁版**（獨立呼叫 API 讀安排表圖檔）| 網站內沒有頁面連到它，但 **LINE 官方帳號圖文選單 E 直接連到它**，不要改檔名或刪除；`home.html` 內也有同樣的安排表區塊 |
 | `app.html` | 轉址頁 | 保留舊 `/app.html` 連結用，**不要刪** |
-| `reports.html` | 報告事項入口頁，兩區：**報告簡報**（打開簡報、列印用 PDF、選頁列印）、**代禱事項**（編輯、列印）| 換簡報檔見下方「報告事項」 |
+| `reports.html` | 報告事項入口頁，兩區：**報告簡報**（打開簡報、選頁列印）、**代禱事項**（編輯、列印）| 換簡報檔見下方「報告事項」 |
 | `reports-select.html` | 報告事項的**選頁列印**：看縮圖勾選要印的投影片 | 只從報告事項頁連進來；見下方「選頁列印」 |
 | `prayer.html` | 代禱事項維護（讀寫「02.代禱事項」試算表）；手機用頁籤、平板電腦一頁兩欄，共用同一套程式 | 首頁沒有直接連結；**報告事項頁的「🙏 代禱事項 → 開啟編輯」、禱告記錄板的「維護 ↗」（連 `/prayer`）都連到這裡**，不要改檔名；可被其他網頁嵌入，見下方「代禱事項維護」 |
 | `track.js` | 按鈕點擊統計（網站上不顯示），見下方「按鈕點擊統計」 | 新增按鈕時加 `data-track` |
@@ -404,8 +404,8 @@ AKfycbzWzh7mEl9wt7ehw7SWLQpwpJlbRB6AoDhSiFSex7YC2sp92ceICPct4AO64LiyN8lbPg
 - **第一區「📖 報告簡報」**（OneDrive 上的 pptx）
   - 「打開簡報」→ `VIEW_URL`，開新分頁（外殼裡開到共用的 `liming-ext` 分頁）。
     OneDrive 分享頁禁止被嵌入（`X-Frame-Options: SAMEORIGIN`），只能開新分頁，所以說明文字和列印按鈕留在這頁
-  - 「🖨️ 列印用 PDF：4 張一頁／2 張一頁」→ Cloudflare Worker，見下方
-  - 「☑️ 選頁列印（只印其中幾張）」→ `reports-select.html`，見下方「選頁列印」
+  - 「🖨️ 列印 → ☑️ 選頁列印」→ `reports-select.html`，見下方「選頁列印」。**列印只有這一個入口**：
+    原本的「4 張一頁」「2 張一頁」（整份直接印）在選頁列印手機實測可用後拿掉（使用者決定，2026-11-09）
   - **不另設編輯按鈕**：「打開簡報」在平板、電腦上本來就是編輯模式，註明「📱 手機僅供瀏覽、列印／✏️ 編輯請用平板或電腦」（使用者決定，2026-10-21）
 - **第二區「🙏 代禱事項」**（見上方「代禱事項維護」）
   - 「✏️ 編輯」→ `prayer.html`，自家頁面，在外殼裡留在框內開
@@ -415,7 +415,8 @@ AKfycbzWzh7mEl9wt7ehw7SWLQpwpJlbRB6AoDhSiFSex7YC2sp92ceICPct4AO64LiyN8lbPg
 |---------|------|
 | `EDIT_URL` | OneDrive 分享連結（可以編輯） |
 | `VIEW_URL` | 「打開簡報」用。**目前就是 `EDIT_URL`**：使用者決定（2026-10-21）大部分人用手機，手機瀏覽器本來就不能編輯 |
-| `PDF_WORKER` | 列印用 PDF 的 Worker 網址 |
+
+Worker 網址 `PDF_WORKER` 寫在 `reports-select.html`（`reports.html` 已經不直接連 Worker）。
 
 ### 各裝置打開分享連結的樣子（2026-10-21 用模擬裝置身分實測）
 
@@ -442,8 +443,8 @@ AKfycbzWzh7mEl9wt7ehw7SWLQpwpJlbRB6AoDhSiFSex7YC2sp92ceICPct4AO64LiyN8lbPg
 
 ### 列印用 PDF（Cloudflare Worker `liming-reports-pdf`）
 
-報告事項頁的「4 張一頁」「2 張一頁」按鈕 → `https://liming-reports-pdf.c3012312.workers.dev/print?n=4|2`
-（`reports.html` 的 `PDF_WORKER`）。**按下當下才產生，一定是 OneDrive 上的最新版**，約 10～15 秒；要等雲端瀏覽器時會到 30 秒左右（頁面寫「約 15～30 秒」）。
+選頁列印（`reports-select.html` 的 `PDF_WORKER`）向它要 PDF。**要的當下才產生，一定是 OneDrive 上的最新版**，約 10～15 秒；要等雲端瀏覽器時會到 30 秒左右（頁面寫「約 15～30 秒」）。
+2026-11-09 以前報告事項頁另有「4 張一頁」「2 張一頁」按鈕直接連 `/print?n=4|2`（整份印），已拿掉，但網址還能用。
 
 - 流程：Cloudflare 雲端無頭瀏覽器（Browser Run）打開唯讀內嵌播放器 → 用**鍵盤**操作「功能表 → 列印為 PDF」
   → 微軟產生向量 PDF → 讀出「開啟 PDF」那個 form（欄位 `Pid`）和 Cookie，**由 Worker 自己 POST** `pdfhandler.ashx` 拿 PDF
@@ -459,7 +460,7 @@ AKfycbzWzh7mEl9wt7ehw7SWLQpwpJlbRB6AoDhSiFSex7YC2sp92ceICPct4AO64LiyN8lbPg
 
   | 網址 | 用途 |
   |------|------|
-  | `/print?n=4\|2` | 等待頁，接著換成 `/pdf`（報告事項頁的兩個按鈕） |
+  | `/print?n=4\|2` | 等待頁，接著換成 `/pdf`，整份印（報告事項頁已不再連這個） |
   | `/pdf?n=4\|2\|1` | 直接回 PDF；`&debug=1` 回各步驟耗時 |
   | `/snapshot` | 產生最新原始 PDF（一張投影片一頁），**暫存 15 分鐘**，回應標頭 `X-Snapshot-Id`（暫存編號）、`X-Slides`（張數）。選頁列印用 |
   | `/print`、`/pdf` 加 `&id=暫存編號&pages=1,3,5-7` | 用暫存那份挑頁排版（約 1 秒，不再開雲端瀏覽器）；只有 `pages` 沒有 `id` 時會重新產生 |
@@ -481,15 +482,16 @@ AKfycbzWzh7mEl9wt7ehw7SWLQpwpJlbRB6AoDhSiFSex7YC2sp92ceICPct4AO64LiyN8lbPg
 
 ### 選頁列印（`reports-select.html`，2026-11-09）
 
-只想印其中幾張投影片時用（手機內建列印不能挑頁、也不能多頁合一）。
+報告事項**唯一的列印入口**（手機內建列印不能挑頁、也不能多頁合一）。2026-11-09 手機實測可用。
 
-1. 進入頁面就向 Worker `/snapshot` 要最新的原始 PDF（約 15～30 秒，跟「4 張一頁」一樣要開雲端瀏覽器）。
+1. 進入頁面就向 Worker `/snapshot` 要最新的原始 PDF（約 15～30 秒，要開雲端瀏覽器）。
    等待時顯示進度條和五個步驟：打開簡報 → 讀取投影片 → 微軟產生 PDF → 下載到手機 → 畫出縮圖。
    **前三步是依經過時間推進的**（Worker 做完才一次回應，中間讀不到真正進度），後兩步是真的完成才打勾
 2. 用 pdf.js（cdnjs 的 4.4.168，約 0.4 MB）在手機上畫縮圖：第一張畫好就換成勾選畫面，其他邊畫邊出現。
    34 張實測：一般瀏覽器 1 秒內畫完；模擬中慢手機 4～7 秒
-3. 預設全選，點投影片切換勾選（勾選框在「第 N 張」旁邊，不蓋住投影片內容），有「全選」「全不選」
-4. 底部選「4 張一頁／2 張一頁」→「🖨️ 列印」→ Worker `/print?n=&id=暫存編號&pages=1,3-5`：
+3. **預設全不選**（使用者決定，2026-11-09；沒勾任何一張時列印按鈕是灰的），點投影片切換勾選
+   （勾選框在「第 N 張」旁邊，不蓋住投影片內容），有「全選」「全不選」
+4. 底部選「4 張一頁／2 張一頁」（**預設 2 張一頁**）→「🖨️ 列印」→ Worker `/print?n=&id=暫存編號&pages=1,3-5`：
    用**同一份暫存**挑頁排版（約 1 秒），印出來的就是剛才看到的內容
 
 - 失敗時顯示原因和「再試一次」按鈕

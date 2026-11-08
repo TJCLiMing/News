@@ -100,26 +100,12 @@
             box-shadow: 0 4px 0 #c0587a;
         }
         .btn-main:active { transform: translateY(2px); box-shadow: 0 2px 0 #c0587a; }
-        /* 列印用 PDF 的兩個按鈕 */
+        /* 兩個按鈕並排（代禱事項「編輯」「列印」） */
         .pdf-row {
             display: flex;
             gap: 10px;
         }
-        .pdf-btn {
-            flex: 1;
-            display: block;
-            color: #e56a8c;
-            background: white;
-            border: 2px solid #ffd6e0;
-            border-radius: 14px;
-            padding: 10px 6px;
-            text-decoration: none;
-            font-weight: 700;
-            font-size: 1rem;
-            line-height: 1.4;
-        }
-        .pdf-btn small { display: block; font-weight: 400; font-size: 0.75rem; color: #bbb; }
-        /* 外框式大按鈕：代禱事項「開啟編輯」「列印」 */
+        /* 外框式大按鈕：選頁列印、代禱事項「編輯」「列印」 */
         .btn-outline {
             flex: 1;
             display: block;
@@ -133,8 +119,6 @@
             font-size: 1.1rem;
         }
         .btn-outline:hover { background: #fff5f8; }
-        .pick-btn { margin-top: 10px; font-size: 1rem; }
-        .pdf-btn:hover { background: #fff5f8; }
 
         html.tech body { background: #04060d; color: #d7e4ff; }
         html.tech header { background: #0a0f1e; border-bottom-color: rgba(0,240,255,0.25); box-shadow: none; }
@@ -147,8 +131,6 @@
         html.tech .card p.tip { color: #ffb300; }
         html.tech .card .sub { color: #ffb300; border-top-color: rgba(0,240,255,0.25); }
         html.tech .btn-main { background: #00b8c4; box-shadow: 0 4px 0 #007a82; }
-        html.tech .pdf-btn { color: #00f0ff; background: transparent; border-color: rgba(0,240,255,0.45); }
-        html.tech .pdf-btn small { color: #5a6b94; }
         html.tech .btn-outline { color: #00f0ff; background: transparent; border-color: rgba(0,240,255,0.45); }
     </style>
 </head>
@@ -170,13 +152,9 @@
             <p class="tip">📱 手機僅供瀏覽、列印<br>✏️ 編輯請用平板或電腦</p>
             <p>開在新分頁，手機可以上下捲動看完全部投影片</p>
 
-            <div class="sub">🖨️ 列印用 PDF</div>
-            <div class="pdf-row">
-                <a data-track="報告：PDF 4張一頁" class="pdf-btn" id="pdf4" href="#" target="liming-ext" rel="noopener">4 張一頁<small>A4 橫式</small></a>
-                <a data-track="報告：PDF 2張一頁" class="pdf-btn" id="pdf2" href="#" target="liming-ext" rel="noopener">2 張一頁<small>A4 直式</small></a>
-            </div>
-            <a data-track="報告：選頁列印" class="btn-outline pick-btn" href="reports-select.html">☑️ 選頁列印（只印其中幾張）</a>
-            <p>按下後約 15～30 秒產生最新版<br>PDF 出來後用「分享 → 列印」</p>
+            <div class="sub">🖨️ 列印</div>
+            <a data-track="報告：選頁列印" class="btn-outline" href="reports-select.html">☑️ 選頁列印</a>
+            <p>看縮圖勾選要印的投影片，2 張或 4 張排成一頁<br>載入最新版約 15～30 秒</p>
         </section>
 
         <!-- 第二區：代禱事項（prayer.html） -->
@@ -200,15 +178,12 @@
         // VIEW_URL：「打開簡報」用的連結。目前和 EDIT_URL 同一個——使用者決定（2026-10-21）：
         //   大部分人用手機，手機瀏覽器本來就不能編輯；頁面上註明「手機僅供瀏覽、列印；編輯請用平板或電腦」，
         //   所以不另設編輯按鈕。要避免電腦／iPad 誤改，就在 OneDrive 另外產生「可以檢視」的分享連結填在這裡
-        // PDF_WORKER：Cloudflare Worker「liming-reports-pdf」（原始碼在 worker/reports-pdf/），
-        //   按下當下才從 OneDrive 產生最新 PDF，再排成一張 A4 放 4 張（橫式）或 2 張（直式）
+        // 列印只有「選頁列印」（reports-select.html）：看縮圖勾選，再由 Worker 排成 2 張或 4 張一頁。
+        //   原本的「4 張一頁」「2 張一頁」（整份直接印）2026-11-09 拿掉（使用者決定），Worker 的 /print?n= 網址仍可直接用
         var EDIT_URL   = 'https://1drv.ms/p/c/69de94ef84c9ee8c/IQC4Kv2bDtgfRIvwXjeLcmZNAQqfJk8b4rm7sD2mAm76c5I?e=6GaOmS';
         var VIEW_URL   = EDIT_URL;
-        var PDF_WORKER = 'https://liming-reports-pdf.c3012312.workers.dev';
 
         document.getElementById('viewLink').href = VIEW_URL;
-        document.getElementById('pdf4').href = PDF_WORKER + '/print?n=4';
-        document.getElementById('pdf2').href = PDF_WORKER + '/print?n=2';
 
         // 代禱事項「列印」要開新分頁（prayer.html?print=1 載入後自動跳出列印視窗）。
         // 外殼的 frame-nav.js 會把自家網頁的連結改成留在框內開，target="_blank" 會被蓋掉，所以這裡自己開新分頁
