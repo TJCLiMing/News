@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="robots" content="noindex">
+    <title>選頁列印</title>
+    <link rel="icon" type="image/png" href="logo_10th.png">
+    <script>
+        // 跟著首頁的風格：科技版使用者看到深色畫面
+        try { if (localStorage.getItem('uiStyle') === 'tech') document.documentElement.classList.add('tech'); } catch (e) {}
+    </script>
+    <script src="frame-nav.js?v=3"></script>
+    <script src="track.js?v=1" data-page="reports" defer></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; }
+        html, body { margin: 0; }
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background: #f4f4f6;
+            color: #4D4D4D;
+            min-height: 100vh;
+            padding-bottom: calc(120px + env(safe-area-inset-bottom, 0px));
+        }
+        header {
+            background: white;
+            border-bottom: 2px solid #ffe0e8;
+            padding: 0 14px;
+            box-shadow: 0 2px 10px rgba(255,146,169,0.12);
+        }
+        header .bar { height: 52px; display: flex; align-items: center; gap: 10px; }
+        header h1 { margin: 0; font-size: 1.15rem; font-weight: 700; white-space: nowrap; }
+        .spacer { flex: 1; }
+        header a { color: #bbb; text-decoration: none; font-size: 0.9rem; white-space: nowrap; }
+        header a:hover { color: #FF92A9; }
+
+        main { max-width: 1000px; margin: 0 auto; padding: 16px; }
+
+        /* ── 等待中：進度 ── */
+        .loading {
+            max-width: 440px; margin: 24px auto; background: white; border: 2px solid #ffe0e8;
+            border-radius: 18px; padding: 22px 20px; text-align: center;
+        }
+        .loading h2 { margin: 0 0 6px; font-size: 1.15rem; color: #c0587a; }
+        .loading .sub { margin: 0 0 16px; color: #999; font-size: 0.9rem; line-height: 1.6; }
+        .progress { height: 12px; background: #ffe8ee; border-radius: 6px; overflow: hidden; margin-bottom: 18px; }
+        .progress > div { height: 100%; width: 0; background: #e56a8c; border-radius: 6px; transition: width 0.6s ease; }
+        .steps { list-style: none; margin: 0; padding: 0; text-align: left; }
+        .steps li { padding: 7px 0; font-size: 1rem; color: #bbb; display: flex; align-items: center; gap: 10px; }
+        .steps li .mk { width: 26px; height: 26px; border-radius: 50%; border: 2px solid #eee; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center; font-size: 0.85rem; }
+        .steps li.doing { color: #4D4D4D; font-weight: 700; }
+        .steps li.doing .mk { border-color: #e56a8c; border-top-color: transparent; animation: spin 0.9s linear infinite; }
+        .steps li.done { color: #6b9a57; }
+        .steps li.done .mk { border-color: #6b9a57; background: #6b9a57; color: white; }
+        .steps li.done .mk::after { content: '✓'; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .error { color: #d0392b; line-height: 1.7; }
+        .retry { margin-top: 12px; border: 0; border-radius: 14px; padding: 12px 22px; font-size: 1rem; font-weight: 700;
+            background: #e56a8c; color: white; cursor: pointer; font-family: inherit; }
+
+        /* ── 縮圖勾選 ── */
+        .tools { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+        .tools .hint { flex: 1; min-width: 180px; font-size: 0.95rem; color: #c0587a; font-weight: 700; }
+        .tools button {
+            border: 2px solid #ffd6e0; background: white; color: #e56a8c; border-radius: 14px;
+            padding: 8px 14px; font-size: 0.95rem; font-weight: 700; cursor: pointer; font-family: inherit;
+        }
+        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        @media (min-width: 640px) { .grid { grid-template-columns: repeat(3, 1fr); } }
+        @media (min-width: 960px) { .grid { grid-template-columns: repeat(4, 1fr); } }
+        .tile {
+            position: relative; background: white; border: 3px solid #eee; border-radius: 14px;
+            padding: 8px; cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent;
+        }
+        .tile canvas { display: block; width: 100%; height: auto; border-radius: 6px; background: #fafafa; aspect-ratio: 16 / 9; }
+        /* 勾選框放在「第 N 張」旁邊，不蓋住投影片內容 */
+        .tile .no {
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            margin-top: 8px; font-size: 1rem; font-weight: 700; color: #999;
+        }
+        .tile .box {
+            width: 30px; height: 30px; border-radius: 9px; flex-shrink: 0;
+            background: white; border: 3px solid #ccc; display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem; font-weight: 700; color: white;
+        }
+        .tile.on { border-color: #e56a8c; }
+        .tile.on .no { color: #e56a8c; }
+        .tile.on .box { background: #e56a8c; border-color: #e56a8c; }
+        .tile.on .box::after { content: '✓'; }
+
+        /* ── 底部：已選幾張、版面、列印 ── */
+        .bottom {
+            position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; background: white;
+            border-top: 2px solid #ffe0e8; box-shadow: 0 -6px 20px rgba(229,106,140,0.12);
+            padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px));
+        }
+        .bottom .in { max-width: 1000px; margin: 0 auto; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .bottom .count { font-weight: 700; color: #c0587a; font-size: 1rem; white-space: nowrap; }
+        .seg { display: flex; border: 2px solid #ffd6e0; border-radius: 14px; overflow: hidden; }
+        .seg button {
+            border: 0; background: white; color: #e56a8c; padding: 9px 12px; font-size: 0.95rem; font-weight: 700;
+            cursor: pointer; font-family: inherit;
+        }
+        .seg button.on { background: #e56a8c; color: white; }
+        .go {
+            flex: 1; min-width: 120px; text-align: center; text-decoration: none; background: #e56a8c; color: white;
+            border-radius: 14px; padding: 12px; font-size: 1.1rem; font-weight: 700; box-shadow: 0 3px 0 #c0587a;
+        }
+        .go.off { background: #ddd; box-shadow: none; pointer-events: none; color: #999; }
+        [hidden] { display: none !important; }
+
+        /* 科技版 */
+        html.tech body { background: #04060d; color: #d7e4ff; }
+        html.tech header { background: #0a0f1e; border-bottom-color: rgba(0,240,255,0.25); box-shadow: none; }
+        html.tech header h1 { color: #fff; }
+        html.tech .loading, html.tech .tile, html.tech .bottom, html.tech .tools button, html.tech .seg button {
+            background: #0a0f1e; border-color: rgba(0,240,255,0.25); }
+        html.tech .tile.on { border-color: #00f0ff; }
+        html.tech .tile.on .box { background: #00b8c4; border-color: #00b8c4; }
+        html.tech .loading h2, html.tech .tools .hint, html.tech .bottom .count { color: #ffb300; }
+        html.tech .tools button, html.tech .seg button { color: #00f0ff; }
+        html.tech .seg button.on, html.tech .go { background: #00b8c4; color: #fff; box-shadow: 0 3px 0 #007a82; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="bar">
+            <h1>☑️ 選頁列印</h1>
+            <span class="spacer"></span>
+            <a href="reports.html">← 報告事項</a>
+        </div>
+    </header>
+
+    <main>
+        <!-- 等待：產生 PDF 時的進度 -->
+        <section class="loading" id="loading">
+            <h2>正在準備最新的投影片</h2>
+            <p class="sub">大約需要 15～30 秒，請不要關閉這一頁</p>
+            <div class="progress"><div id="bar"></div></div>
+            <ol class="steps" id="steps">
+                <li><span class="mk"></span>打開簡報</li>
+                <li><span class="mk"></span>讀取投影片</li>
+                <li><span class="mk"></span>微軟產生 PDF</li>
+                <li><span class="mk"></span>下載到手機</li>
+                <li><span class="mk"></span>畫出縮圖</li>
+            </ol>
+            <div id="err" hidden>
+                <p class="error" id="errMsg"></p>
+                <button class="retry" id="retry">再試一次</button>
+            </div>
+        </section>
+
+        <!-- 勾選 -->
+        <section id="pick" hidden>
+            <div class="tools">
+                <span class="hint">點投影片勾選要印的</span>
+                <button id="all">全選</button>
+                <button id="none">全不選</button>
+            </div>
+            <div class="grid" id="grid"></div>
+        </section>
+    </main>
+
+    <div class="bottom" id="bottom" hidden>
+        <div class="in">
+            <span class="count" id="count">已選 0 張</span>
+            <div class="seg" id="seg">
+                <button data-n="4" class="on">4 張一頁</button>
+                <button data-n="2">2 張一頁</button>
+            </div>
+            <a class="go off" id="go" href="#" target="liming-ext" rel="noopener" data-track="報告：選頁列印（送出）">🖨️ 列印</a>
+        </div>
+    </div>
+
+    <script type="module">
+        // 選頁列印：
+        // 1. 向 Worker 要一份最新的原始 PDF（/snapshot，一張投影片一頁），Worker 暫存 15 分鐘並回傳暫存編號
+        // 2. 用 pdf.js 在手機上畫縮圖，邊畫邊顯示，可以先開始勾
+        // 3. 按列印 → Worker /print?n=&id=&pages=：用暫存那份挑頁排版（約 1 秒），印的就是剛才看到的內容
+        // 最後的 PDF 跟「全部列印」一樣由 Worker 用網址回傳，LINE 內建瀏覽器、Safari 都能列印
+        const PDF_WORKER = 'https://liming-reports-pdf.c3012312.workers.dev';
+        const PDFJS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/';
+        const $ = id => document.getElementById(id);
+
+        let snapId = '', total = 0, layout = 4;
+        const picked = new Set();
+
+        // ── 進度：前三步依經過時間推進（Worker 做完才一起回應，中間沒有進度可讀），後兩步依實際完成 ──
+        const STEP_AT = [0, 5, 12];          // 秒：打開簡報、讀取投影片、微軟產生 PDF 大約從這時開始
+        const steps = [...$('steps').children];
+        let t0 = 0, timer = null, stage = 0;
+        function setStep(i) {
+            stage = Math.max(stage, i);
+            steps.forEach((li, k) => { li.className = k < stage ? 'done' : (k === stage ? 'doing' : ''); });
+        }
+        function setBar(p) { $('bar').style.width = Math.min(100, p) + '%'; }
+        function startTimer() {
+            t0 = Date.now(); stage = 0; setStep(0); setBar(2);
+            timer = setInterval(() => {
+                const s = (Date.now() - t0) / 1000;
+                for (let i = STEP_AT.length - 1; i >= 0; i--) if (s >= STEP_AT[i]) { if (stage < i) setStep(i); break; }
+                if (stage <= 2) setBar(5 + 75 * (1 - Math.exp(-s / 9)));   // 慢慢接近 80%，不會停在 100% 等
+            }, 300);
+        }
+
+        function fail(msg) {
+            clearInterval(timer);
+            $('errMsg').textContent = msg;
+            $('err').hidden = false;
+            steps.forEach(li => { if (li.className === 'doing') li.className = ''; });
+        }
+
+        // 選到的頁 → 「1-3,5」
+        function pagesParam() {
+            const list = [...picked].sort((a, b) => a - b);
+            const out = [];
+            for (let i = 0; i < list.length; i++) {
+                let j = i;
+                while (j + 1 < list.length && list[j + 1] === list[j] + 1) j++;
+                out.push(i === j ? String(list[i]) : list[i] + '-' + list[j]);
+                i = j;
+            }
+            return out.join(',');
+        }
+        function refresh() {
+            $('count').textContent = '已選 ' + picked.size + ' 張';
+            const go = $('go');
+            go.classList.toggle('off', picked.size === 0);
+            go.href = picked.size ? PDF_WORKER + '/print?n=' + layout + '&id=' + encodeURIComponent(snapId) + '&pages=' + pagesParam() : '#';
+            document.querySelectorAll('.tile').forEach(t => t.classList.toggle('on', picked.has(+t.dataset.p)));
+        }
+
+        async function start() {
+            $('err').hidden = true;
+            $('grid').innerHTML = ''; picked.clear(); $('pick').hidden = true;   // 「再試一次」時從頭來
+            startTimer();
+            try {
+                const pdfjsP = import(PDFJS + 'pdf.min.mjs');   // 套件同時開始下載
+                const res = await fetch(PDF_WORKER + '/snapshot', { cache: 'no-store' });
+                if (!res.ok) {
+                    let why = ''; try { why = (await res.json()).error || ''; } catch (e) {}
+                    throw new Error('PDF 暫時產生不出來' + (why ? '（' + why + '）' : ''));
+                }
+                snapId = res.headers.get('X-Snapshot-Id') || '';
+                clearInterval(timer); setStep(3); setBar(85);
+                const buf = await res.arrayBuffer();
+                setStep(4); setBar(92);
+                const pdfjs = await pdfjsP;
+                pdfjs.GlobalWorkerOptions.workerSrc = PDFJS + 'pdf.worker.min.mjs';
+                const doc = await pdfjs.getDocument({ data: buf }).promise;
+                total = doc.numPages;
+
+                // 先把所有格子排好（預設全選），再一張一張畫縮圖。
+                // 勾選區先排版但不顯示：格子要有寬度，縮圖才能依手機螢幕畫清楚（藏起來量不到寬度）
+                const grid = $('grid');
+                $('pick').style.visibility = 'hidden'; $('pick').hidden = false;
+                for (let i = 1; i <= total; i++) {
+                    picked.add(i);
+                    const t = document.createElement('div');
+                    t.className = 'tile on'; t.dataset.p = i;
+                    t.innerHTML = '<canvas width="320" height="180"></canvas><div class="no"><span class="box"></span>第 ' + i + ' 張</div>';
+                    grid.appendChild(t);
+                }
+                for (let i = 1; i <= total; i++) {
+                    const page = await doc.getPage(i);
+                    const c = grid.children[i - 1].querySelector('canvas');
+                    const w = Math.min(480, Math.round(c.clientWidth * (window.devicePixelRatio || 1)) || 320);
+                    const vp = page.getViewport({ scale: w / page.getViewport({ scale: 1 }).width });
+                    c.width = Math.round(vp.width); c.height = Math.round(vp.height);
+                    await page.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise;
+                    if (i === 1) {   // 第一張畫好就換成勾選畫面，其他邊畫邊出現
+                        setStep(5); setBar(100);
+                        $('loading').hidden = true; $('pick').style.visibility = ''; $('bottom').hidden = false;
+                        refresh();
+                    }
+                }
+            } catch (e) {
+                fail((e && e.message) || '發生錯誤');
+            }
+        }
+
+        $('grid').addEventListener('click', e => {
+            const t = e.target.closest('.tile'); if (!t) return;
+            const p = +t.dataset.p;
+            picked.has(p) ? picked.delete(p) : picked.add(p);
+            refresh();
+        });
+        $('all').addEventListener('click', () => { for (let i = 1; i <= total; i++) picked.add(i); refresh(); });
+        $('none').addEventListener('click', () => { picked.clear(); refresh(); });
+        $('seg').addEventListener('click', e => {
+            const b = e.target.closest('button'); if (!b) return;
+            layout = +b.dataset.n;
+            [...$('seg').children].forEach(x => x.classList.toggle('on', x === b));
+            refresh();
+        });
+        $('retry').addEventListener('click', start);
+        start();
+    </script>
+</body>
+</html>

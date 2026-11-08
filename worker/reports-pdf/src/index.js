@@ -1,7 +1,14 @@
-// 報告事項即時 PDF（測試版）
+// 報告事項即時 PDF
 //
 // GET /pdf?n=1|2|4      回傳 PDF（1＝原始一張一頁；2＝A4 直式上下兩張；4＝A4 橫式 2x2）
 // GET /pdf?n=4&debug=1  回傳 JSON：各階段耗時，不回 PDF
+// GET /print?n=4        等待頁：先顯示「產生中」，再換成 /pdf
+//
+// 選頁列印（reports-select.html 使用）：
+// GET /snapshot         產生最新的原始 PDF（一張投影片一頁），暫存 15 分鐘；
+//                       回傳 PDF，標頭 X-Snapshot-Id 是暫存編號、X-Slides 是張數
+// GET /pdf?n=4&id=暫存編號&pages=1,3,5-7   從暫存那份挑頁排版（不用再等微軟產生一次，印的就是剛才預覽的內容）
+//                       暫存過期或找不到時，重新產生一份再挑頁
 //
 // 流程：雲端無頭瀏覽器打開 OneDrive 唯讀內嵌播放器 → 用鍵盤操作「功能表 → 列印為 PDF」
 // → 微軟在伺服器產生 PDF → 讀出「開啟 PDF」那個 form（欄位 Pid）與 Cookie，由 Worker 自己 POST pdfhandler.ashx 拿 PDF
@@ -21,12 +28,31 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 let memo = { bytes: null, at: 0, slides: 0 };
 let inflight = null;
 
+// 選頁列印的暫存：Cloudflare 快取（同一個資料中心內有效），15 分鐘
+const SNAPSHOT_TTL = 15 * 60;
+const snapKey = (origin, id) => new Request(origin + '/__snapshot/' + encodeURIComponent(id));
+
+// 「1,3,5-7」→ [0,2,4,5,6]（0 起算、排序、去重、超出範圍的丟掉）；沒給就回 null（代表全部）
+function parsePages(text, total) {
+  if (!text) return null;
+  const set = new Set();
+  String(text).split(',').forEach(part => {
+    const m = part.trim().match(/^(\d+)(?:-(\d+))?$/);
+    if (!m) return;
+    let a = +m[1], b = m[2] ? +m[2] : a;
+    if (a > b) [a, b] = [b, a];
+    for (let i = Math.max(1, a); i <= Math.min(total, b); i++) set.add(i - 1);
+  });
+  return [...set].sort((x, y) => x - y);
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
-    const cors = { 'Access-Control-Allow-Origin': '*' };
+    const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Expose-Headers': 'X-Snapshot-Id, X-Slides' };
     // 報告事項頁的按鈕連到 /print：先顯示「產生中」，再換成 /pdf（產生 PDF 的十幾秒內畫面不會一片空白）
-    if (url.pathname === '/print') return waitingPage(url.searchParams.get('n') === '2' ? 2 : 4, cors);
+    if (url.pathname === '/print') return waitingPage(url.searchParams.get('n') === '2' ? 2 : 4, url.searchParams, cors);
+    if (url.pathname === '/snapshot') return snapshot(request, env, url, cors);
     if (url.pathname !== '/pdf') return new Response('liming-reports-pdf：請用 /print?n=4 或 /pdf?n=4', { headers: cors });
     if (request.method === 'HEAD') return new Response(null, { headers: cors });
     if (PREVIEW_BOT.test(request.headers.get('User-Agent') || '')) {
@@ -41,17 +67,24 @@ export default {
     const mark = s => log.push(`${((Date.now() - t0) / 1000).toFixed(1)}s ${s}`);
 
     try {
-      let src, slides;
-      if (memo.bytes && Date.now() - memo.at < REUSE_MS) {
-        ({ bytes: src, slides } = memo);
-        mark(`重用 ${Math.round((Date.now() - memo.at) / 1000)} 秒前產生的 PDF`);
-      } else {
-        if (!inflight) inflight = generate(env, mark).finally(() => { inflight = null; });
-        else mark('有人正在產生，等同一份');
-        ({ bytes: src, slides } = await inflight);
+      let src = null, slides;
+      // 選頁列印：先找暫存的那一份
+      const id = url.searchParams.get('id');
+      if (id) {
+        const hit = await caches.default.match(snapKey(url.origin, id));
+        if (hit) {
+          src = new Uint8Array(await hit.arrayBuffer());
+          slides = +(hit.headers.get('X-Slides') || 0);
+          mark('使用暫存的 PDF');
+        } else {
+          mark('暫存過期或找不到，重新產生');
+        }
       }
-      const out = n === 1 ? src : await nup(src, n);
-      mark(`排版完成（${n} 張一頁）`);
+      if (!src) ({ bytes: src, slides } = await getFresh(env, mark));
+      const pages = parsePages(url.searchParams.get('pages'), slides || 999);
+      if (pages && !pages.length) throw new Error('沒有選到任何一頁');
+      const out = (n === 1 && !pages) ? src : await nup(src, n, pages);
+      mark(`排版完成（${n} 張一頁${pages ? `，${pages.length} 張投影片` : ''}）`);
 
       if (debug) return Response.json({ ok: true, slides, bytes: out.length, log }, { headers: cors });
       const name = encodeURIComponent(`黎明報告事項-${n}張一頁.pdf`);
@@ -64,6 +97,37 @@ export default {
     }
   },
 };
+
+// 拿最新的 PDF：2 分鐘內剛產生過就重用；有人正在產生就等同一份
+async function getFresh(env, mark) {
+  if (memo.bytes && Date.now() - memo.at < REUSE_MS) {
+    mark(`重用 ${Math.round((Date.now() - memo.at) / 1000)} 秒前產生的 PDF`);
+    return memo;
+  }
+  if (!inflight) inflight = generate(env, mark).finally(() => { inflight = null; });
+  else mark('有人正在產生，等同一份');
+  return inflight;
+}
+
+// 選頁列印第一步：產生最新的原始 PDF，暫存起來，回傳 PDF＋暫存編號
+async function snapshot(request, env, url, cors) {
+  if (request.method === 'HEAD') return new Response(null, { headers: cors });
+  const log = [], t0 = Date.now();
+  const mark = s => log.push(`${((Date.now() - t0) / 1000).toFixed(1)}s ${s}`);
+  try {
+    const { bytes, slides } = await getFresh(env, mark);
+    const id = crypto.randomUUID();
+    await caches.default.put(snapKey(url.origin, id), new Response(bytes, { headers: {
+      'Content-Type': 'application/pdf', 'X-Slides': String(slides), 'Cache-Control': `public, max-age=${SNAPSHOT_TTL}` } }));
+    mark('已暫存');
+    if (url.searchParams.has('debug')) return Response.json({ ok: true, id, slides, bytes: bytes.length, log }, { headers: cors });
+    return new Response(bytes, { headers: { ...cors, 'Content-Type': 'application/pdf', 'Cache-Control': 'no-store',
+      'X-Snapshot-Id': id, 'X-Slides': String(slides) } });
+  } catch (e) {
+    mark('錯誤：' + e.message);
+    return Response.json({ ok: false, error: e.message, log }, { status: 502, headers: cors });
+  }
+}
 
 // 開雲端瀏覽器拿 OneDrive「列印為 PDF」的結果，回傳 { bytes, slides }
 async function generate(env, mark) {
@@ -164,8 +228,15 @@ async function launchWithRetry(env, mark) {
   }
 }
 
-// 多頁合一：2＝A4 直式上下兩張；4＝A4 橫式 2x2；保持向量
-async function nup(srcBytes, n) {
+// 多頁合一：1＝一張一頁（只挑頁）；2＝A4 直式上下兩張；4＝A4 橫式 2x2；保持向量
+// pages：要放的頁（0 起算）；null＝全部
+async function nup(srcBytes, n, pages) {
+  if (n === 1) {
+    const src = await PDFDocument.load(srcBytes);
+    const out = await PDFDocument.create();
+    (await out.copyPages(src, pages || src.getPageIndices())).forEach(p => out.addPage(p));
+    return out.save();
+  }
   const MM = 72 / 25.4;
   const [cols, rows, land] = n === 2 ? [1, 2, false] : [2, 2, true];
   const [PW, PH] = land ? [297 * MM, 210 * MM] : [210 * MM, 297 * MM];
@@ -174,7 +245,7 @@ async function nup(srcBytes, n) {
   const ch = (PH - 2 * M - (rows - 1) * G) / rows;
   const src = await PDFDocument.load(srcBytes);
   const out = await PDFDocument.create();
-  const embedded = await out.embedPdf(src, src.getPageIndices());
+  const embedded = await out.embedPdf(src, pages || src.getPageIndices());
   for (let p = 0; p < embedded.length; p += n) {
     const page = out.addPage([PW, PH]);
     embedded.slice(p, p + n).forEach((ep, k) => {
@@ -192,7 +263,13 @@ async function nup(srcBytes, n) {
 
 // 等待頁：馬上顯示說明，再用 location.replace 換成 PDF。
 // 瀏覽器在新頁面回應之前會繼續顯示這一頁，所以等待期間看得到說明；按「上一頁」也不會回到這裡
-function waitingPage(n, cors) {
+function waitingPage(n, params, cors) {
+  // 選頁列印會帶 id（暫存編號）和 pages；只保留這兩個參數，其他的不轉過去
+  const id = params.get('id') || '', pagesParam = params.get('pages') || '';
+  const extra = (id ? '&id=' + encodeURIComponent(id) : '') + (pagesParam ? '&pages=' + encodeURIComponent(pagesParam) : '');
+  const picked = pagesParam ? (parsePages(pagesParam, 999) || []).length : 0;
+  const title = picked ? `正在排版你選的 ${picked} 張投影片` : '正在產生最新的報告事項 PDF';
+  const wait = id ? '大約需要幾秒鐘' : '大約需要 15～30 秒';
   const html = `<!doctype html><html lang="zh-TW"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex"><title>報告事項 PDF 產生中</title>
 <style>
@@ -203,11 +280,11 @@ function waitingPage(n, cors) {
   @media (prefers-color-scheme:dark){body{background:#111;color:#ddd}.muted{color:#999}}
 </style>
 <body><div class="spin"></div>
-<h2>正在產生最新的報告事項 PDF</h2>
-<p>${n} 張投影片一頁，大約需要 15～30 秒</p>
+<h2>${title}</h2>
+<p>${n} 張投影片一頁，${wait}</p>
 <p class="muted">請不要關閉這一頁；PDF 出來後，用「分享 → 列印」</p>
-<script>setTimeout(function(){ location.replace('/pdf?n=${n}'); }, 50);</script>
-<noscript><p><a href="/pdf?n=${n}">開啟 PDF</a></p></noscript></body></html>`;
+<script>setTimeout(function(){ location.replace('/pdf?n=${n}${extra}'); }, 50);</script>
+<noscript><p><a href="/pdf?n=${n}${extra}">開啟 PDF</a></p></noscript></body></html>`;
   return new Response(html, { headers: { ...cors, 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' } });
 }
 

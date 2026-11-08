@@ -65,7 +65,8 @@ liming-tjc.org/        → index.html（外殼，全螢幕 iframe）
 | `photos.html` | 相簿頁 | **LINE 官方帳號圖文選單 F 直接連到它**，不要改檔名或刪除 |
 | `schedule.html` | 安排表**單頁版**（獨立呼叫 API 讀安排表圖檔）| 網站內沒有頁面連到它，但 **LINE 官方帳號圖文選單 E 直接連到它**，不要改檔名或刪除；`home.html` 內也有同樣的安排表區塊 |
 | `app.html` | 轉址頁 | 保留舊 `/app.html` 連結用，**不要刪** |
-| `reports.html` | 報告事項入口頁，兩區：**報告簡報**（打開簡報、列印用 PDF）、**代禱事項**（編輯、列印）| 換簡報檔見下方「報告事項」 |
+| `reports.html` | 報告事項入口頁，兩區：**報告簡報**（打開簡報、列印用 PDF、選頁列印）、**代禱事項**（編輯、列印）| 換簡報檔見下方「報告事項」 |
+| `reports-select.html` | 報告事項的**選頁列印**：看縮圖勾選要印的投影片 | 只從報告事項頁連進來；見下方「選頁列印」 |
 | `prayer.html` | 代禱事項維護（讀寫「02.代禱事項」試算表）；手機用頁籤、平板電腦一頁兩欄，共用同一套程式 | 首頁沒有直接連結；**報告事項頁的「🙏 代禱事項 → 開啟編輯」、禱告記錄板的「維護 ↗」（連 `/prayer`）都連到這裡**，不要改檔名；可被其他網頁嵌入，見下方「代禱事項維護」 |
 | `track.js` | 按鈕點擊統計（網站上不顯示），見下方「按鈕點擊統計」 | 新增按鈕時加 `data-track` |
 | `frame-nav.js` | iframe 內的連結導向控制 | 新增可嵌入網域時要改（`index.html` 也要同步改）|
@@ -142,7 +143,7 @@ liming-tjc.org/#photos     → photos.html（相簿）
 | 圖片 | 快取優先 → **所以改了要升版本** |
 | 跨網域（GAS API、Google Fonts、tjc-km、OneDrive、Worker）| 完全不攔截 |
 
-> **改 `frame-nav.js` 時，同時把頁面引用的 `frame-nav.js?v=N` 版本號加一**（`home.html`、`index-tech.html`、`photos.html`、`posters.html`、`reports.html`、`schedule.html` 共 6 處）。
+> **改 `frame-nav.js` 時，同時把頁面引用的 `frame-nav.js?v=N` 版本號加一**（`home.html`、`index-tech.html`、`photos.html`、`posters.html`、`reports.html`、`reports-select.html`、`schedule.html` 共 7 處）。
 > 還在用舊版 Service Worker 的使用者會先拿快取裡的舊 JS，換網址才能讓他們第一次開啟就拿到新版。
 > 曾經發生過：外殼已經是新版，但 `frame-nav.js` 還是舊的，結果外部網站重新整理會跳回首頁。
 
@@ -332,8 +333,9 @@ AKfycbzWzh7mEl9wt7ehw7SWLQpwpJlbRB6AoDhSiFSex7YC2sp92ceICPct4AO64LiyN8lbPg
 - 前端 `track.js`：點到有 `data-track` 的元素，用 `navigator.sendBeacon` 背景送 `{ action: 'track', key, page }` 給 GAS `doPost`
   （`程式碼.js` 的 `trackClick_`）。不等回應，不影響開啟速度；只送按鈕名稱和頁面，不送個人資料
 - **只在正式網域 `liming-tjc.org` 送出**，本機測試只印在主控台，不會混進統計
-- 統計的按鈕：`home.html`、`index-tech.html`、`reports.html` 上所有按鈕。名稱前綴：
-  `快捷：`（手機版圖示方格＋科技版模組）、`卡片：`（電腦版功能卡片的按鈕）、`友站：`（好友連結）、`報告：`（報告事項頁）、`年度總覽`。
+- 統計的按鈕：`home.html`、`index-tech.html`、`reports.html`、`reports-select.html` 上所有按鈕。名稱前綴：
+  `快捷：`（手機版圖示方格＋科技版模組）、`卡片：`（電腦版功能卡片的按鈕）、`友站：`（好友連結）、`報告：`（報告事項頁與選頁列印頁）、`年度總覽`。
+  選頁列印有兩個：「報告：選頁列印」（進入選頁畫面）、「報告：選頁列印（送出）」（勾好按列印），兩者相減約略是進來後沒印就離開的次數
   一般版和科技版用同一個名稱，所以每月統計會合在一起算；要分開看就篩「頁面」欄
 - **新增按鈕時記得加 `data-track="前綴：名稱"`**，沒加就不會被統計；三個頁面都已載入 `track.js?v=1`
 - 後端只做最基本的檢查（名稱限 40 字、去掉開頭的 `= + - @` 避免變成公式）；有人亂送也只會多幾筆奇怪的名稱
@@ -403,6 +405,7 @@ AKfycbzWzh7mEl9wt7ehw7SWLQpwpJlbRB6AoDhSiFSex7YC2sp92ceICPct4AO64LiyN8lbPg
   - 「打開簡報」→ `VIEW_URL`，開新分頁（外殼裡開到共用的 `liming-ext` 分頁）。
     OneDrive 分享頁禁止被嵌入（`X-Frame-Options: SAMEORIGIN`），只能開新分頁，所以說明文字和列印按鈕留在這頁
   - 「🖨️ 列印用 PDF：4 張一頁／2 張一頁」→ Cloudflare Worker，見下方
+  - 「☑️ 選頁列印（只印其中幾張）」→ `reports-select.html`，見下方「選頁列印」
   - **不另設編輯按鈕**：「打開簡報」在平板、電腦上本來就是編輯模式，註明「📱 手機僅供瀏覽、列印／✏️ 編輯請用平板或電腦」（使用者決定，2026-10-21）
 - **第二區「🙏 代禱事項」**（見上方「代禱事項維護」）
   - 「✏️ 編輯」→ `prayer.html`，自家頁面，在外殼裡留在框內開
@@ -451,7 +454,19 @@ AKfycbzWzh7mEl9wt7ehw7SWLQpwpJlbRB6AoDhSiFSex7YC2sp92ceICPct4AO64LiyN8lbPg
 - 雲端瀏覽器預設英文介面，程式同時比對中英文（「第 1 張投影片」/ "Slide 1 of 38"、「列印為 PDF」/ "Print to PDF"）
 - 額度：Cloudflare 免費方案每天 10 分鐘瀏覽器時間（每次約 12 秒，約 45 次）、**每 20 秒才能開一個新瀏覽器**，
   被拒絕時 Worker 會自動等一下重試；LINE／Facebook 連結預覽機器人不啟動瀏覽器
-- 剛產生的 PDF 2 分鐘內會重用，但 workers.dev 網址上只在同一個執行個體內有效（不保證）
+- 剛產生的 PDF 2 分鐘內會重用，但只在同一個執行個體內有效（不保證）
+- 網址一覽（都在 `https://liming-reports-pdf.c3012312.workers.dev`）：
+
+  | 網址 | 用途 |
+  |------|------|
+  | `/print?n=4\|2` | 等待頁，接著換成 `/pdf`（報告事項頁的兩個按鈕） |
+  | `/pdf?n=4\|2\|1` | 直接回 PDF；`&debug=1` 回各步驟耗時 |
+  | `/snapshot` | 產生最新原始 PDF（一張投影片一頁），**暫存 15 分鐘**，回應標頭 `X-Snapshot-Id`（暫存編號）、`X-Slides`（張數）。選頁列印用 |
+  | `/print`、`/pdf` 加 `&id=暫存編號&pages=1,3,5-7` | 用暫存那份挑頁排版（約 1 秒，不再開雲端瀏覽器）；只有 `pages` 沒有 `id` 時會重新產生 |
+
+- 暫存用 Cloudflare 的 Cache API（`caches.default`），**workers.dev 網址上實測可用**；只在同一個 Cloudflare 資料中心內有效（同一支手機通常連同一個）。
+  暫存過期（超過 15 分鐘）或找不到時，會**重新產生最新版再挑頁**：要再等 15～30 秒（等待頁仍寫「幾秒鐘」），
+  而且這期間簡報若被增刪投影片，印出來的頁碼可能跟剛才看到的縮圖對不上
 - **微軟改了播放器畫面（按鈕 id、選單文字、`pdfhandler` 表單）就會壞**：使用者會看到「PDF 暫時產生不出來」的中文說明頁，
   說明頁附有微軟播放器的連結，可以改用播放器右下 ▤ 功能表 →「列印為 PDF」（不用登入，一樣是最新版；一張一頁）
 - 部署帳號：wrangler 登入的 `c3012312@gmail.com`（Cloudflare 帳號「C3012312@gmail.com's Account」）
@@ -463,6 +478,24 @@ AKfycbzWzh7mEl9wt7ehw7SWLQpwpJlbRB6AoDhSiFSex7YC2sp92ceICPct4AO64LiyN8lbPg
   npm run deploy     # 部署到 Cloudflare（wrangler 要登入上面那個帳號）
   ```
   部署後用 `/pdf?n=4&debug=1` 看各步驟耗時確認正常。GitHub Pages 也會公開這個資料夾的檔案（裡面沒有密碼或金鑰）
+
+### 選頁列印（`reports-select.html`，2026-11-09）
+
+只想印其中幾張投影片時用（手機內建列印不能挑頁、也不能多頁合一）。
+
+1. 進入頁面就向 Worker `/snapshot` 要最新的原始 PDF（約 15～30 秒，跟「4 張一頁」一樣要開雲端瀏覽器）。
+   等待時顯示進度條和五個步驟：打開簡報 → 讀取投影片 → 微軟產生 PDF → 下載到手機 → 畫出縮圖。
+   **前三步是依經過時間推進的**（Worker 做完才一次回應，中間讀不到真正進度），後兩步是真的完成才打勾
+2. 用 pdf.js（cdnjs 的 4.4.168，約 0.4 MB）在手機上畫縮圖：第一張畫好就換成勾選畫面，其他邊畫邊出現。
+   34 張實測：一般瀏覽器 1 秒內畫完；模擬中慢手機 4～7 秒
+3. 預設全選，點投影片切換勾選（勾選框在「第 N 張」旁邊，不蓋住投影片內容），有「全選」「全不選」
+4. 底部選「4 張一頁／2 張一頁」→「🖨️ 列印」→ Worker `/print?n=&id=暫存編號&pages=1,3-5`：
+   用**同一份暫存**挑頁排版（約 1 秒），印出來的就是剛才看到的內容
+
+- 失敗時顯示原因和「再試一次」按鈕
+- 縮圖畫在 `requestAnimationFrame` 的時機（pdf.js 的預設），**切到別的 APP 時會暫停，切回來會繼續畫**，不用重新整理
+- 測試注意：無頭瀏覽器（自動測試）有時會把分頁當成背景、降低畫面更新，縮圖會畫得很慢或停住，那是測試環境的問題；
+  要量速度請用有畫面的瀏覽器
 
 ### 過去的做法
 
