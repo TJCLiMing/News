@@ -352,6 +352,7 @@ AKfycbzWzh7mEl9wt7ehw7SWLQpwpJlbRB6AoDhSiFSex7YC2sp92ceICPct4AO64LiyN8lbPg
   - 客製化邀請卡（2026-09-28 上線）→ `data-new-until="2026-11-28"`
   - 報告事項（2026-10-20 上線）→ `data-new-until="2026-12-20"`
   - 查經團契（2026-10-24 上線）→ `data-new-until="2026-12-24"`
+  - 教會活動（2026-11-12 上線，連 `tjc-km.github.io/LimingUploader/planner.html#home`，黎明寶庫專案裡的活動規劃頁）→ `data-new-until="2027-01-12"`
 
 ---
 
