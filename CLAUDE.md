@@ -6,6 +6,7 @@
 |------|------|------|
 | **後端 API** | Google Apps Script | 讀取 Google Drive 圖片、回傳資料 |
 | **前端頁面** | GitHub Pages | 外殼 + 內容頁 + 靜態資源 |
+| **列印用 PDF** | Cloudflare Worker `liming-reports-pdf` | 報告事項「選頁列印」向它要 PDF。原始碼在 `worker/reports-pdf/`，**不會跟著 GitHub 上線，改完要另外 `npm run deploy`**，見下方「列印用 PDF」 |
 
 網站名稱：**黎明教會整合平台**（2026-10-13 前叫「黎明教會活動快報」，已不只是活動快報）。
 主畫面圖示名稱「黎明教會」（`manifest.json` 的 `short_name`、`apple-mobile-web-app-title`）；
@@ -89,6 +90,25 @@ liming-tjc.org/        → index.html（外殼，全螢幕 iframe）
 
 > 圖文選單：使用者 2026-10-14 貼的設定，E、F 原本是 `tjcliming.github.io/News/...`，2026-10-21 使用者確認已改成新網域。
 > 實際網址以 LINE Official Account Manager 後台為準
+
+### 首頁連到其他自建系統（對方改檔名、換網址時，這裡要跟著改）
+
+| 按鈕 | 連到 | 屬於哪個專案 | 在外殼裡 |
+|------|------|-------------|---------|
+| 查經團契 | `https://study.liming-tjc.org/` | 聚會紀錄系統（`01.Meeting`） | 開到 `liming-ext` 分頁（刻意不放框內，見下方） |
+| 黎明寶庫 | `https://tjc-km.github.io/LimingUploader/?openExternalBrowser=1` | 黎明寶庫（`06.LimingUploader`） | 框內 |
+| 教會活動 | `https://tjc-km.github.io/LimingUploader/planner.html#home` | 黎明寶庫的活動規劃頁 | 框內 |
+| 禱告記錄板 | `https://tjc-km.github.io/prayer-roster/` | 禱告記錄板（`03.Prayer\prayer-roster`） | 框內 |
+| 客製化邀請卡 | `https://invite.liming-tjc.org/admin` | 邀請卡（`05.Invite`） | `liming-ext` |
+| 讚美詩 | `https://tjc-km.github.io/hymns/#/` | `hymns` repo（不在 `00.TjcProject` 底下） | 框內 |
+| 友站：聚會紀錄與錄音 | `https://tjc-km.github.io/liming-meeting/` | 聚會紀錄系統（`01.Meeting`） | 框內 |
+| 友站：軟硬體說明 | `https://limingdocs.c3012312.workers.dev/#home` | 說明書（`04.LimingProject`） | `liming-ext` |
+| 友站：A4 圖片列印 | `https://tjc-km.github.io/LimingUploader/print.html` | 黎明寶庫 | 框內 |
+
+- 功能區的網址寫在三處（`home.html` 手機圖示、電腦卡片，`index-tech.html` 模組），友站寫在兩處（`home.html`、`index-tech.html`），換網址要全部改
+- **對方改檔名、換網址不會有任何警告**：點進去只會看到「找不到頁面」，要有人回報才知道（靜默失效）
+- 「在外殼裡」是依 `EMBEDDABLE_HOSTS` 完全比對網域：只有 `liming-tjc.org`、`tjc-km.github.io` 在框內開，`study.`、`invite.` 這些子網域都不算
+- 2026-11-12 整理，之後新增連到別的專案的按鈕時補一列
 
 ### 外殼在解決什麼問題
 
