@@ -8,6 +8,8 @@
  *   1. 自家 / tjc-km 的 GitHub Pages → target="_self"，留在 iframe 內（不開新分頁）
  *   2. 其他外部網站（Google、LINE、Canva…）→ 共用同一個具名分頁，
  *      所以不管點幾個，最多只會佔用 1 個額外分頁
+ *   2a. 例外：會進到 Google Meet 的連結（NEW_TAB_HOSTS）→ 每次開新分頁，
+ *      不然開會中再點其他外部按鈕，共用分頁裡的 Meet 會被換掉
  *   3. 點進可嵌入的「跨網域」網站（tjc-km…）時通知外殼網址，
  *      因為瀏覽器不讓外殼讀跨網域 iframe 的位置，重新整理時才能回到同一個網站
  */
@@ -31,6 +33,15 @@
     // 無法嵌入的外部連結共用這個分頁名稱
     var EXTERNAL_TARGET = 'liming-ext';
 
+    // 會進到 Google Meet 的網站：每次開新分頁，不用共用分頁（使用者決定，2026-11-12）。
+    // 2026-11-11 使用者在電腦上點查經團契 → 頁面裡「加入 Google Meet」在同一個分頁開 →
+    // 回平台再點一次查經團契，共用分頁裡的 Meet 被換掉。開會中點文字記錄、認識黎明…也一樣會離開會議。
+    // study.liming-tjc.org 是查經邀請頁（裡面的 Meet 按鈕不開新分頁，那是聚會紀錄系統的程式）
+    var NEW_TAB_HOSTS = [
+        'meet.google.com',
+        'study.liming-tjc.org'
+    ];
+
     // 頁面殘留的 <base target="_top"> 是 Google Apps Script 時期的設定，
     // 在 iframe 內會讓連結衝出外殼，改回 _self（只在 iframe 內生效）
     var baseEl = document.querySelector('base');
@@ -43,6 +54,14 @@
             // 同網域一律可嵌入（也涵蓋本機測試用的 localhost）
             if (u.origin === location.origin) return true;
             return EMBEDDABLE_HOSTS.indexOf(u.hostname) !== -1;
+        } catch (e) {
+            return false;
+        }
+    }
+
+    function needsNewTab(absoluteUrl) {
+        try {
+            return NEW_TAB_HOSTS.indexOf(new URL(absoluteUrl, location.href).hostname) !== -1;
         } catch (e) {
             return false;
         }
@@ -61,7 +80,7 @@
         if (href.charAt(0) === '#' || href.toLowerCase().indexOf('javascript:') === 0) return;
 
         var embed = canEmbed(a.href);
-        a.target = embed ? '_self' : EXTERNAL_TARGET;
+        a.target = embed ? '_self' : (needsNewTab(a.href) ? '_blank' : EXTERNAL_TARGET);
 
         if (embed) {
             try {

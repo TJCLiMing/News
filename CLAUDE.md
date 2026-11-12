@@ -70,7 +70,7 @@ liming-tjc.org/        → index.html（外殼，全螢幕 iframe）
 | `reports-select.html` | 報告事項的**選頁列印**：看縮圖勾選要印的投影片 | 只從報告事項頁連進來；見下方「選頁列印」 |
 | `prayer.html` | 代禱事項維護（讀寫「02.代禱事項」試算表）；手機用頁籤、平板電腦一頁兩欄，共用同一套程式 | 首頁沒有直接連結；**報告事項頁的「🙏 代禱事項 → 開啟編輯」、禱告記錄板的「維護 ↗」（連 `/prayer`）都連到這裡**，不要改檔名；可被其他網頁嵌入，見下方「代禱事項維護」 |
 | `track.js` | 按鈕點擊統計（網站上不顯示），見下方「按鈕點擊統計」 | 新增按鈕時加 `data-track` |
-| `frame-nav.js` | iframe 內的連結導向控制 | 新增可嵌入網域時要改（`index.html` 也要同步改）|
+| `frame-nav.js` | iframe 內的連結導向控制 | 新增可嵌入網域時要改（`index.html` 也要同步改）；新增會進到 Google Meet 的網站時加進 `NEW_TAB_HOSTS` |
 | `sw.js` | Service Worker（離線快取）| 見下方版本規則 |
 | `manifest.json` | PWA 設定 | |
 | `worker/reports-pdf/` | 報告事項「列印用 PDF」的 **Cloudflare Worker 原始碼**（不是網頁）| 改完要另外部署，見下方「列印用 PDF」；`node_modules` 不進 git |
@@ -95,7 +95,7 @@ liming-tjc.org/        → index.html（外殼，全螢幕 iframe）
 
 | 按鈕 | 連到 | 屬於哪個專案 | 在外殼裡 |
 |------|------|-------------|---------|
-| 查經團契 | `https://study.liming-tjc.org/` | 聚會紀錄系統（`01.Meeting`） | 開到 `liming-ext` 分頁（刻意不放框內，見下方） |
+| 查經團契 | `https://study.liming-tjc.org/` | 聚會紀錄系統（`01.Meeting`） | **每次開新分頁**（會進到 Google Meet，見下方） |
 | 黎明寶庫 | `https://tjc-km.github.io/LimingUploader/?openExternalBrowser=1` | 黎明寶庫（`06.LimingUploader`） | 框內 |
 | 教會活動 | `https://tjc-km.github.io/LimingUploader/planner.html#home` | 黎明寶庫的活動規劃頁 | 框內 |
 | 禱告記錄板 | `https://tjc-km.github.io/prayer-roster/` | 禱告記錄板（`03.Prayer\prayer-roster`） | 框內 |
@@ -118,11 +118,18 @@ liming-tjc.org/        → index.html（外殼，全螢幕 iframe）
 - **不可嵌入**的（Google Meet / Forms / Sites、LINE、Canva、OneDrive（報告事項「打開簡報」），都有 `X-Frame-Options`；
   以及不在白名單的網域，例如列印用 PDF 的 `*.workers.dev`）
   → 共用同一個 `liming-ext` 分頁，不管點幾個最多只佔 1 個
+- **例外：會進到 Google Meet 的**（`frame-nav.js` 的 `NEW_TAB_HOSTS`：`meet.google.com`、`study.liming-tjc.org`）
+  → **每次開新分頁**（使用者決定，2026-11-12）。首頁是「Google Meet」「禱告團契」「查經團契」三個按鈕
 
 > 查經團契 `study.liming-tjc.org` 雖然是自家子網域，但**刻意不加進白名單**：頁面裡有加入 Google Meet 的連結，
 > Meet 禁止被嵌入，放在框內會開不起來
 
-分頁數從 8+ 降到最多 2 個。
+> 為什麼 Meet 要例外：共用分頁一次只能放一個網站。2026-11-11 使用者在電腦上點查經團契 → 頁面裡的「加入 Google Meet」
+> 在同一個分頁開（那是聚會紀錄系統的程式，不是這裡）→ 回平台再點一次查經團契，共用分頁裡的 Meet 被換成查經頁。
+> 開會中點「文字記錄」「認識黎明」等其他外部按鈕也一樣，等於離開會議。手機點 Meet 通常會跳到 Meet APP，主要是電腦會遇到。
+> 代價：同一個按鈕點兩次會多一個分頁（一次聚會通常只點一次）。以後新增會進到 Meet 的網站，要加進 `NEW_TAB_HOSTS`
+
+分頁數從 8+ 降到最多 2 個（加上開會用的 Meet 分頁）。
 
 外殼有**防疊套保護**：被自己的 iframe 載入時會 `location.replace('home.html')`，
 所以任何頁面連到 `index.html` 都不會變成外殼裡再包一層外殼。
