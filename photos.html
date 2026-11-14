@@ -779,17 +779,18 @@
             grid.innerHTML = '';
             hintMsg.style.display = 'none';
             emptyMsg.style.display = 'none';
-            header.style.display = 'none';
+
+            // 空相簿也要顯示標題和按鈕（心得、上傳連結、分享相簿）：
+            // 新建的活動相簿還沒有照片時，正需要把上傳連結傳出去（2026-11-14 修正，之前整排都藏起來）
+            currentFolderName = folder.name;
+            document.getElementById('folderTitle').textContent = folder.name;
+            document.getElementById('fileCount').textContent   = `共 ${folder.files.length} 個檔案`;
+            header.style.display = 'flex';
 
             if (!folder.files.length) {
                 emptyMsg.style.display = 'block';
                 return;
             }
-
-            currentFolderName = folder.name;
-            document.getElementById('folderTitle').textContent = folder.name;
-            document.getElementById('fileCount').textContent   = `共 ${folder.files.length} 個檔案`;
-            header.style.display = 'flex';
 
             folder.files.forEach((file, index) => {
                 const el = document.createElement('div');
