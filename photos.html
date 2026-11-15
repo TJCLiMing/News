@@ -945,10 +945,18 @@
             }
         }
 
-        // ── 分享資料夾（LimingUploader gallery）──
+        // ── 上傳連結：黎明寶庫的相簿短網址（2026-11-15 改，使用者決定）──
+        // 網址只放資料夾 ID，不帶名稱參數：名稱由寶庫 Worker（LimingUploader worker.js 的 sharePage()）依 ID 查，
+        // 並產生 LINE 預覽卡片（相簿名稱＋第一張照片），打開後轉到寶庫圖庫頁 gallery.html（可看、可上傳）。
+        // 跟 LINE 小幫手（LineBotHelper 程式碼.js 的 buildGalleryUrl）、寶庫 gallery.html 的「分享」同一個格式
+        const SHARE_BASE_URL = 'https://share.liming-tjc.org/s';
         function shareGallery() {
-            const url = `https://tjc-km.github.io/LimingUploader/gallery.html?folderId=${encodeURIComponent(currentFolderId)}&name=${encodeURIComponent(currentFolderName)}`;
-            navigator.clipboard.writeText(url).then(() => {
+            if (!currentFolderId) return;
+            const url = `${SHARE_BASE_URL}/${encodeURIComponent(currentFolderId)}`;
+            // 剪貼簿被擋時（LINE 內建瀏覽器常見）退回 prompt，這時只放網址
+            const fallback = () => prompt('複製以下連結：', url);
+            if (!navigator.clipboard || !navigator.clipboard.writeText) { fallback(); return; }
+            navigator.clipboard.writeText(`📷 ${currentFolderName}\n${url}`).then(() => {
                 const toast = document.getElementById('shareToast');
                 toast.textContent = '📁 資料夾連結已複製！';
                 toast.classList.add('show');
@@ -956,7 +964,7 @@
                     toast.classList.remove('show');
                     toast.textContent = '🔗 連結已複製！';
                 }, 2200);
-            });
+            }).catch(fallback);
         }
 
         // ── 分享目前資料夾連結 ──
