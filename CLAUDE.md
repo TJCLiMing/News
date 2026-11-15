@@ -470,6 +470,11 @@ Worker 網址 `PDF_WORKER` 寫在 `reports-select.html`（`reports.html` 已經�
 > - 用分享連結自己組 `action=embedview` → 出現「請登入以檢視此檔案」
 > - Office Online viewer（`view.officeapps.live.com`）→ 找不到檔案（下載要登入 Cookie）
 
+> 🔧 **「打開簡報」出現「很抱歉，發生一些問題 / Sorry, you cannot access this document」、選頁列印也失敗** →
+> 簡報多半被換成了另一個檔案（刪掉重傳、另存新檔都會讓 OneDrive 當成新檔），舊的分享連結和內嵌連結都會失效，**兩個都要照上面換**。
+> 2026-11-15 發生過一次：同名的「2026代禱及事項宣佈.pptx」檔案編號變了，使用者給了新檔的分享連結。
+> 要避免：改簡報就在原檔上改，不要刪掉重傳
+
 ### 列印用 PDF（Cloudflare Worker `liming-reports-pdf`）
 
 選頁列印（`reports-select.html` 的 `PDF_WORKER`）向它要 PDF。**要的當下才產生，一定是 OneDrive 上的最新版**，約 10～15 秒；要等雲端瀏覽器時會到 30 秒左右（頁面寫「約 15～30 秒」）。

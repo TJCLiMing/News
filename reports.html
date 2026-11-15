@@ -180,7 +180,8 @@
         //   所以不另設編輯按鈕。要避免電腦／iPad 誤改，就在 OneDrive 另外產生「可以檢視」的分享連結填在這裡
         // 列印只有「選頁列印」（reports-select.html）：看縮圖勾選，再由 Worker 排成 2 張或 4 張一頁。
         //   原本的「4 張一頁」「2 張一頁」（整份直接印）2026-11-09 拿掉（使用者決定），Worker 的 /print?n= 網址仍可直接用
-        var EDIT_URL   = 'https://1drv.ms/p/c/69de94ef84c9ee8c/IQC4Kv2bDtgfRIvwXjeLcmZNAQqfJk8b4rm7sD2mAm76c5I?e=6GaOmS';
+        // 2026-11-15 換成新檔的連結：簡報被換成另一個檔案（檔案編號變了），舊連結出現「you cannot access this document」
+        var EDIT_URL   = 'https://1drv.ms/p/c/69de94ef84c9ee8c/IQCjCTNzfoIWTYVwTO5on_jeAf7o50PzvmdCnb8m8hS5E2k?e=PoAv2g';
         var VIEW_URL   = EDIT_URL;
 
         document.getElementById('viewLink').href = VIEW_URL;
