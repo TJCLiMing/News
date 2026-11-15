@@ -17,7 +17,8 @@
 import puppeteer from '@cloudflare/puppeteer';
 import { PDFDocument, rgb } from 'pdf-lib';
 
-const EMBED_URL = 'https://1drv.ms/p/c/69de94ef84c9ee8c/IQS4Kv2bDtgfRIvwXjeLcmZNAURBt9mo7LGuj8eTAIRsFAw?em=2&wdAr=1.7777777777777777';
+// 2026-11-15 換成新檔的內嵌連結（簡報被換成另一個檔案，舊的失效）
+const EMBED_URL = 'https://1drv.ms/p/c/69de94ef84c9ee8c/IQSjCTNzfoIWTYVwTO5on_jeAY73zBYluh7Pn_SxM_lfs0U?em=2&wdAr=1.7777777777777777';
 // 剛產生的 PDF 在這段時間內直接重用：幾個人同時按、或連按兩種版面，只開一次雲端瀏覽器
 const REUSE_MS = 2 * 60 * 1000;
 // LINE、Facebook 等連結預覽機器人：不啟動瀏覽器（LINE 傳連結時會先偷打開一次）
