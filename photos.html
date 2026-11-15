@@ -233,6 +233,48 @@
         }
         .share-toast.show { opacity: 1; }
 
+        /* ── 上傳連結小窗：複製／前往／取消 ── */
+        .link-dialog {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.45);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            z-index: 1900;
+        }
+        .link-dialog[hidden] { display: none; }
+        .ld-box {
+            background: white;
+            border-radius: 20px;
+            padding: 22px 18px 16px;
+            width: 100%;
+            max-width: 340px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.18);
+        }
+        .ld-box h3 { font-size: 1.15rem; color: #c0587a; }
+        .ld-name { margin-top: 8px; font-size: 1rem; font-weight: 700; color: var(--text); word-break: break-all; }
+        .ld-desc { margin-top: 6px; font-size: 0.85rem; color: #999; line-height: 1.6; }
+        .ld-btn {
+            display: block;
+            width: 100%;
+            margin-top: 12px;
+            padding: 13px 12px;
+            border-radius: 14px;
+            font-family: inherit;
+            font-size: 1.1rem;
+            font-weight: 700;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .ld-copy { background: #e56a8c; color: white; border: none; box-shadow: 0 4px 0 #c0587a; }
+        .ld-copy:active { transform: translateY(2px); box-shadow: 0 2px 0 #c0587a; }
+        .ld-go { background: white; color: #e56a8c; border: 2px solid #ffd6e0; }
+        .ld-go:hover { background: #fff5f8; }
+        .ld-cancel { background: none; border: none; color: #999; font-weight: 400; font-size: 1rem; margin-top: 6px; }
+
         /* ── 心得面板 ── */
         .comment-panel {
             position: fixed;
@@ -632,6 +674,18 @@
     <!-- Toast -->
     <div class="share-toast" id="shareToast">🔗 連結已複製！</div>
 
+    <!-- 上傳連結小窗：複製／前往／取消 -->
+    <div class="link-dialog" id="linkDialog" hidden>
+        <div class="ld-box" role="dialog" aria-modal="true" aria-labelledby="ldTitle">
+            <h3 id="ldTitle">🔗 上傳連結</h3>
+            <p class="ld-name" id="ldName"></p>
+            <p class="ld-desc">複製連結傳給大家，<br>或直接前往看照片、上傳照片</p>
+            <button class="ld-btn ld-copy" onclick="copyGalleryLink()">📋 複製連結</button>
+            <a class="ld-btn ld-go" id="ldGo" href="#" onclick="closeLinkDialog()">📤 前往上傳</a>
+            <button class="ld-btn ld-cancel" onclick="closeLinkDialog()">取消</button>
+        </div>
+    </div>
+
     <!-- Lightbox -->
     <div class="lightbox" id="lightbox">
         <button class="lb-close" id="lbClose">✕</button>
@@ -949,9 +1003,31 @@
         // 網址只放資料夾 ID，不帶名稱參數：名稱由寶庫 Worker（LimingUploader worker.js 的 sharePage()）依 ID 查，
         // 並產生 LINE 預覽卡片（相簿名稱＋第一張照片），打開後轉到寶庫圖庫頁 gallery.html（可看、可上傳）。
         // 跟 LINE 小幫手（LineBotHelper 程式碼.js 的 buildGalleryUrl）、寶庫 gallery.html 的「分享」同一個格式
-        const SHARE_BASE_URL = 'https://share.liming-tjc.org/s';
+        //
+        // 按鈕先開小窗「複製連結／前往上傳／取消」（2026-11-15，使用者要求）：
+        // - 複製：複製上面說的短網址
+        // - 前往：直接開寶庫圖庫頁，不經過短網址（使用者決定）。短網址要多等寶庫 Worker 查名稱約 0.8 秒，
+        //   而且 share.liming-tjc.org 不在外殼白名單會開到別的分頁；tjc-km.github.io 在白名單，平台裡留在框內開。
+        //   圖庫頁要帶 name 參數才顯示相簿名稱（沒帶標題會是「黎明寶庫」）。
+        //   用 <a> 而不是 location.href，外殼的 frame-nav.js 才會接手（留在框內、記住入口網址給 ↻ 重新整理用）
+        const SHARE_BASE_URL   = 'https://share.liming-tjc.org/s';
+        const GALLERY_PAGE_URL = 'https://tjc-km.github.io/LimingUploader/gallery.html';
         function shareGallery() {
             if (!currentFolderId) return;
+            document.getElementById('ldName').textContent = `📷 ${currentFolderName}`;
+            document.getElementById('ldGo').href =
+                `${GALLERY_PAGE_URL}?folderId=${encodeURIComponent(currentFolderId)}&name=${encodeURIComponent(currentFolderName)}`;
+            document.getElementById('linkDialog').hidden = false;
+        }
+        function closeLinkDialog() {
+            document.getElementById('linkDialog').hidden = true;
+        }
+        // 點小窗外的灰色區域、按 Esc 也是取消
+        document.getElementById('linkDialog').addEventListener('click', e => { if (e.target === e.currentTarget) closeLinkDialog(); });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLinkDialog(); });
+
+        function copyGalleryLink() {
+            closeLinkDialog();
             const url = `${SHARE_BASE_URL}/${encodeURIComponent(currentFolderId)}`;
             // 剪貼簿被擋時（LINE 內建瀏覽器常見）退回 prompt，這時只放網址
             const fallback = () => prompt('複製以下連結：', url);
