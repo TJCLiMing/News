@@ -238,7 +238,7 @@
 
     <script>
         const GAS_URL = 'https://script.google.com/macros/s/AKfycbzWzh7mEl9wt7ehw7SWLQpwpJlbRB6AoDhSiFSex7YC2sp92ceICPct4AO64LiyN8lbPg/exec';
-        const POSTER_FOLDER_ID = '1kkkt_UT-ZYT36ti_nlXnChKjKVm6Hu00';
+        // 海報資料夾由 GAS 的 POSTER_FOLDER_ID 決定（跟首頁海報共用），這頁不再自己寫資料夾 ID（2026-11-17）
         const CACHE_KEY = 'posterArchiveCacheV1';
 
         let allPosters = [];      // { id, name, y, m, d, title }
@@ -345,7 +345,7 @@
             if (cached && Array.isArray(cached)) applyData(cached);
         } catch (e) {}
 
-        fetch(`${GAS_URL}?mode=getFolderFiles&folderId=${POSTER_FOLDER_ID}`)
+        fetch(`${GAS_URL}?mode=getFolderFiles`)
             .then(r => r.json())
             .then(data => {
                 if (data.status === 'success' && Array.isArray(data.files)) {

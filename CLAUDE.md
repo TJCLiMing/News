@@ -339,7 +339,7 @@ AKfycbzWzh7mEl9wt7ehw7SWLQpwpJlbRB6AoDhSiFSex7YC2sp92ceICPct4AO64LiyN8lbPg
 ## Script Properties（GAS 後端設定）
 | 屬性名稱 | 說明 |
 |---------|------|
-| `POSTER_FOLDER_ID` | 活動海報 Google Drive 資料夾 ID |
+| `POSTER_FOLDER_ID` | 活動海報 Google Drive 資料夾 ID。**首頁海報和海報年度總覽（`?mode=getFolderFiles`）共用**，換資料夾只改這裡；沒設定時用 `程式碼.js` 的 `posterFolderId_()` 預設值（2026-11-17 起，之前 `posters.html` 自己另寫一份） |
 | `SCHEDULE_FOLDER_ID` | 月份安排表 Google Drive 資料夾 ID |
 | `QRCODE_FILE_ID` | 黎明官方帳號 QRCode 圖片 Drive ID |
 | `HELPER_QRCODE_FILE_ID` | 小幫手 QRCode 圖片 Drive ID |

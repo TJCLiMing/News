@@ -4,8 +4,7 @@
  * ?mode=refresh                    → 立即重掃海報與安排表並更新快取（60 秒內最多重掃一次）
  * ?mode=photos                    → 相簿完整結構 JSON（供 GitHub Actions 產生靜態 JSON 用）
  * ?mode=getTodayModified           → 最近 24 小時新建或有更新的資料夾（含檔案）
- * ?mode=getFolders                 → 相簿資料夾清單（含今日偵測）
- * ?mode=getFolderFiles&folderId=xx → 指定資料夾的檔案列表
+ * ?mode=getFolderFiles             → 海報資料夾（POSTER_FOLDER_ID）的檔案列表，海報年度總覽用
  * ?mode=getComments&folderId=xxx   → 取得指定相簿心得
  * ?mode=addComment&folderId=xxx&name=xxx&text=xxx → 新增心得
  */
@@ -17,16 +16,13 @@ function doGet(e) {
       .setMimeType(ContentService.MimeType.JSON);
   }
 
-  if (e && e.parameter && e.parameter.mode === 'getFolders') {
-    const data = getFoldersList();
-    return ContentService
-      .createTextOutput(JSON.stringify(data))
-      .setMimeType(ContentService.MimeType.JSON);
-  }
+  // getFolders、getTodayFolders 兩個 mode 已在 2026-11-17 刪除：
+  // 是 2026-05 相簿頁短暫改成即時讀取時用的，同月改回靜態 JSON＋getTodayModified 後就沒人呼叫
 
   if (e && e.parameter && e.parameter.mode === 'getFolderFiles') {
-    const folderId = e.parameter.folderId || '';
-    const data = getFolderFilesList(folderId);
+    // 海報年度總覽（posters.html）用：一律讀 POSTER_FOLDER_ID，跟首頁海報共用同一個設定，網址帶的 folderId 不理會。
+    // 2026-11-17 前由網頁傳資料夾 ID（海報資料夾 ID 寫在網頁和這裡兩份），而且任何人都能用它列出部署帳號看得到的資料夾
+    const data = getFolderFilesList(posterFolderId_());
     return ContentService
       .createTextOutput(JSON.stringify(data))
       .setMimeType(ContentService.MimeType.JSON);
@@ -34,13 +30,6 @@ function doGet(e) {
 
   if (e && e.parameter && e.parameter.mode === 'photos') {
     const data = getPhotosData();
-    return ContentService
-      .createTextOutput(JSON.stringify(data))
-      .setMimeType(ContentService.MimeType.JSON);
-  }
-
-  if (e && e.parameter && e.parameter.mode === 'getTodayFolders') {
-    const data = getTodayFolders();
     return ContentService
       .createTextOutput(JSON.stringify(data))
       .setMimeType(ContentService.MimeType.JSON);
@@ -98,13 +87,21 @@ function doGet(e) {
 }
 
 /**
+ * 海報資料夾 ID：首頁海報（getDashboardData）和海報年度總覽（?mode=getFolderFiles）共用
+ * 指令碼屬性 POSTER_FOLDER_ID 沒設定時用這裡的預設值；換資料夾改屬性就好
+ */
+function posterFolderId_() {
+  return PropertiesService.getScriptProperties().getProperty('POSTER_FOLDER_ID') || '1kkkt_UT-ZYT36ti_nlXnChKjKVm6Hu00';
+}
+
+/**
  * 核心抓取邏輯
  */
 function getDashboardData() {
   try {
     const t0 = Date.now();
     const props = PropertiesService.getScriptProperties();
-    const posterFolderId = props.getProperty('POSTER_FOLDER_ID') || '1kkkt_UT-ZYT36ti_nlXnChKjKVm6Hu00';
+    const posterFolderId = posterFolderId_();
     const scheduleFolderId = props.getProperty('SCHEDULE_FOLDER_ID');
     const qrCodeId = props.getProperty('QRCODE_FILE_ID');
     const helperQrCodeId = props.getProperty('HELPER_QRCODE_FILE_ID');
@@ -257,52 +254,6 @@ function fetchFiles(folderId, type, targetMonths = []) {
 }
 
 /**
- * 即時查詢今天日期的資料夾（用檔名比對）
- * 支援格式：2026.05.17 / 2026-05-17 / 20260517
- */
-function getTodayFolders() {
-  try {
-    const props  = PropertiesService.getScriptProperties();
-    const rootId = props.getProperty('PHOTO_FOLDER_ID') || '12xTW7EdkKu4mPQead-0C7NTJT54gzZD3';
-    const root   = DriveApp.getFolderById(rootId);
-
-    const now    = new Date();
-    const yyyy   = now.getFullYear();
-    const mm     = String(now.getMonth() + 1).padStart(2, '0');
-    const dd     = String(now.getDate()).padStart(2, '0');
-    const patterns = [
-      `${yyyy}.${mm}.${dd}`,
-      `${yyyy}-${mm}-${dd}`,
-      `${yyyy}${mm}${dd}`
-    ];
-
-    const folders = [];
-    const folderIter = root.getFolders();
-    while (folderIter.hasNext()) {
-      const folder = folderIter.next();
-      const name   = folder.getName();
-      if (patterns.some(p => name.includes(p))) {
-        const files = [];
-        const fileIter = folder.getFiles();
-        while (fileIter.hasNext()) {
-          const file = fileIter.next();
-          const mime = file.getMimeType();
-          if (mime.startsWith('image/') || mime.startsWith('video/')) {
-            files.push({ id: file.getId(), name: file.getName(), mimeType: mime });
-          }
-        }
-        files.sort((a, b) => b.name.localeCompare(a.name));
-        folders.push({ id: folder.getId(), name, files, isToday: true });
-      }
-    }
-
-    return { status: 'success', folders };
-  } catch(e) {
-    return { status: 'error', message: e.toString() };
-  }
-}
-
-/**
  * 取得指定相簿的心得留言（有快取）
  */
 function getComments(folderId) {
@@ -386,45 +337,6 @@ function getPhotosData() {
       }
       files.sort((a, b) => b.name.localeCompare(a.name));
       folders.push({ id: folder.getId(), name: folder.getName(), files });
-    }
-    folders.sort((a, b) => b.name.localeCompare(a.name));
-
-    return {
-      folders,
-      updatedAt: Utilities.formatDate(new Date(), 'GMT+8', 'yyyy-MM-dd HH:mm'),
-      status: 'success'
-    };
-  } catch (e) {
-    return { status: 'error', message: e.toString() };
-  }
-}
-
-/**
- * 取得相簿資料夾清單（含今日偵測），不含檔案
- */
-function getFoldersList() {
-  try {
-    const props  = PropertiesService.getScriptProperties();
-    const rootId = props.getProperty('PHOTO_FOLDER_ID') || '12xTW7EdkKu4mPQead-0C7NTJT54gzZD3';
-    const root   = DriveApp.getFolderById(rootId);
-
-    const now  = new Date();
-    const yyyy = now.getFullYear();
-    const mm   = String(now.getMonth() + 1).padStart(2, '0');
-    const dd   = String(now.getDate()).padStart(2, '0');
-    const todayPatterns = [
-      `${yyyy}.${mm}.${dd}`,
-      `${yyyy}-${mm}-${dd}`,
-      `${yyyy}${mm}${dd}`
-    ];
-
-    const folders = [];
-    const folderIter = root.getFolders();
-    while (folderIter.hasNext()) {
-      const folder  = folderIter.next();
-      const name    = folder.getName();
-      const isToday = todayPatterns.some(p => name.includes(p));
-      folders.push({ id: folder.getId(), name, isToday });
     }
     folders.sort((a, b) => b.name.localeCompare(a.name));
 
