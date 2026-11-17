@@ -5,7 +5,7 @@ import sys
 from xml.sax.saxutils import escape
 
 OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data-flow.svg')
-W, H = 1510, 1230
+W, H = 1510, 1276
 FONT = "'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif"
 BLUE, GREEN, GOLD, GRAY, DARK = '#7c9cc4', '#7fa87f', '#c9a15c', '#8b93a6', '#4a5164'
 LINE_H, PAD_TOP, PAD_BOT, HEAD = 19, 14, 10, 30
@@ -68,6 +68,15 @@ add(f'<rect x="0" y="0" width="{W}" height="{H}" fill="#fbfbfd" stroke="#d7dae0"
 add('<text x="30" y="40" font-size="20" font-weight="700" fill="#1a1d24">黎明教會整合平台 liming-tjc.org：資料流程</text>')
 add('<text x="30" y="63" font-size="13" fill="#5c6270">六個畫面：首頁、安排表單頁、相簿、報告事項、代禱事項維護、海報年度總覽　｜　'
     '藍＝海報與安排表　綠＝相簿　金＝報告事項（簡報、代禱）　灰＝統計、設定、暫存</text>')
+add('<text x="30" y="88" font-size="13" font-weight="700" fill="#1a1d24">怎麼看：</text>')
+add('<text x="92" y="88" font-size="13" fill="#5c6270"><tspan font-weight="700" fill="#1a1d24">順著箭頭看（左 → 右）：</tspan>'
+    '左邊的檔案、設定經過哪些處理，最後出現在哪個畫面</text>')
+add('<text x="92" y="108" font-size="13" fill="#5c6270"><tspan font-weight="700" fill="#1a1d24">逆著箭頭看（右 → 左）：</tspan>'
+    '畫面上某一項是從哪裡來的，不對時要去哪裡改</text>')
+
+# 「怎麼看」多佔兩行：欄標題以下整塊往下移 SHIFT
+SHIFT = 46
+add(f'<g transform="translate(0,{SHIFT})">')
 
 AX, AW = 30, 270
 BX, BW = 380, 330
@@ -237,6 +246,7 @@ _, _, py, _, _ = boxes['D代禱']
 vx = DX + DW - 40
 add(f'<path d="M{vx} {ry + rh} L{vx} {py}" fill="none" stroke="{GOLD}" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#ao)"/>')
 add(f'<text x="{vx - 8}" y="{(ry + rh + py) // 2 + 4}" font-size="11.5" fill="{GOLD}" font-weight="700" text-anchor="end">編輯、列印</text>')
+add('</g>')
 
 # 圖例
 add(f'<text x="30" y="{H - 48}" font-size="12" fill="#5c6270">實線＝系統自動流動　虛線＝人按按鈕或連結　✎＝管理同工可以直接改的地方　'
@@ -251,7 +261,7 @@ for col in 'ABCD':
     for (t1, b1, k1), (t2, b2, k2) in zip(items, items[1:]):
         if t2 < b1 + 12:
             problems.append(f'{k1} 和 {k2} 重疊或太近')
-    if items and items[-1][1] > H - 64:
+    if items and items[-1][1] + SHIFT > H - 64:
         problems.append(f'{items[-1][2]} 超出圖的底部')
 
 open(OUT, 'w', encoding='utf-8').write('\n'.join(parts) + '\n')
