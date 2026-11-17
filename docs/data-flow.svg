@@ -1,0 +1,255 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1510 1230" width="1510" height="1230" font-family="'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif">
+  <!-- 黎明教會整合平台（News repo）的資料流程。由 docs/data-flow.py 產生，改圖請改腳本重新執行，不要手改這個檔。改動資料來源（雲端硬碟資料夾、試算表、OneDrive 簡報）、GAS 的 mode／action、keepWarm 或 GitHub Actions 排程、列印 Worker、各畫面的區塊時要同步更新。 -->
+<defs>
+<marker id="ab" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 L8 4.5 L0 9 z" fill="#7c9cc4"/></marker>
+<marker id="ag" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 L8 4.5 L0 9 z" fill="#7fa87f"/></marker>
+<marker id="ao" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 L8 4.5 L0 9 z" fill="#c9a15c"/></marker>
+<marker id="ay" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 L8 4.5 L0 9 z" fill="#8b93a6"/></marker>
+</defs>
+<rect x="0" y="0" width="1510" height="1230" fill="#fbfbfd" stroke="#d7dae0" rx="8"/>
+<text x="30" y="40" font-size="20" font-weight="700" fill="#1a1d24">黎明教會整合平台 liming-tjc.org：資料流程</text>
+<text x="30" y="63" font-size="13" fill="#5c6270">六個畫面：首頁、安排表單頁、相簿、報告事項、代禱事項維護、海報年度總覽　｜　藍＝海報與安排表　綠＝相簿　金＝報告事項（簡報、代禱）　灰＝統計、設定、暫存</text>
+<text x="30" y="100" font-size="14" font-weight="700" fill="#1a1d24">來源（人在維護、輸入的）</text>
+<text x="380" y="100" font-size="14" font-weight="700" fill="#1a1d24">處理</text>
+<text x="790" y="100" font-size="14" font-weight="700" fill="#1a1d24">資料</text>
+<text x="1150" y="100" font-size="14" font-weight="700" fill="#1a1d24">畫面（網頁）</text>
+<rect x="30" y="120" width="270" height="111" fill="#ffffff" stroke="#8b93a6" stroke-width="1.6" rx="7"/>
+<rect x="30" y="120" width="270" height="30" fill="#8b93a6" rx="7"/>
+<rect x="30" y="142" width="270" height="8" fill="#8b93a6"/>
+<text x="44" y="140" font-size="14.5" font-weight="700" fill="#ffffff">GAS 設定（指令碼屬性）</text>
+<text x="44" y="168" font-size="12.5" fill="#4a5164">資料夾、試算表的 ID（不在圖上）</text>
+<text x="44" y="187" font-size="12.5" fill="#4a5164">DEPLOY_TIME：頁尾「最後部署時間」</text>
+<text x="44" y="206" font-size="12.5" fill="#4a5164">✎ 改完不用重新部署</text>
+<rect x="30" y="249" width="270" height="149" fill="#ffffff" stroke="#7c9cc4" stroke-width="1.6" rx="7"/>
+<rect x="30" y="249" width="270" height="30" fill="#7c9cc4" rx="7"/>
+<rect x="30" y="271" width="270" height="8" fill="#7c9cc4"/>
+<text x="44" y="269" font-size="14.5" font-weight="700" fill="#ffffff">雲端硬碟：海報、安排表</text>
+<text x="44" y="297" font-size="12.5" fill="#4a5164">精彩活動海報</text>
+<text x="44" y="316" font-size="12.5" fill="#4a5164">　看 GAS 設定 POSTER_FOLDER_ID</text>
+<text x="44" y="335" font-size="12.5" fill="#4a5164">月份安排表</text>
+<text x="44" y="354" font-size="12.5" fill="#4a5164">　看 GAS 設定 SCHEDULE_FOLDER_ID</text>
+<text x="44" y="373" font-size="12.5" fill="#4a5164">✎ 圖檔放進資料夾就會出現</text>
+<rect x="30" y="430" width="270" height="149" fill="#ffffff" stroke="#7fa87f" stroke-width="1.6" rx="7"/>
+<rect x="30" y="430" width="270" height="30" fill="#7fa87f" rx="7"/>
+<rect x="30" y="452" width="270" height="8" fill="#7fa87f"/>
+<text x="44" y="450" font-size="14.5" font-weight="700" fill="#ffffff">雲端硬碟：相簿</text>
+<text x="44" y="478" font-size="12.5" fill="#4a5164">一個活動一個資料夾</text>
+<text x="44" y="497" font-size="12.5" fill="#4a5164">✎ 可用黎明寶庫上傳照片、影片</text>
+<text x="44" y="516" font-size="12.5" fill="#4a5164">只讀每個資料夾的第一層</text>
+<text x="44" y="535" font-size="12.5" fill="#4a5164">看 GAS 設定 PHOTO_FOLDER_ID</text>
+<text x="44" y="554" font-size="12.5" fill="#4a5164">　沒設定時用程式裡的預設資料夾</text>
+<rect x="30" y="620" width="270" height="73" fill="#ffffff" stroke="#7fa87f" stroke-width="1.6" rx="7"/>
+<rect x="30" y="620" width="270" height="30" fill="#7fa87f" rx="7"/>
+<rect x="30" y="642" width="270" height="8" fill="#7fa87f"/>
+<text x="44" y="640" font-size="14.5" font-weight="700" fill="#ffffff">相簿頁送出的心得</text>
+<text x="44" y="668" font-size="12.5" fill="#4a5164">「💬 心得」填姓名、內容後送出</text>
+<rect x="30" y="720" width="270" height="111" fill="#ffffff" stroke="#c9a15c" stroke-width="1.6" rx="7"/>
+<rect x="30" y="720" width="270" height="30" fill="#c9a15c" rx="7"/>
+<rect x="30" y="742" width="270" height="8" fill="#c9a15c"/>
+<text x="44" y="740" font-size="14.5" font-weight="700" fill="#ffffff">OneDrive：報告簡報</text>
+<text x="44" y="768" font-size="12.5" fill="#4a5164">2026代禱及事項宣佈.pptx</text>
+<text x="44" y="787" font-size="12.5" fill="#4a5164">✎ 在原檔上改，不要刪掉重傳</text>
+<text x="44" y="806" font-size="12.5" fill="#4a5164">　換新檔時兩個連結都要換</text>
+<rect x="30" y="905" width="270" height="92" fill="#ffffff" stroke="#c9a15c" stroke-width="1.6" rx="7"/>
+<rect x="30" y="905" width="270" height="30" fill="#c9a15c" rx="7"/>
+<rect x="30" y="927" width="270" height="8" fill="#c9a15c"/>
+<text x="44" y="925" font-size="14.5" font-weight="700" fill="#ffffff">代禱事項頁的修改</text>
+<text x="44" y="953" font-size="12.5" fill="#4a5164">✎ 同工在網頁上新增、修改、刪除</text>
+<text x="44" y="972" font-size="12.5" fill="#4a5164">按「儲存」才送出；不用登入</text>
+<rect x="30" y="1030" width="270" height="111" fill="#ffffff" stroke="#8b93a6" stroke-width="1.6" rx="7"/>
+<rect x="30" y="1030" width="270" height="30" fill="#8b93a6" rx="7"/>
+<rect x="30" y="1052" width="270" height="8" fill="#8b93a6"/>
+<text x="44" y="1050" font-size="14.5" font-weight="700" fill="#ffffff">各頁的按鈕</text>
+<text x="44" y="1078" font-size="12.5" fill="#4a5164">有 data-track 的按鈕被點到時</text>
+<text x="44" y="1097" font-size="12.5" fill="#4a5164">首頁、科技版、報告事項、選頁列印</text>
+<text x="44" y="1116" font-size="12.5" fill="#4a5164">只在正式網域 liming-tjc.org 送出</text>
+<rect x="380" y="249" width="330" height="149" fill="#ffffff" stroke="#7c9cc4" stroke-width="1.6" rx="7"/>
+<rect x="380" y="249" width="330" height="30" fill="#7c9cc4" rx="7"/>
+<rect x="380" y="271" width="330" height="8" fill="#7c9cc4"/>
+<text x="394" y="269" font-size="14.5" font-weight="700" fill="#ffffff">GAS｜海報、安排表快取</text>
+<text x="394" y="297" font-size="12.5" fill="#4a5164">keepWarm 觸發器每 5 分鐘重掃兩個資料夾</text>
+<text x="394" y="316" font-size="12.5" fill="#4a5164">?mode=api 只回快取，不碰雲端硬碟</text>
+<text x="394" y="335" font-size="12.5" fill="#4a5164">↻ ?mode=refresh 立刻重掃，60 秒內只算一次</text>
+<text x="394" y="354" font-size="12.5" fill="#4a5164">重掃失敗就保留原本的快取</text>
+<text x="394" y="373" font-size="12.5" fill="#4a5164">觸發器停了不會報錯，網站停在舊資料</text>
+<rect x="380" y="430" width="330" height="149" fill="#ffffff" stroke="#7fa87f" stroke-width="1.6" rx="7"/>
+<rect x="380" y="430" width="330" height="30" fill="#7fa87f" rx="7"/>
+<rect x="380" y="452" width="330" height="8" fill="#7fa87f"/>
+<text x="394" y="450" font-size="14.5" font-weight="700" fill="#ffffff">GitHub Actions｜更新相簿資料</text>
+<text x="394" y="478" font-size="12.5" fill="#4a5164">每 3 小時呼叫 GAS ?mode=photos（約 60 秒）</text>
+<text x="394" y="497" font-size="12.5" fill="#4a5164">合格的資料才覆蓋，沒變就不 commit</text>
+<text x="394" y="516" font-size="12.5" fill="#4a5164">失敗重試 3 次；都失敗保留舊檔、寄信</text>
+<text x="394" y="535" font-size="12.5" fill="#4a5164">超過 30 天沒更新會強制更新一次</text>
+<text x="394" y="554" font-size="12.5" fill="#4a5164">可手動執行：Actions → 更新相簿資料</text>
+<rect x="380" y="597" width="330" height="111" fill="#ffffff" stroke="#7fa87f" stroke-width="1.6" rx="7"/>
+<rect x="380" y="597" width="330" height="30" fill="#7fa87f" rx="7"/>
+<rect x="380" y="619" width="330" height="8" fill="#7fa87f"/>
+<text x="394" y="617" font-size="14.5" font-weight="700" fill="#ffffff">GAS｜心得</text>
+<text x="394" y="645" font-size="12.5" fill="#4a5164">?mode=addComment 寫一列</text>
+<text x="394" y="664" font-size="12.5" fill="#4a5164">?mode=getComments 依相簿讀出</text>
+<text x="394" y="683" font-size="12.5" fill="#4a5164">聚會紀錄系統也用同一個 GAS</text>
+<rect x="380" y="726" width="330" height="149" fill="#ffffff" stroke="#c9a15c" stroke-width="1.6" rx="7"/>
+<rect x="380" y="726" width="330" height="30" fill="#c9a15c" rx="7"/>
+<rect x="380" y="748" width="330" height="8" fill="#c9a15c"/>
+<text x="394" y="746" font-size="14.5" font-weight="700" fill="#ffffff">Cloudflare Worker｜列印用 PDF</text>
+<text x="394" y="774" font-size="12.5" fill="#4a5164">雲端瀏覽器打開唯讀內嵌播放器</text>
+<text x="394" y="793" font-size="12.5" fill="#4a5164">　請微軟產生 PDF（15～30 秒）</text>
+<text x="394" y="812" font-size="12.5" fill="#4a5164">/snapshot 暫存 15 分鐘；/print 挑頁排版</text>
+<text x="394" y="831" font-size="12.5" fill="#4a5164">額度：每天 10 分鐘、每 20 秒開一個瀏覽器</text>
+<text x="394" y="850" font-size="12.5" fill="#4a5164">改完要另外 npm run deploy</text>
+<rect x="380" y="893" width="330" height="130" fill="#ffffff" stroke="#c9a15c" stroke-width="1.6" rx="7"/>
+<rect x="380" y="893" width="330" height="30" fill="#c9a15c" rx="7"/>
+<rect x="380" y="915" width="330" height="8" fill="#c9a15c"/>
+<text x="394" y="913" font-size="14.5" font-weight="700" fill="#ffffff">GAS｜代禱事項</text>
+<text x="394" y="941" font-size="12.5" fill="#4a5164">prayerGet 讀三個分頁和經文</text>
+<text x="394" y="960" font-size="12.5" fill="#4a5164">prayerSave 寫回 A、B 欄</text>
+<text x="394" y="979" font-size="12.5" fill="#4a5164">先比對版本，別人剛改過就拒絕儲存</text>
+<text x="394" y="998" font-size="12.5" fill="#4a5164">字數上限：近期 15、長期 5、事工 30</text>
+<rect x="380" y="1041" width="330" height="92" fill="#ffffff" stroke="#8b93a6" stroke-width="1.6" rx="7"/>
+<rect x="380" y="1041" width="330" height="30" fill="#8b93a6" rx="7"/>
+<rect x="380" y="1063" width="330" height="8" fill="#8b93a6"/>
+<text x="394" y="1061" font-size="14.5" font-weight="700" fill="#ffffff">GAS｜按鈕點擊統計</text>
+<text x="394" y="1089" font-size="12.5" fill="#4a5164">POST track 寫一列：時間、月份、按鈕、頁面</text>
+<text x="394" y="1108" font-size="12.5" fill="#4a5164">名稱限 40 字，去掉開頭的 = + - @</text>
+<rect x="790" y="249" width="270" height="168" fill="#ffffff" stroke="#4a5164" stroke-width="1.6" rx="7"/>
+<rect x="790" y="249" width="270" height="30" fill="#4a5164" rx="7"/>
+<rect x="790" y="271" width="270" height="8" fill="#4a5164"/>
+<text x="804" y="269" font-size="14.5" font-weight="700" fill="#ffffff">GAS 快取（指令碼屬性）</text>
+<text x="804" y="297" font-size="12.5" fill="#4a5164">CACHED_DATA：海報、安排表的檔案清單</text>
+<text x="804" y="316" font-size="12.5" fill="#4a5164">CACHED_AT：快取建立時間</text>
+<text x="804" y="335" font-size="12.5" fill="#4a5164">　＝頁尾「資料更新於」</text>
+<text x="804" y="354" font-size="12.5" fill="#4a5164">沒有有效期限，只靠 keepWarm 覆蓋</text>
+<text x="804" y="373" font-size="12.5" fill="#4a5164">程式自動寫入，不要手動改</text>
+<text x="804" y="392" font-size="12.5" fill="#4a5164">觸發器停了：「資料更新於」停在舊時間</text>
+<rect x="790" y="440" width="270" height="111" fill="#ffffff" stroke="#4a5164" stroke-width="1.6" rx="7"/>
+<rect x="790" y="440" width="270" height="30" fill="#4a5164" rx="7"/>
+<rect x="790" y="462" width="270" height="8" fill="#4a5164"/>
+<text x="804" y="460" font-size="14.5" font-weight="700" fill="#ffffff">相簿快照 photos-data.json</text>
+<text x="804" y="488" font-size="12.5" fill="#4a5164">每本相簿的 ID、名稱、檔案清單</text>
+<text x="804" y="507" font-size="12.5" fill="#4a5164">相簿頁直接讀這個檔，不經 GAS</text>
+<text x="804" y="526" font-size="12.5" fill="#4a5164">壞掉時先看檔案是不是變成 HTML</text>
+<rect x="790" y="569" width="270" height="111" fill="#ffffff" stroke="#4a5164" stroke-width="1.6" rx="7"/>
+<rect x="790" y="569" width="270" height="30" fill="#4a5164" rx="7"/>
+<rect x="790" y="591" width="270" height="8" fill="#4a5164"/>
+<text x="804" y="589" font-size="14.5" font-weight="700" fill="#ffffff">試算表：心得</text>
+<text x="804" y="617" font-size="12.5" fill="#4a5164">看 GAS 設定 FEEDBACK_SHEET_ID</text>
+<text x="804" y="636" font-size="12.5" fill="#4a5164">第一個分頁，一則心得一列</text>
+<text x="804" y="655" font-size="12.5" fill="#4a5164">聚會紀錄系統也讀寫這份</text>
+<rect x="790" y="700" width="270" height="92" fill="#ffffff" stroke="#8b93a6" stroke-width="1.6" rx="7"/>
+<rect x="790" y="700" width="270" height="30" fill="#8b93a6" rx="7"/>
+<rect x="790" y="722" width="270" height="8" fill="#8b93a6"/>
+<text x="804" y="720" font-size="14.5" font-weight="700" fill="#ffffff">PDF 暫存（Cloudflare）</text>
+<text x="804" y="748" font-size="12.5" fill="#4a5164">原始 PDF，一張投影片一頁</text>
+<text x="804" y="767" font-size="12.5" fill="#4a5164">暫存 15 分鐘，同一個資料中心才有效</text>
+<rect x="790" y="812" width="270" height="130" fill="#ffffff" stroke="#4a5164" stroke-width="1.6" rx="7"/>
+<rect x="790" y="812" width="270" height="30" fill="#4a5164" rx="7"/>
+<rect x="790" y="834" width="270" height="8" fill="#4a5164"/>
+<text x="804" y="832" font-size="14.5" font-weight="700" fill="#ffffff">試算表「02.代禱事項」</text>
+<text x="804" y="860" font-size="12.5" fill="#4a5164">近期代禱、長期關懷代禱、近期事工</text>
+<text x="804" y="879" font-size="12.5" fill="#4a5164">規範說明 › 經文</text>
+<text x="804" y="898" font-size="12.5" fill="#4a5164">✎ 也可以直接在試算表裡改</text>
+<text x="804" y="917" font-size="12.5" fill="#4a5164">分頁名稱不能改：二樓投影程式也讀</text>
+<rect x="790" y="1000" width="270" height="130" fill="#ffffff" stroke="#4a5164" stroke-width="1.6" rx="7"/>
+<rect x="790" y="1000" width="270" height="30" fill="#4a5164" rx="7"/>
+<rect x="790" y="1022" width="270" height="8" fill="#4a5164"/>
+<text x="804" y="1020" font-size="14.5" font-weight="700" fill="#ffffff">試算表「各功能點擊次頻率」</text>
+<text x="804" y="1048" font-size="12.5" fill="#4a5164">點擊紀錄：每點一次一列</text>
+<text x="804" y="1067" font-size="12.5" fill="#4a5164">每月統計：QUERY 彙整按鈕 × 月份</text>
+<text x="804" y="1086" font-size="12.5" fill="#4a5164">網站上不顯示，直接看試算表</text>
+<text x="804" y="1105" font-size="12.5" fill="#4a5164">✎ 時區要設成台北</text>
+<rect x="1150" y="120" width="330" height="206" fill="#ffffff" stroke="#7c9cc4" stroke-width="1.6" rx="7"/>
+<rect x="1150" y="120" width="330" height="30" fill="#7c9cc4" rx="7"/>
+<rect x="1150" y="142" width="330" height="8" fill="#7c9cc4"/>
+<text x="1164" y="140" font-size="14.5" font-weight="700" fill="#ffffff">首頁（一般版、科技版）</text>
+<text x="1164" y="168" font-size="12.5" fill="#4a5164">home.html・index-tech.html</text>
+<text x="1164" y="187" font-size="12.5" fill="#4a5164">外殼 index.html 框住，網址停在首頁</text>
+<text x="1164" y="206" font-size="12.5" fill="#4a5164">先顯示手機裡上次存的資料</text>
+<text x="1164" y="225" font-size="12.5" fill="#4a5164">精彩活動海報 ← GAS 快取</text>
+<text x="1164" y="244" font-size="12.5" fill="#4a5164">月份安排表 ← GAS 快取</text>
+<text x="1164" y="263" font-size="12.5" fill="#4a5164">資料更新於 ← 快取建立時間；↻ 立刻重掃</text>
+<text x="1164" y="282" font-size="12.5" fill="#4a5164">最後部署時間 ← DEPLOY_TIME、網頁發布時間</text>
+<text x="1164" y="301" font-size="12.5" fill="#4a5164">快捷功能、好友連結 ← 寫在網頁裡</text>
+<rect x="1150" y="344" width="330" height="92" fill="#ffffff" stroke="#7c9cc4" stroke-width="1.6" rx="7"/>
+<rect x="1150" y="344" width="330" height="30" fill="#7c9cc4" rx="7"/>
+<rect x="1150" y="366" width="330" height="8" fill="#7c9cc4"/>
+<text x="1164" y="364" font-size="14.5" font-weight="700" fill="#ffffff">安排表單頁</text>
+<text x="1164" y="392" font-size="12.5" fill="#4a5164">schedule.html・LINE 圖文選單 E</text>
+<text x="1164" y="411" font-size="12.5" fill="#4a5164">月份安排表 ← GAS 快取</text>
+<rect x="1150" y="454" width="330" height="187" fill="#ffffff" stroke="#7fa87f" stroke-width="1.6" rx="7"/>
+<rect x="1150" y="454" width="330" height="30" fill="#7fa87f" rx="7"/>
+<rect x="1150" y="476" width="330" height="8" fill="#7fa87f"/>
+<text x="1164" y="474" font-size="14.5" font-weight="700" fill="#ffffff">相簿</text>
+<text x="1164" y="502" font-size="12.5" fill="#4a5164">photos.html・LINE 圖文選單 F</text>
+<text x="1164" y="521" font-size="12.5" fill="#4a5164">相簿清單、照片 ← photos-data.json</text>
+<text x="1164" y="540" font-size="12.5" fill="#4a5164">最近 24 小時的變動 ← 相簿資料夾</text>
+<text x="1164" y="559" font-size="12.5" fill="#4a5164">　GAS 即時讀，補上快照之後的變動</text>
+<text x="1164" y="578" font-size="12.5" fill="#4a5164">💬 心得 ← 心得試算表</text>
+<text x="1164" y="597" font-size="12.5" fill="#4a5164">🔗 上傳連結：複製黎明寶庫短網址</text>
+<text x="1164" y="616" font-size="12.5" fill="#4a5164">🔗 分享相簿：複製本頁連結</text>
+<rect x="1150" y="659" width="330" height="149" fill="#ffffff" stroke="#c9a15c" stroke-width="1.6" rx="7"/>
+<rect x="1150" y="659" width="330" height="30" fill="#c9a15c" rx="7"/>
+<rect x="1150" y="681" width="330" height="8" fill="#c9a15c"/>
+<text x="1164" y="679" font-size="14.5" font-weight="700" fill="#ffffff">報告事項</text>
+<text x="1164" y="707" font-size="12.5" fill="#4a5164">reports.html・首頁、科技版</text>
+<text x="1164" y="726" font-size="12.5" fill="#4a5164">打開簡報 → OneDrive（不經後端）</text>
+<text x="1164" y="745" font-size="12.5" fill="#4a5164">選頁列印 reports-select.html</text>
+<text x="1164" y="764" font-size="12.5" fill="#4a5164">　縮圖、PDF ← 列印 Worker</text>
+<text x="1164" y="783" font-size="12.5" fill="#4a5164">代禱事項「編輯」「列印」→ 代禱事項維護</text>
+<rect x="1150" y="852" width="330" height="130" fill="#ffffff" stroke="#c9a15c" stroke-width="1.6" rx="7"/>
+<rect x="1150" y="852" width="330" height="30" fill="#c9a15c" rx="7"/>
+<rect x="1150" y="874" width="330" height="8" fill="#c9a15c"/>
+<text x="1164" y="872" font-size="14.5" font-weight="700" fill="#ffffff">代禱事項維護</text>
+<text x="1164" y="900" font-size="12.5" fill="#4a5164">prayer.html・禱告記錄板「維護」</text>
+<text x="1164" y="919" font-size="12.5" fill="#4a5164">四類代禱事項 ← 02.代禱事項</text>
+<text x="1164" y="938" font-size="12.5" fill="#4a5164">儲存 → GAS 寫回（見左邊來源）</text>
+<text x="1164" y="957" font-size="12.5" fill="#4a5164">?print=1 列印版</text>
+<rect x="1150" y="1000" width="330" height="149" fill="#ffffff" stroke="#7c9cc4" stroke-width="1.6" rx="7"/>
+<rect x="1150" y="1000" width="330" height="30" fill="#7c9cc4" rx="7"/>
+<rect x="1150" y="1022" width="330" height="8" fill="#7c9cc4"/>
+<text x="1164" y="1020" font-size="14.5" font-weight="700" fill="#ffffff">海報年度總覽</text>
+<text x="1164" y="1048" font-size="12.5" fill="#4a5164">posters.html・首頁「年度總覽」</text>
+<text x="1164" y="1067" font-size="12.5" fill="#4a5164">全年海報 ← 海報資料夾</text>
+<text x="1164" y="1086" font-size="12.5" fill="#4a5164">　GAS 即時讀，不經快取（沒畫箭頭）</text>
+<text x="1164" y="1105" font-size="12.5" fill="#4a5164">海報資料夾 ID 另外寫在這頁裡</text>
+<text x="1164" y="1124" font-size="12.5" fill="#4a5164">　換資料夾時兩邊都要改</text>
+<path d="M300 320 L380 320" fill="none" stroke="#7c9cc4" stroke-width="1.8" marker-end="url(#ab)"/>
+<text x="340" y="314" font-size="11.5" fill="#7c9cc4" font-weight="700" text-anchor="middle">檔案清單</text>
+<path d="M710 350 L790 350" fill="none" stroke="#7c9cc4" stroke-width="1.8" marker-end="url(#ab)"/>
+<text x="750" y="344" font-size="11.5" fill="#7c9cc4" font-weight="700" text-anchor="middle">海報、安排表</text>
+<path d="M1060 300 L1150 300" fill="none" stroke="#7c9cc4" stroke-width="1.8" marker-end="url(#ab)"/>
+<text x="1105" y="294" font-size="11.5" fill="#7c9cc4" font-weight="700" text-anchor="middle">海報、安排表</text>
+<path d="M1060 395 L1150 395" fill="none" stroke="#7c9cc4" stroke-width="1.8" marker-end="url(#ab)"/>
+<text x="1105" y="389" font-size="11.5" fill="#7c9cc4" font-weight="700" text-anchor="middle">安排表</text>
+<path d="M300 480 L380 480" fill="none" stroke="#7fa87f" stroke-width="1.8" marker-end="url(#ag)"/>
+<text x="340" y="474" font-size="11.5" fill="#7fa87f" font-weight="700" text-anchor="middle">照片清單</text>
+<path d="M710 500 L790 500" fill="none" stroke="#7fa87f" stroke-width="1.8" marker-end="url(#ag)"/>
+<text x="750" y="494" font-size="11.5" fill="#7fa87f" font-weight="700" text-anchor="middle">相簿清單</text>
+<path d="M1060 520 L1150 520" fill="none" stroke="#7fa87f" stroke-width="1.8" marker-end="url(#ag)"/>
+<text x="1105" y="514" font-size="11.5" fill="#7fa87f" font-weight="700" text-anchor="middle">相簿清單</text>
+<path d="M300 670 L380 670" fill="none" stroke="#7fa87f" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#ag)"/>
+<text x="340" y="664" font-size="11.5" fill="#7fa87f" font-weight="700" text-anchor="middle">心得</text>
+<path d="M710 645 L790 645" fill="none" stroke="#7fa87f" stroke-width="1.8" marker-end="url(#ag)"/>
+<text x="750" y="639" font-size="11.5" fill="#7fa87f" font-weight="700" text-anchor="middle">心得</text>
+<path d="M1060 610 L1150 610" fill="none" stroke="#7fa87f" stroke-width="1.8" marker-end="url(#ag)"/>
+<text x="1105" y="604" font-size="11.5" fill="#7fa87f" font-weight="700" text-anchor="middle">心得</text>
+<path d="M300 790 L380 790" fill="none" stroke="#c9a15c" stroke-width="1.8" marker-end="url(#ao)"/>
+<text x="340" y="784" font-size="11.5" fill="#c9a15c" font-weight="700" text-anchor="middle">投影片</text>
+<path d="M710 760 L790 760" fill="none" stroke="#c9a15c" stroke-width="1.8" marker-end="url(#ao)"/>
+<text x="750" y="754" font-size="11.5" fill="#c9a15c" font-weight="700" text-anchor="middle">原始 PDF</text>
+<path d="M1060 740 L1150 740" fill="none" stroke="#c9a15c" stroke-width="1.8" marker-end="url(#ao)"/>
+<text x="1105" y="734" font-size="11.5" fill="#c9a15c" font-weight="700" text-anchor="middle">PDF</text>
+<path d="M300 965 L380 965" fill="none" stroke="#c9a15c" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#ao)"/>
+<text x="340" y="959" font-size="11.5" fill="#c9a15c" font-weight="700" text-anchor="middle">修改內容</text>
+<path d="M710 930 L790 930" fill="none" stroke="#c9a15c" stroke-width="1.8" marker-end="url(#ao)"/>
+<text x="750" y="924" font-size="11.5" fill="#c9a15c" font-weight="700" text-anchor="middle">代禱事項</text>
+<path d="M1060 900 L1150 900" fill="none" stroke="#c9a15c" stroke-width="1.8" marker-end="url(#ao)"/>
+<text x="1105" y="894" font-size="11.5" fill="#c9a15c" font-weight="700" text-anchor="middle">代禱事項</text>
+<path d="M300 1110 L380 1110" fill="none" stroke="#8b93a6" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#ay)"/>
+<text x="340" y="1104" font-size="11.5" fill="#8b93a6" font-weight="700" text-anchor="middle">按鈕名稱</text>
+<path d="M710 1085 L790 1085" fill="none" stroke="#8b93a6" stroke-width="1.8" marker-end="url(#ay)"/>
+<text x="750" y="1079" font-size="11.5" fill="#8b93a6" font-weight="700" text-anchor="middle">一列紀錄</text>
+<path d="M1440 808 L1440 852" fill="none" stroke="#c9a15c" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#ao)"/>
+<text x="1432" y="834" font-size="11.5" fill="#c9a15c" font-weight="700" text-anchor="end">編輯、列印</text>
+<text x="30" y="1182" font-size="12" fill="#5c6270">實線＝系統自動流動　虛線＝人按按鈕或連結　✎＝管理同工可以直接改的地方　機敏值（資料夾／試算表 ID、部署 ID）不在圖上，見 GAS 的指令碼屬性</text>
+<text x="30" y="1204" font-size="12" fill="#5c6270">沒畫成方塊的頁：index.html（外殼，框住其他頁）、app.html（舊網址轉址）　圖片、照片由瀏覽器直接向雲端硬碟載入，沒畫箭頭</text>
+</svg>

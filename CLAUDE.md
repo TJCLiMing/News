@@ -8,6 +8,11 @@
 | **前端頁面** | GitHub Pages | 外殼 + 內容頁 + 靜態資源 |
 | **列印用 PDF** | Cloudflare Worker `liming-reports-pdf` | 報告事項「選頁列印」向它要 PDF。原始碼在 `worker/reports-pdf/`，**不會跟著 GitHub 上線，改完要另外 `npm run deploy`**，見下方「列印用 PDF」 |
 
+**資料流程圖**：[`docs/data-flow.svg`](docs/data-flow.svg)（來源 → 處理 → 資料 → 畫面四欄，2026-11-17）。
+由 `docs/data-flow.py` 產生，改圖要改腳本再執行 `python docs/data-flow.py`，不要手改 SVG。
+改資料來源（雲端硬碟資料夾、試算表、OneDrive 簡報）、GAS 的 mode／action、`keepWarm` 或 GitHub Actions 排程、列印 Worker、各畫面的區塊時，要一起更新。
+`docs/` 會跟著 GitHub Pages 公開，所以圖上只放設定名稱，不放資料夾、試算表的 ID。
+
 網站名稱：**黎明教會整合平台**（2026-10-13 前叫「黎明教會活動快報」，已不只是活動快報）。
 主畫面圖示名稱「黎明教會」（`manifest.json` 的 `short_name`、`apple-mobile-web-app-title`）；
 `manifest.json` 的 `id` 維持 `liming-news`，**不要改**（改了已安裝的 APP 會被當成另一個）。
@@ -74,6 +79,7 @@ liming-tjc.org/        → index.html（外殼，全螢幕 iframe）
 | `sw.js` | Service Worker（離線快取）| 見下方版本規則 |
 | `manifest.json` | PWA 設定 | |
 | `worker/reports-pdf/` | 報告事項「列印用 PDF」的 **Cloudflare Worker 原始碼**（不是網頁）| 改完要另外部署，見下方「列印用 PDF」；`node_modules` 不進 git |
+| `docs/data-flow.py`、`docs/data-flow.svg` | 資料流程圖（腳本產生 SVG，網站不會讀） | 資料怎麼流動改了就改腳本重新產生，見上方「專案架構」 |
 
 ### 外部從哪裡連進網站（改檔名、換網址前先看這裡）
 
