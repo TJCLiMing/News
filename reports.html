@@ -181,8 +181,11 @@
         // 列印只有「選頁列印」（reports-select.html）：看縮圖勾選，再由 Worker 排成 2 張或 4 張一頁。
         //   原本的「4 張一頁」「2 張一頁」（整份直接印）2026-11-09 拿掉（使用者決定），Worker 的 /print?n= 網址仍可直接用
         // 2026-11-15 換成新檔的連結：簡報被換成另一個檔案（檔案編號變了），舊連結出現「you cannot access this document」
+        // 2026-11-20 簡報第二次被換成新檔，11-15 的連結失效。使用者這次只給了「內嵌」連結（IQS 開頭），
+        //   暫時讓「打開簡報」用它（唯讀播放器，一次一張、不能編輯）。
+        //   ⚠️ 拿到新檔的「共用 → 複製連結」（IQC 開頭）後，換回 EDIT_URL，VIEW_URL 改回 = EDIT_URL
         var EDIT_URL   = 'https://1drv.ms/p/c/69de94ef84c9ee8c/IQCjCTNzfoIWTYVwTO5on_jeAf7o50PzvmdCnb8m8hS5E2k?e=PoAv2g';
-        var VIEW_URL   = EDIT_URL;
+        var VIEW_URL   = 'https://1drv.ms/p/c/69de94ef84c9ee8c/IQS1Avs1o0jKRLNQ3d7xKN2sATHiLe_ZC91yg0Fbzk31VbU?em=2&wdAr=1.7777777777777777';
 
         document.getElementById('viewLink').href = VIEW_URL;
 
